@@ -11,14 +11,50 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::create('branches', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('name');
+            $table->string('address');
+            $table->string('phone', 50)->nullable();
+            $table->string('email')->nullable();
+            $table->string('avatar')->nullable();
+            $table->string('status', 50)->default('active');
+            $table->timestamps();
+
+            $table->index('email', 'branches_email_index');
+        });
+
         Schema::create('users', function (Blueprint $table) {
-            $table->id();
+            $table->increments('id');
+            $table->unsignedInteger('branch_id')->nullable();
+            $table->unsignedInteger('seller_id')->nullable();
             $table->string('name');
             $table->string('email')->unique();
+            $table->string('phone', 50)->nullable();
+            $table->string('avatar')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->string('role', 50)->default('staff');
+            $table->string('status', 50)->default('active');
+            $table->boolean('privacy_accepted')->default(false);
+            $table->boolean('newsletter_opt_in')->default(false);
+            $table->unsignedInteger('duetto_id')->nullable();
             $table->rememberToken();
             $table->timestamps();
+
+            $table->index('branch_id', 'users_branch_id_idx');
+            $table->index('seller_id', 'users_seller_id_idx');
+
+            $table->foreign('branch_id', 'users_branch_id_fk')
+                ->references('id')
+                ->on('branches')
+                ->restrictOnDelete()
+                ->cascadeOnUpdate();
+            $table->foreign('seller_id', 'users_seller_id_fk')
+                ->references('id')
+                ->on('users')
+                ->nullOnDelete()
+                ->cascadeOnUpdate();
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
@@ -29,7 +65,7 @@ return new class extends Migration
 
         Schema::create('sessions', function (Blueprint $table) {
             $table->string('id')->primary();
-            $table->foreignId('user_id')->nullable()->index();
+            $table->unsignedBigInteger('user_id')->nullable()->index();
             $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();
             $table->longText('payload');
@@ -42,8 +78,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('users');
-        Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
+        Schema::dropIfExists('password_reset_tokens');
+        Schema::dropIfExists('users');
+        Schema::dropIfExists('branches');
     }
 };
