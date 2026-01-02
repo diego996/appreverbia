@@ -3,9 +3,10 @@
 use App\Livewire\Forms\LoginForm;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Volt\Component;
 
-new #[Layout('layouts.guest')] class extends Component
+new #[Layout('layouts.reverbia-guest')] #[Title('Reverbia - Login')] class extends Component
 {
     public LoginForm $form;
 
@@ -25,45 +26,46 @@ new #[Layout('layouts.guest')] class extends Component
 }; ?>
 
 <div>
-    <!-- Session Status -->
-    <x-auth-session-status class="mb-3" :status="session('status')" />
+    <div class="panel" aria-label="Accesso clienti Reverbia">
+        <div class="logo" aria-hidden="true">RE<span>V</span>ER<span>B</span>IA</div>
+        <h1>I tuoi Personal Trainer a Milano</h1>
 
-    <form wire:submit="login" class="vstack gap-3">
-        <!-- Email Address -->
-        <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input wire:model="form.email" id="email" type="email" name="email" required autofocus autocomplete="username" />
-            <x-input-error :messages="$errors->get('form.email')" class="mt-1" />
-        </div>
+        @if (session('status'))
+            <div class="status-text">{{ session('status') }}</div>
+        @endif
 
-        <!-- Password -->
-        <div>
-            <x-input-label for="password" :value="__('Password')" />
+        <form wire:submit="login">
+            <div class="field">
+                <label for="email">Inserisci la tua email</label>
+                <input wire:model="form.email" type="email" id="email" name="email" placeholder="nome@domain.com" required autofocus autocomplete="username">
+                @error('form.email')
+                    <div class="error-text">{{ $message }}</div>
+                @enderror
+            </div>
 
-            <x-text-input wire:model="form.password" id="password"
-                            type="password"
-                            name="password"
-                            required autocomplete="current-password" />
+            <div class="field">
+                <label for="password">Password</label>
+                <input wire:model="form.password" type="password" id="password" name="password" placeholder="********" required autocomplete="current-password">
+                @error('form.password')
+                    <div class="error-text">{{ $message }}</div>
+                @enderror
+            </div>
 
-            <x-input-error :messages="$errors->get('form.password')" class="mt-1" />
-        </div>
+            <div class="checkbox">
+                <input wire:model="form.remember" type="checkbox" id="remember" name="remember">
+                <label for="remember">Ricordami</label>
+            </div>
 
-        <!-- Remember Me -->
-        <div class="form-check">
-            <input wire:model="form.remember" id="remember" type="checkbox" class="form-check-input" name="remember">
-            <label class="form-check-label" for="remember">{{ __('Remember me') }}</label>
-        </div>
+            <button class="btn" type="submit">Entra ora</button>
+        </form>
 
-        <div class="d-flex align-items-center justify-content-end gap-2">
+        <div class="links">
             @if (Route::has('password.request'))
-                <a class="link-secondary small" href="{{ route('password.request') }}" wire:navigate>
-                    {{ __('Forgot your password?') }}
-                </a>
+                Non ricordi le tue credenziali?<br>
+                Puoi fare un nuovo <a href="{{ route('password.request') }}" wire:navigate>reset</a> o contattare il <a href="#">supporto</a>.
+            @else
+                Hai bisogno di aiuto? Contatta il <a href="#">supporto</a>.
             @endif
-
-            <x-primary-button>
-                {{ __('Log in') }}
-            </x-primary-button>
         </div>
-    </form>
+    </div>
 </div>
