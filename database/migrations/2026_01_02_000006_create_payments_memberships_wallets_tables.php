@@ -22,10 +22,8 @@ return new class extends Migration
             $table->timestamps();
             $table->unsignedBigInteger('item_id')->nullable();
 
-            $table->index('user_id', 'payments_user_id_foreign');
             $table->index('status', 'payments_status_index');
             $table->index(['payable_type', 'payable_id'], 'payments_payable_type_payable_id_index');
-            $table->index('item_id', 'payments_item_id_foreign');
             $table->foreign('item_id', 'payments_item_id_foreign')
                 ->references('id')
                 ->on('items')
@@ -46,9 +44,7 @@ return new class extends Migration
             $table->timestamps();
             $table->unsignedBigInteger('payment_id')->nullable();
 
-            $table->index('user_id', 'memberships_user_id_foreign');
             $table->index('status', 'memberships_status_index');
-            $table->index('payment_id', 'memberships_payment_id_foreign');
             $table->foreign('payment_id', 'memberships_payment_id_foreign')
                 ->references('id')
                 ->on('payments')

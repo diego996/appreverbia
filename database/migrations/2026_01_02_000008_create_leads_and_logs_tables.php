@@ -36,7 +36,6 @@ return new class extends Migration
             $table->json('meta')->nullable();
             $table->timestamps();
 
-            $table->index('user_id', 'logs_user_id_foreign');
             $table->foreign('user_id', 'logs_user_id_foreign')
                 ->references('id')
                 ->on('users')

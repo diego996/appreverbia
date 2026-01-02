@@ -25,7 +25,6 @@ return new class extends Migration
             $table->boolean('active')->default(true);
             $table->timestamps();
 
-            $table->index('item_property_id', 'items_item_property_id_foreign');
             $table->index('active', 'items_active_index');
             $table->foreign('item_property_id', 'items_item_property_id_foreign')
                 ->references('id')
