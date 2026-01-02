@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="csrf-token" content="{{ csrf_token() }}">
+
+        <title>{{ $title ?? config('app.name', 'Reverbia') }}</title>
+
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+        <style>
+            :root {
+                --bg: #050505;
+                --panel: #0d0d0f;
+                --panel-2: #131316;
+                --accent: #7efc5b;
+                --accent-2: #f35aa7;
+                --muted: #a0a0a5;
+                --text: #f1f1f1;
+                --line: #1f1f22;
+                --shadow: 0 16px 38px rgba(0, 0, 0, 0.45);
+            }
+            * { box-sizing: border-box; }
+            body {
+                margin: 0;
+                min-height: 100vh;
+                background: var(--bg);
+                color: var(--text);
+                font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
+            }
+            .topbar {
+                position: sticky;
+                top: 0;
+                z-index: 30;
+                padding: 14px 18px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                background: linear-gradient(180deg, rgba(126,252,91,0.08), rgba(5,5,5,0.94));
+                border-bottom: 1px solid var(--line);
+            }
+            .brand {
+                letter-spacing: 5px;
+                font-weight: 700;
+                font-size: 15px;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+            .brand span { color: var(--accent); }
+            .top-icons { display: flex; gap: 14px; font-size: 18px; color: var(--text); }
+            .hamburger {
+                width: 34px;
+                height: 34px;
+                border-radius: 50%;
+                border: 1px solid var(--line);
+                background: #0a0a0c;
+                display: grid;
+                place-items: center;
+                padding: 0;
+                color: var(--text);
+            }
+            .hamburger span {
+                position: relative;
+                display: block;
+                width: 14px;
+                height: 2px;
+                background: var(--text);
+            }
+            .hamburger span::before,
+            .hamburger span::after {
+                content: "";
+                position: absolute;
+                left: 0;
+                width: 100%;
+                height: 2px;
+                background: var(--text);
+                transition: transform 0.2s ease;
+            }
+            .hamburger span::before { top: -5px; }
+            .hamburger span::after { top: 5px; }
+            .nav-bottom {
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: #0a0a0c;
+                border-top: 1px solid var(--line);
+                display: grid;
+                grid-template-columns: repeat(5, 1fr);
+                padding: 10px 4px;
+                color: var(--muted);
+                font-size: 12px;
+                z-index: 10;
+            }
+            .nav-bottom a {
+                color: inherit;
+                text-decoration: none;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 4px;
+            }
+            .nav-bottom a.active { color: var(--accent); }
+            .menu-overlay {
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.8);
+                backdrop-filter: blur(3px);
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.25s ease;
+                z-index: 40;
+            }
+            .menu-panel {
+                position: absolute;
+                inset: 0;
+                background: #050505;
+                padding: 26px 20px 20px;
+                transform: translateY(-6%);
+                opacity: 0;
+                transition: all 0.28s ease;
+                overflow-y: auto;
+            }
+            body.menu-open .menu-overlay { opacity: 1; pointer-events: auto; }
+            body.menu-open .menu-panel { transform: translateY(0); opacity: 1; }
+            .menu-items a {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 12px 10px;
+                color: var(--text);
+                text-decoration: none;
+                border-bottom: 1px solid var(--line);
+                font-weight: 600;
+            }
+            .menu-items a i { color: var(--accent); font-size: 18px; }
+            .btn-close-menu {
+                width: 34px;
+                height: 34px;
+                border-radius: 50%;
+                border: 1px solid var(--line);
+                background: #0f0f12;
+                color: var(--text);
+                display: grid;
+                place-items: center;
+            }
+        </style>
+        @stack('styles')
+    </head>
+    <body>
+        <header class="topbar">
+            <button id="menuToggle" class="hamburger" aria-label="Apri menu">
+                <span></span>
+            </button>
+            <div class="brand" aria-label="Reverbia">
+                <span>RE</span>VER<span>B</span>IA
+            </div>
+            <div class="top-icons" aria-label="Azioni rapide">
+                <i class="bi bi-cart3"></i>
+                <i class="bi bi-bell"></i>
+            </div>
+        </header>
+
+        {{ $slot }}
+
+        <nav class="nav-bottom" aria-label="Navigazione principale">
+            <a class="{{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}" wire:navigate>
+                <i class="bi bi-house-door"></i><span>Home</span>
+            </a>
+            <a href="#"><i class="bi bi-calendar-check"></i><span>Prenota</span></a>
+            <a href="#"><i class="bi bi-heart"></i><span>Allenamenti</span></a>
+            <a href="#"><i class="bi bi-chat-dots"></i><span>Supporto</span></a>
+            <a class="{{ request()->routeIs('calendar') ? 'active' : '' }}" href="{{ route('calendar') }}" wire:navigate>
+                <i class="bi bi-calendar4-week"></i><span>Calendario</span>
+            </a>
+        </nav>
+
+        <div id="menuOverlay" class="menu-overlay" aria-hidden="true">
+            <div class="menu-panel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="brand"><span>RE</span>VER<span>B</span>IA</div>
+                    <button class="btn-close-menu" type="button" data-close aria-label="Chiudi menu">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+                <div class="menu-items">
+                    @foreach ($menuLinks ?? [] as $link)
+                        <a href="{{ $link['url'] }}" @if(!str_starts_with($link['url'], '#')) wire:navigate @endif>
+                            <i class="bi {{ $link['icon'] }}"></i>
+                            <span>{{ $link['label'] }}</span>
+                        </a>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+
+        <script>
+            (function () {
+                const setupMenu = () => {
+                    const body = document.body;
+                    const toggle = document.getElementById('menuToggle');
+                    const overlay = document.getElementById('menuOverlay');
+                    const closeButtons = overlay ? overlay.querySelectorAll('[data-close]') : [];
+
+                    if (!toggle || !overlay) {
+                        return;
+                    }
+
+                    const closeMenu = () => body.classList.remove('menu-open');
+
+                    toggle.addEventListener('click', () => {
+                        body.classList.toggle('menu-open');
+                    });
+
+                    overlay.addEventListener('click', (event) => {
+                        if (event.target === overlay) {
+                            closeMenu();
+                        }
+                    });
+
+                    closeButtons.forEach((btn) => btn.addEventListener('click', closeMenu));
+
+                    document.addEventListener('keydown', (event) => {
+                        if (event.key === 'Escape') {
+                            closeMenu();
+                        }
+                    });
+                };
+
+                document.addEventListener('DOMContentLoaded', setupMenu);
+                document.addEventListener('livewire:navigated', setupMenu);
+            }());
+        </script>
+        @stack('scripts')
+    </body>
+</html>

@@ -6,7 +6,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-#[Layout('layouts.reverbia')]
+#[Layout('layouts.reverbia-shell')]
 #[Title('Reverbia - Home')]
 class Dashboard extends Component
 {
