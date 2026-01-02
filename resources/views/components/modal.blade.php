@@ -51,11 +51,11 @@ $maxWidth = [
     aria-modal="true"
     style="display: {{ $show ? 'block' : 'none' }};"
 >
-    <div class="modal-dialog modal-dialog-centered {{ $maxWidth }}" x-on:click.outside="show = false">
+    <div class="modal-backdrop fade show" style="z-index: 1040;" x-on:click="show = false"></div>
+
+    <div class="modal-dialog modal-dialog-centered {{ $maxWidth }} position-relative" style="z-index: 1055;" x-on:click.outside="show = false">
         <div class="modal-content">
             {{ $slot }}
         </div>
     </div>
-
-    <div class="modal-backdrop fade show" x-on:click="show = false"></div>
 </div>

@@ -9,7 +9,7 @@
         <div class="vstack gap-4">
             <div class="card shadow-sm">
                 <div class="card-body">
-                    <div class="col-lg-8">
+                    <div class="col-lg-8 mx-auto">
                         <livewire:profile.update-profile-information-form />
                     </div>
                 </div>
@@ -17,7 +17,7 @@
 
             <div class="card shadow-sm">
                 <div class="card-body">
-                    <div class="col-lg-8">
+                    <div class="col-lg-8 mx-auto">
                         <livewire:profile.update-password-form />
                     </div>
                 </div>
@@ -25,7 +25,7 @@
 
             <div class="card shadow-sm">
                 <div class="card-body">
-                    <div class="col-lg-8">
+                    <div class="col-lg-8 mx-auto">
                         <livewire:profile.delete-user-form />
                     </div>
                 </div>
