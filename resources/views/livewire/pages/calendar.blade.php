@@ -1,207 +1,5 @@
-@push('styles')
-    <style>
-        main { padding: 12px 14px 90px; }
-        .filter-row {
-            color: var(--muted);
-            font-size: 13px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .filter-row i { color: var(--accent); }
-        .title-block {
-            text-align: center;
-            margin: 14px 0 10px;
-            font-weight: 700;
-            letter-spacing: 0.08em;
-            font-size: 18px;
-        }
-        .title-block span { color: var(--accent); }
-        .calendar-card {
-            background: #0b0b0e;
-            border: 1px dashed rgba(126,252,91,0.5);
-            border-radius: 18px;
-            padding: 14px 14px 18px;
-            box-shadow: var(--shadow);
-        }
-        .calendar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 8px;
-        }
-        .calendar-header .label {
-            font-size: 12px;
-            color: var(--muted);
-        }
-        .calendar-header .date-title {
-            font-size: 20px;
-            font-weight: 700;
-        }
-        .calendar-header button {
-            background: transparent;
-            border: none;
-            color: var(--muted);
-            font-size: 16px;
-        }
-        .month-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            color: var(--muted);
-            margin: 10px 0 8px;
-            font-size: 13px;
-        }
-        .month-row button {
-            background: transparent;
-            border: none;
-            color: var(--muted);
-            font-size: 18px;
-        }
-        .weekday-row, .week-row {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 4px;
-            text-align: center;
-            color: var(--muted);
-            font-size: 12px;
-            margin-bottom: 4px;
-        }
-        .day {
-            height: 38px;
-            display: grid;
-            place-items: center;
-            border-radius: 10px;
-            border: 1px solid transparent;
-            color: var(--text);
-        }
-        .day.selected {
-            background: rgba(126,252,91,0.15);
-            border-color: var(--accent);
-            color: var(--accent);
-            font-weight: 700;
-        }
-        .day.busy {
-            background: rgba(243,90,167,0.08);
-            border-color: rgba(243,90,167,0.5);
-            color: var(--accent-2);
-        }
-        .filters-inline {
-            display: flex;
-            justify-content: space-between;
-            color: var(--muted);
-            font-size: 12px;
-            margin: 10px 2px 18px;
-        }
-        .trainer-row { margin: 12px 0 16px; }
-        .section-title {
-            font-size: 12px;
-            letter-spacing: 0.08em;
-            color: var(--muted);
-            text-transform: uppercase;
-            font-weight: 700;
-        }
-        .trainer-chips {
-            display: flex;
-            gap: 10px;
-            overflow-x: auto;
-            padding-bottom: 6px;
-        }
-        .trainer-chip {
-            white-space: nowrap;
-            padding: 8px 12px;
-            border-radius: 999px;
-            border: 1px solid var(--line);
-            background: #0e0e12;
-            color: var(--text);
-            font-size: 13px;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .trainer-chip span {
-            color: var(--muted);
-            font-size: 11px;
-        }
-        .list-card {
-            display: grid;
-            grid-template-columns: 94px 1fr;
-            gap: 14px;
-            padding: 12px;
-            border-radius: 14px;
-            background: var(--panel-2);
-            border: 1px solid var(--line);
-            margin-bottom: 12px;
-            box-shadow: var(--shadow);
-        }
-        .thumb {
-            width: 100%;
-            aspect-ratio: 1/1;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #1c1c21, #0f0f12);
-            position: relative;
-            overflow: hidden;
-        }
-        .thumb::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: repeating-linear-gradient(
-                135deg,
-                rgba(255,255,255,0.04),
-                rgba(255,255,255,0.04) 10px,
-                transparent 10px,
-                transparent 20px
-            );
-        }
-        .list-body .category {
-            color: var(--muted);
-            text-transform: uppercase;
-            font-size: 12px;
-            letter-spacing: 0.06em;
-            margin-bottom: 4px;
-        }
-        .list-body .title {
-            font-weight: 700;
-            font-size: 16px;
-            margin-bottom: 8px;
-        }
-        .list-body .trainer {
-            font-size: 13px;
-            color: var(--text);
-            margin-bottom: 6px;
-        }
-        .list-tags {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-bottom: 10px;
-        }
-        .list-tags span {
-            padding: 6px 10px;
-            background: #0f0f12;
-            border-radius: 10px;
-            color: var(--muted);
-            font-size: 11px;
-            border: 1px solid var(--line);
-        }
-        .btn-cta {
-            background: var(--accent);
-            color: #0a0a0a;
-            border: none;
-            border-radius: 999px;
-            padding: 10px 14px;
-            font-weight: 700;
-            font-size: 13px;
-            align-self: flex-start;
-        }
-    </style>
-@endpush
-
 <div>
-    <main>
+    <main class="page-calendar">
         <div class="filter-row mt-1">
             <i class="bi bi-geo-alt"></i>
             <div>
@@ -238,9 +36,13 @@
                 </button>
             </div>
             <div class="month-row">
-                <button type="button" aria-label="Mese precedente"><i class="bi bi-chevron-left"></i></button>
+                <button type="button" aria-label="Mese precedente" wire:click="previousMonth">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
                 <div>{{ $calendar['monthLabel'] }}</div>
-                <button type="button" aria-label="Mese successivo"><i class="bi bi-chevron-right"></i></button>
+                <button type="button" aria-label="Mese successivo" wire:click="nextMonth">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
             </div>
             <div class="weekday-row">
                 @foreach ($calendar['weekdays'] as $day)
@@ -261,7 +63,7 @@
                         @if ($day === null)
                             <div></div>
                         @else
-                            <div class="{{ implode(' ', $classes) }}">{{ $day }}</div>
+                            <div class="{{ implode(' ', $classes) }}" wire:click="selectDay({{ $day }})">{{ $day }}</div>
                         @endif
                     @endforeach
                 </div>

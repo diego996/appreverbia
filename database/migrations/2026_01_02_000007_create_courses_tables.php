@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('courses', function (Blueprint $table) {
             $table->increments('id');
             $table->unsignedInteger('branch_id');
-            $table->unsignedInteger('trainer_id');
+            $table->unsignedBigInteger('trainer_id');
             $table->string('title');
             $table->text('description')->nullable();
             $table->string('video_url')->nullable();
@@ -51,7 +51,7 @@ return new class extends Migration
         Schema::create('course_bookings', function (Blueprint $table) {
             $table->increments('id');
             $table->unsignedInteger('occurrence_id');
-            $table->unsignedInteger('user_id');
+            $table->unsignedBigInteger('user_id');
             $table->timestamp('booked_at')->nullable();
             $table->string('status', 50)->default('booked');
             $table->timestamps();
@@ -73,7 +73,7 @@ return new class extends Migration
         Schema::create('course_waitlist', function (Blueprint $table) {
             $table->increments('id');
             $table->unsignedInteger('occurrence_id');
-            $table->unsignedInteger('user_id');
+            $table->unsignedBigInteger('user_id');
             $table->timestamp('added_at')->nullable();
             $table->string('status', 50)->default('waiting');
             $table->timestamps();

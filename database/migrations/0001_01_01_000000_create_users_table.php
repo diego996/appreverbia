@@ -25,9 +25,9 @@ return new class extends Migration
         });
 
         Schema::create('users', function (Blueprint $table) {
-            $table->increments('id');
+            $table->bigIncrements('id');
             $table->unsignedInteger('branch_id')->nullable();
-            $table->unsignedInteger('seller_id')->nullable();
+            $table->unsignedBigInteger('seller_id')->nullable();
             $table->string('name');
             $table->string('email')->unique();
             $table->string('phone', 50)->nullable();

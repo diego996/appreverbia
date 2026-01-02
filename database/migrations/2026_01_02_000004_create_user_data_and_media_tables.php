@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('user_data', function (Blueprint $table) {
             $table->unsignedBigInteger('id', true);
-            $table->unsignedInteger('user_id')->nullable();
+            $table->unsignedBigInteger('user_id')->nullable();
             $table->string('cognome')->nullable();
             $table->string('nome')->nullable();
             $table->string('consenso_al_trattamento_dei_dati_con_finalita_di_marketing')->nullable();
@@ -67,7 +67,7 @@ return new class extends Migration
 
         Schema::create('user_media', function (Blueprint $table) {
             $table->increments('id');
-            $table->unsignedInteger('user_id');
+            $table->unsignedBigInteger('user_id');
             $table->string('file_path');
             $table->string('file_type', 100);
             $table->string('title')->nullable();

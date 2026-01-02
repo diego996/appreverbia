@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('payments', function (Blueprint $table) {
             $table->unsignedBigInteger('id', true);
-            $table->unsignedInteger('user_id');
+            $table->unsignedBigInteger('user_id');
             $table->string('payable_type')->nullable();
             $table->unsignedBigInteger('payable_id')->nullable();
             $table->bigInteger('amount');
@@ -36,7 +36,7 @@ return new class extends Migration
 
         Schema::create('memberships', function (Blueprint $table) {
             $table->unsignedBigInteger('id', true);
-            $table->unsignedInteger('user_id')->nullable();
+            $table->unsignedBigInteger('user_id')->nullable();
             $table->unsignedBigInteger('branch_id')->nullable();
             $table->date('start_date');
             $table->date('end_date')->nullable();
@@ -57,7 +57,7 @@ return new class extends Migration
 
         Schema::create('wallets', function (Blueprint $table) {
             $table->unsignedBigInteger('id', true);
-            $table->unsignedInteger('user_id')->nullable();
+            $table->unsignedBigInteger('user_id')->nullable();
             $table->string('model_type')->nullable();
             $table->unsignedBigInteger('model_id')->nullable();
             $table->integer('token_delta');
