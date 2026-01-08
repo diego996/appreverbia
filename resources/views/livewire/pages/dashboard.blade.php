@@ -94,7 +94,7 @@
                 @foreach ($bookedLessons as $lesson)
                     <article class="lesson-card">
                         <div class="lesson-top">
-                            <span>{{ strtoupper($lesson['date']) }} · {{ $lesson['time'] }}</span>
+                            <span>{{ strtoupper($lesson['date']) }} - {{ $lesson['time'] }}</span>
                             <span class="badge-status">{{ $lesson['status'] }}</span>
                         </div>
                         <div class="lesson-title">{{ $lesson['title'] }}</div>
