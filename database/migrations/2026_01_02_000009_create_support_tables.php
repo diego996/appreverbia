@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('support_conversations', function (Blueprint $table) {
             $table->unsignedBigInteger('id', true);
-            $table->unsignedInteger('user_id')->nullable();
+            $table->unsignedBigInteger('user_id')->nullable();
             $table->unsignedInteger('branch_id')->nullable();
             $table->string('title');
             $table->string('assigned_to')->nullable();
@@ -36,7 +36,7 @@ return new class extends Migration
         Schema::create('support_messages', function (Blueprint $table) {
             $table->unsignedBigInteger('id', true);
             $table->unsignedBigInteger('conversation_id');
-            $table->unsignedInteger('user_id')->nullable();
+            $table->unsignedBigInteger('user_id')->nullable();
             $table->unsignedInteger('branch_id')->nullable();
             $table->enum('sender_type', ['customer', 'staff']);
             $table->text('text')->nullable();

@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('workout_plans', function (Blueprint $table) {
             $table->increments('id');
-            $table->unsignedInteger('trainer_id');
+            $table->unsignedBigInteger('trainer_id');
             $table->string('title');
             $table->text('description')->nullable();
             $table->timestamps();

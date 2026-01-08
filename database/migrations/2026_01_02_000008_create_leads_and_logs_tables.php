@@ -32,7 +32,7 @@ return new class extends Migration
 
         Schema::create('logs', function (Blueprint $table) {
             $table->unsignedBigInteger('id', true);
-            $table->unsignedInteger('user_id');
+            $table->unsignedBigInteger('user_id');
             $table->json('meta')->nullable();
             $table->timestamps();
 
