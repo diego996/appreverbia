@@ -1,64 +1,106 @@
+@push('styles')
+    <style>
+        main.page-dashboard { padding: 12px 14px 90px; }
+        .section-block { margin-bottom: 22px; }
+        .section-title {
+            font-size: 12px;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+        .lesson-rail {
+            display: grid;
+            grid-auto-flow: column;
+            grid-auto-columns: minmax(240px, 1fr);
+            gap: 14px;
+            overflow-x: auto;
+            padding: 14px 2px 6px;
+            scroll-snap-type: x mandatory;
+        }
+        .lesson-card {
+            background: linear-gradient(150deg, #1b1b20, #0f0f12);
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            padding: 16px;
+            min-height: 168px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            scroll-snap-align: start;
+        }
+        .lesson-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: var(--muted);
+        }
+        .lesson-title {
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .lesson-meta { font-size: 13px; color: var(--muted); }
+        .badge-status {
+            background: rgba(126,252,91,0.12);
+            border: 1px solid rgba(126,252,91,0.4);
+            color: var(--accent);
+            padding: 4px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .cta-card {
+            background: radial-gradient(circle at 20% 20%, rgba(126,252,91,0.15), transparent 55%), #0b0b0e;
+            border-style: dashed;
+            justify-content: center;
+            text-decoration: none;
+            color: var(--text);
+        }
+        .cta-card .cta-title {
+            font-size: 17px;
+            font-weight: 700;
+        }
+        .cta-card .cta-sub { color: var(--muted); font-size: 13px; }
+        .wallet-card {
+            background: #0b0b0e;
+            border: 1px solid var(--line);
+            border-radius: 22px;
+            padding: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow);
+        }
+        .wallet-card .amount {
+            font-size: 26px;
+            font-weight: 700;
+        }
+        .wallet-card .label {
+            color: var(--muted);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+    </style>
+@endpush
+
 <div>
     <main class="page-dashboard">
-        <section class="token-card" aria-labelledby="token-balance">
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <div class="eyebrow mb-1">Lezioni rimanenti</div>
-                    <div id="token-balance" class="fw-semibold">Saldo token aggiornato</div>
-                </div>
-                <div class="user-pill small">{{ auth()->user()->name ?? 'Ospite' }}</div>
-            </div>
-            <div class="donut" style="--percent: {{ max(0, min(100, (int) $tokens['percentage'])) }};" role="img" aria-label="{{ (int) $tokens['percentage'] }}% dei token ancora disponibili">
-                <div class="donut-value">
-                    <strong>{{ (int) $tokens['percentage'] }}%</strong>
-                    <span>token disponibili</span>
-                </div>
-            </div>
-            <div class="token-stats">
-                <div class="token-stat">
-                    <div class="label">Token totali</div>
-                    <div class="value">{{ (int) $tokens['total'] }}</div>
-                </div>
-                <div class="token-stat">
-                    <div class="label">Token prenotati</div>
-                    <div class="value">{{ (int) $tokens['booked'] }}</div>
-                </div>
-                <div class="token-stat">
-                    <div class="label">Token disponibili</div>
-                    <div class="value">{{ (int) $tokens['available'] }}</div>
-                </div>
-            </div>
-            <div class="dot-indicators" aria-hidden="true">
-                <span></span><span></span><span class="active"></span><span></span><span></span>
-            </div>
-        </section>
-
-        <section class="slider-block" data-slider>
-            <div class="d-flex justify-content-between align-items-center">
-                <div class="section-title">Le tue prossime lezioni prenotate</div>
-            </div>
-            <div class="slider-window mt-3">
-                <div class="slider-track" data-track>
-                    @foreach ($bookedLessons as $lesson)
-                        @if (!empty($lesson['empty']))
-                            <article class="slider-card">
-                                <div class="title">{{ $lesson['message'] }}</div>
-                                <div class="coach">{{ $lesson['hint'] }}</div>
-                            </article>
-                        @else
-                            <article class="slider-card">
-                                <span class="tag">{{ strtoupper($lesson['date']) }} - {{ $lesson['time'] }}</span>
-                                <div class="title">{{ $lesson['title'] }}</div>
-                                <div class="coach mb-2">Coach: {{ $lesson['coach'] }}</div>
-                                <div class="coach text-success fw-semibold">{{ $lesson['status'] }}</div>
-                            </article>
-                        @endif
-                    @endforeach
-                </div>
-            </div>
-            <div class="slider-dots" data-dots>
-                @foreach ($bookedLessons as $index => $lesson)
-                    <button type="button" aria-label="Slide {{ $index + 1 }}" data-slide="{{ $index }}"></button>
+        <section class="section-block">
+            <div class="section-title">Prossime lezioni</div>
+            <div class="lesson-rail">
+                @foreach ($bookedLessons as $lesson)
+                    <article class="lesson-card">
+                        <div class="lesson-top">
+                            <span>{{ strtoupper($lesson['date']) }} · {{ $lesson['time'] }}</span>
+                            <span class="badge-status">{{ $lesson['status'] }}</span>
+                        </div>
+                        <div class="lesson-title">{{ $lesson['title'] }}</div>
+                        <div class="lesson-meta">Coach: {{ $lesson['coach'] }}</div>
+                        <div class="lesson-meta">Sala: {{ $lesson['room'] }}</div>
+                    </article>
                 @endforeach
 
                 <a class="lesson-card cta-card" href="#">

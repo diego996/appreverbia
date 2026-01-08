@@ -30,12 +30,10 @@ class Calendar extends Component
         $this->selectedDate = $today->toDateString();
 
         $this->menuLinks = [
-            ['icon' => 'bi-house-door', 'label' => 'Home', 'url' => route('dashboard')],
+            ['icon' => 'bi-house-door', 'label' => 'Home', 'url' => route('home')],
             ['icon' => 'bi-calendar4-week', 'label' => 'Calendario', 'url' => route('calendar')],
-            ['icon' => 'bi-calendar-check', 'label' => 'Prenota', 'url' => '#'],
-            ['icon' => 'bi-heart', 'label' => 'Allenamenti', 'url' => '#'],
+            ['icon' => 'bi-bag-plus', 'label' => 'Acquista', 'url' => '#'],
             ['icon' => 'bi-chat-dots', 'label' => 'Supporto', 'url' => '#'],
-            ['icon' => 'bi-person', 'label' => 'Profilo', 'url' => '#'],
         ];
 
         $this->loadCalendar();
