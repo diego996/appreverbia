@@ -10,18 +10,14 @@ use Livewire\Component;
 #[Title('Reverbia - Home')]
 class Dashboard extends Component
 {
-    public array $tokens = [];
     public array $bookedLessons = [];
-    public array $availableCourses = [];
-    public array $menuLinks = [];
+    public array $walletSummary = [];
 
     public function mount(): void
     {
-        $this->tokens = [
-            'percentage' => 62,
-            'total' => 20,
-            'booked' => 8,
+        $this->walletSummary = [
             'available' => 12,
+            'label' => 'Lezioni disponibili',
         ];
 
         $this->bookedLessons = [
@@ -30,6 +26,7 @@ class Dashboard extends Component
                 'time' => '18:30',
                 'title' => 'Reverbia Strength',
                 'coach' => 'Sofia L.',
+                'room' => 'Sala North',
                 'status' => 'Confermato',
             ],
             [
@@ -37,47 +34,19 @@ class Dashboard extends Component
                 'time' => '07:45',
                 'title' => 'Power Pilates',
                 'coach' => 'Marco V.',
+                'room' => 'Studio Flow',
                 'status' => 'In attesa',
             ],
             [
-                'empty' => true,
-                'message' => 'Nessuna lezione prenotata',
-                'hint' => 'Scegli un corso dal calendario',
-            ],
-        ];
-
-        $this->availableCourses = [
-            [
-                'tag' => 'Posturale',
-                'time' => '19:00',
+                'date' => 'Sab 16',
+                'time' => '10:15',
                 'title' => 'Functional Core',
                 'coach' => 'Giulia P.',
-                'cta' => 'Prenota ora',
-            ],
-            [
-                'tag' => 'Forza',
-                'time' => '20:30',
-                'title' => 'Reverbia HIIT',
-                'coach' => 'Luca R.',
-                'cta' => 'Vedi dettagli',
-            ],
-            [
-                'tag' => 'Mind',
-                'time' => '08:15',
-                'title' => 'Yoga Flow',
-                'coach' => 'Serena M.',
-                'cta' => 'Prenota ora',
+                'room' => 'Sala Studio',
+                'status' => 'Confermato',
             ],
         ];
 
-        $this->menuLinks = [
-            ['icon' => 'bi-house-door', 'label' => 'Home', 'url' => route('dashboard')],
-            ['icon' => 'bi-calendar4-week', 'label' => 'Calendario', 'url' => route('calendar')],
-            ['icon' => 'bi-calendar-check', 'label' => 'Prenota', 'url' => '#'],
-            ['icon' => 'bi-heart', 'label' => 'Allenamenti', 'url' => '#'],
-            ['icon' => 'bi-chat-dots', 'label' => 'Supporto', 'url' => '#'],
-            ['icon' => 'bi-person', 'label' => 'Profilo', 'url' => '#'],
-        ];
     }
 
     public function render()

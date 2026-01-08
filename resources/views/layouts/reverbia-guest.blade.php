@@ -46,12 +46,18 @@
             }
             .logo {
                 text-align: center;
+                margin-bottom: 12px;
+            }
+            .app-logo {
+                height: 32px;
+                width: auto;
+            }
+            .app-logo-text {
                 letter-spacing: 6px;
                 font-size: 22px;
                 font-weight: 700;
-                margin-bottom: 8px;
+                color: var(--text);
             }
-            .logo span { color: var(--accent); }
             h1 {
                 text-align: center;
                 font-size: 18px;

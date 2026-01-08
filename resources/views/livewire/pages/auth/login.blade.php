@@ -21,13 +21,15 @@ new #[Layout('layouts.reverbia-guest')] #[Title('Reverbia - Login')] class exten
 
         Session::regenerate();
 
-        $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
+        $this->redirectIntended(default: route('home', absolute: false), navigate: true);
     }
 }; ?>
 
 <div>
     <div class="panel" aria-label="Accesso clienti Reverbia">
-        <div class="logo" aria-hidden="true">RE<span>V</span>ER<span>B</span>IA</div>
+        <div class="logo" aria-hidden="true">
+            <x-application-logo class="app-logo" />
+        </div>
         <h1>I tuoi Personal Trainer a Milano</h1>
 
         @if (session('status'))

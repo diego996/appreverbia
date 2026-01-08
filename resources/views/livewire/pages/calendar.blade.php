@@ -1,14 +1,32 @@
 @push('styles')
     <style>
         main { padding: 12px 14px 90px; }
-        .filter-row {
-            color: var(--muted);
-            font-size: 13px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        .filters-panel {
+            background: #0b0b0e;
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            padding: 14px;
+            box-shadow: var(--shadow);
+            display: grid;
+            gap: 12px;
         }
-        .filter-row i { color: var(--accent); }
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            color: var(--muted);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .filter-select {
+            background: #111114;
+            border: 1px solid #1f1f22;
+            border-radius: 12px;
+            padding: 10px 12px;
+            color: var(--text);
+            font-size: 14px;
+        }
         .title-block {
             text-align: center;
             margin: 14px 0 10px;
@@ -87,44 +105,6 @@
             border-color: rgba(243,90,167,0.5);
             color: var(--accent-2);
         }
-        .filters-inline {
-            display: flex;
-            justify-content: space-between;
-            color: var(--muted);
-            font-size: 12px;
-            margin: 10px 2px 18px;
-        }
-        .trainer-row { margin: 12px 0 16px; }
-        .section-title {
-            font-size: 12px;
-            letter-spacing: 0.08em;
-            color: var(--muted);
-            text-transform: uppercase;
-            font-weight: 700;
-        }
-        .trainer-chips {
-            display: flex;
-            gap: 10px;
-            overflow-x: auto;
-            padding-bottom: 6px;
-        }
-        .trainer-chip {
-            white-space: nowrap;
-            padding: 8px 12px;
-            border-radius: 999px;
-            border: 1px solid var(--line);
-            background: #0e0e12;
-            color: var(--text);
-            font-size: 13px;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .trainer-chip span {
-            color: var(--muted);
-            font-size: 11px;
-        }
         .list-card {
             display: grid;
             grid-template-columns: 94px 1fr;
@@ -202,29 +182,44 @@
 
 <div>
     <main>
-        <div class="filter-row mt-1">
-            <i class="bi bi-geo-alt"></i>
-            <div>
-                <div>Filtra per Sede</div>
-                <div class="small text-secondary">(preimpostato su sede cliente)</div>
-            </div>
-            <i class="bi bi-caret-right-fill ms-auto"></i>
+        <div class="filters-panel mt-2">
+            <label class="filter-group">
+                Sede
+                <select class="filter-select">
+                    <option>Qualsiasi</option>
+                    <option>Milano Centro</option>
+                    <option>Milano Nord</option>
+                </select>
+            </label>
+            <label class="filter-group">
+                Trainer
+                <select class="filter-select">
+                    <option>Qualsiasi</option>
+                    @foreach ($trainers as $trainer)
+                        <option>{{ $trainer['name'] }}</option>
+                    @endforeach
+                </select>
+            </label>
+            <label class="filter-group">
+                Giorno
+                <select class="filter-select">
+                    <option>Qualsiasi</option>
+                    @foreach ($calendar['weekdays'] as $weekday)
+                        <option>{{ $weekday }}</option>
+                    @endforeach
+                </select>
+            </label>
+            <label class="filter-group">
+                Corso
+                <select class="filter-select">
+                    <option>Pilates</option>
+                    <option>Functional</option>
+                </select>
+            </label>
         </div>
 
         <div class="title-block">
             CALENDARIO <span>LEZIONI</span>
-        </div>
-
-        <div class="trainer-row">
-            <div class="section-title mb-2">Scegli il trainer</div>
-            <div class="trainer-chips">
-                @foreach ($trainers as $trainer)
-                    <a class="trainer-chip" href="#{{ $trainer['id'] }}">
-                        {{ $trainer['name'] }}
-                        <span>{{ $trainer['specialty'] }}</span>
-                    </a>
-                @endforeach
-            </div>
         </div>
 
         <section class="calendar-card">
@@ -267,11 +262,6 @@
                 </div>
             @endforeach
         </section>
-
-        <div class="filters-inline">
-            <span>Filtra per orario</span>
-            <span>Filtra per orario</span>
-        </div>
 
         @foreach ($lessonCards as $card)
             <article class="list-card" id="{{ $card['id'] }}">

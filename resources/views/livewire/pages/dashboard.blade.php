@@ -1,94 +1,7 @@
 @push('styles')
     <style>
-        main { padding: 10px 14px 90px; }
-        .token-card {
-            background: radial-gradient(circle at 30% 15%, rgba(126,252,91,0.08), transparent 35%), #0a0a0b;
-            border-radius: 24px;
-            padding: 20px 18px 26px;
-            border: 1px solid var(--line);
-            box-shadow: var(--shadow);
-        }
-        .eyebrow {
-            font-size: 12px;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            color: var(--accent);
-            font-weight: 700;
-        }
-        .user-pill {
-            border: 1px solid var(--line);
-            background: #0f0f13;
-            padding: 6px 12px;
-            border-radius: 999px;
-            color: var(--muted);
-        }
-        .donut {
-            width: min(72vw, 240px);
-            aspect-ratio: 1/1;
-            margin: 16px auto 10px;
-            border-radius: 50%;
-            position: relative;
-            display: grid;
-            place-items: center;
-        }
-        .donut::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            border-radius: 50%;
-            background:
-                radial-gradient(circle at center, #0a0a0b 62%, transparent 62%),
-                repeating-conic-gradient(
-                    from -90deg,
-                    #2b2b30 0 9deg,
-                    #141417 9deg 14deg
-                );
-        }
-        .donut::after {
-            content: "";
-            position: absolute;
-            inset: 2px;
-            border-radius: 50%;
-            background:
-                conic-gradient(from -90deg, var(--accent-2) calc(var(--percent) * 1%), transparent 0);
-            mask: radial-gradient(circle at center, transparent 55%, black 57%);
-        }
-        .donut-value {
-            position: relative;
-            text-align: center;
-            z-index: 1;
-        }
-        .donut-value strong { font-size: 30px; display: block; }
-        .donut-value span { font-size: 13px; color: var(--muted); }
-        .token-stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-top: 12px;
-        }
-        .token-stat {
-            background: #0f0f12;
-            border: 1px solid var(--line);
-            border-radius: 14px;
-            padding: 10px 12px;
-            text-align: center;
-        }
-        .token-stat .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
-        .token-stat .value { font-size: 18px; font-weight: 700; margin-top: 4px; }
-        .dot-indicators {
-            display: flex;
-            justify-content: center;
-            gap: 6px;
-            margin-top: 10px;
-        }
-        .dot-indicators span {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #2f2f33;
-        }
-        .dot-indicators span.active { background: var(--text); }
-        .slider-block { margin-top: 28px; }
+        main { padding: 12px 14px 90px; }
+        .section-block { margin-bottom: 22px; }
         .section-title {
             font-size: 12px;
             letter-spacing: 0.08em;
@@ -96,203 +9,122 @@
             text-transform: uppercase;
             font-weight: 700;
         }
-        .slider-window {
-            overflow: hidden;
-            border-radius: 22px;
-            margin-top: 12px;
+        .lesson-rail {
+            display: grid;
+            grid-auto-flow: column;
+            grid-auto-columns: minmax(240px, 1fr);
+            gap: 14px;
+            overflow-x: auto;
+            padding: 14px 2px 6px;
+            scroll-snap-type: x mandatory;
         }
-        .slider-track {
-            display: flex;
-            gap: 18px;
-            transition: transform 0.3s ease;
-            transform: translateX(calc(var(--index, 0) * -100%));
-        }
-        .slider-card {
-            flex: 0 0 100%;
-            background: linear-gradient(150deg, #19191d, #0f0f11);
+        .lesson-card {
+            background: linear-gradient(150deg, #1b1b20, #0f0f12);
             border: 1px solid var(--line);
-            border-radius: 22px;
+            border-radius: 20px;
             padding: 16px;
-            min-height: 160px;
-            color: var(--text);
+            min-height: 168px;
             box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            scroll-snap-align: start;
         }
-        .slider-card .tag {
+        .lesson-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             font-size: 12px;
             color: var(--muted);
-            margin-bottom: 4px;
-            display: block;
         }
-        .slider-card .title {
-            font-size: 20px;
+        .lesson-title {
+            font-size: 18px;
             font-weight: 700;
-            margin-bottom: 12px;
         }
-        .slider-card .coach { color: var(--muted); font-size: 13px; }
-        .slider-card .cta {
-            display: inline-block;
-            margin-top: 10px;
-            padding: 10px 14px;
-            border-radius: 12px;
-            background: var(--accent);
-            color: #0a0a0a;
-            font-weight: 700;
-            text-decoration: none;
-        }
-        .slider-card .cta.link {
-            background: transparent;
+        .lesson-meta { font-size: 13px; color: var(--muted); }
+        .badge-status {
+            background: rgba(126,252,91,0.12);
+            border: 1px solid rgba(126,252,91,0.4);
             color: var(--accent);
-            border: 1px solid var(--accent);
+            padding: 4px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
         }
-        .slider-dots {
-            display: flex;
+        .cta-card {
+            background: radial-gradient(circle at 20% 20%, rgba(126,252,91,0.15), transparent 55%), #0b0b0e;
+            border-style: dashed;
             justify-content: center;
-            gap: 8px;
-            margin-top: 10px;
+            text-decoration: none;
+            color: var(--text);
         }
-        .slider-dots button {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            border: none;
-            background: #26262a;
-            padding: 0;
+        .cta-card .cta-title {
+            font-size: 17px;
+            font-weight: 700;
         }
-        .slider-dots button.active { background: var(--accent); }
-        .bottom-link {
+        .cta-card .cta-sub { color: var(--muted); font-size: 13px; }
+        .wallet-card {
+            background: #0b0b0e;
+            border: 1px solid var(--line);
+            border-radius: 22px;
+            padding: 18px;
             display: flex;
             align-items: center;
-            justify-content: flex-end;
-            gap: 6px;
-            color: var(--accent);
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 13px;
-            margin-top: 6px;
+            justify-content: space-between;
+            box-shadow: var(--shadow);
+        }
+        .wallet-card .amount {
+            font-size: 26px;
+            font-weight: 700;
+        }
+        .wallet-card .label {
+            color: var(--muted);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
         }
     </style>
 @endpush
 
 <div>
     <main>
-        <section class="token-card" aria-labelledby="token-balance">
-            <div class="d-flex align-items-center justify-content-between">
+        <section class="section-block">
+            <div class="section-title">Prossime lezioni</div>
+            <div class="lesson-rail">
+                @foreach ($bookedLessons as $lesson)
+                    <article class="lesson-card">
+                        <div class="lesson-top">
+                            <span>{{ strtoupper($lesson['date']) }} · {{ $lesson['time'] }}</span>
+                            <span class="badge-status">{{ $lesson['status'] }}</span>
+                        </div>
+                        <div class="lesson-title">{{ $lesson['title'] }}</div>
+                        <div class="lesson-meta">Coach: {{ $lesson['coach'] }}</div>
+                        <div class="lesson-meta">Sala: {{ $lesson['room'] }}</div>
+                    </article>
+                @endforeach
+
+                <a class="lesson-card cta-card" href="#">
+                    <div class="cta-title">I tuoi corsi</div>
+                    <div class="cta-sub">Rivedi le prenotazioni attive</div>
+                    <div class="mt-auto text-success fw-semibold">Apri elenco</div>
+                </a>
+                <a class="lesson-card cta-card" href="{{ route('calendar') }}" wire:navigate>
+                    <div class="cta-title">Vai al calendario</div>
+                    <div class="cta-sub">Scopri nuovi slot disponibili</div>
+                    <div class="mt-auto text-success fw-semibold">Apri calendario</div>
+                </a>
+            </div>
+        </section>
+
+        <section class="section-block">
+            <div class="section-title">Wallet lezioni</div>
+            <div class="wallet-card">
                 <div>
-                    <div class="eyebrow mb-1">Lezioni rimanenti</div>
-                    <div id="token-balance" class="fw-semibold">Saldo token aggiornato</div>
+                    <div class="amount">{{ (int) $walletSummary['available'] }}</div>
+                    <div class="label">{{ $walletSummary['label'] }}</div>
                 </div>
-                <div class="user-pill small">{{ auth()->user()->name ?? 'Ospite' }}</div>
+                <div class="text-success fw-semibold">Acquista</div>
             </div>
-            <div class="donut" style="--percent: {{ max(0, min(100, (int) $tokens['percentage'])) }};" role="img" aria-label="{{ (int) $tokens['percentage'] }}% dei token ancora disponibili">
-                <div class="donut-value">
-                    <strong>{{ (int) $tokens['percentage'] }}%</strong>
-                    <span>token disponibili</span>
-                </div>
-            </div>
-            <div class="token-stats">
-                <div class="token-stat">
-                    <div class="label">Token totali</div>
-                    <div class="value">{{ (int) $tokens['total'] }}</div>
-                </div>
-                <div class="token-stat">
-                    <div class="label">Token prenotati</div>
-                    <div class="value">{{ (int) $tokens['booked'] }}</div>
-                </div>
-                <div class="token-stat">
-                    <div class="label">Token disponibili</div>
-                    <div class="value">{{ (int) $tokens['available'] }}</div>
-                </div>
-            </div>
-            <div class="dot-indicators" aria-hidden="true">
-                <span></span><span></span><span class="active"></span><span></span><span></span>
-            </div>
-        </section>
-
-        <section class="slider-block" data-slider>
-            <div class="d-flex justify-content-between align-items-center">
-                <div class="section-title">Le tue prossime lezioni prenotate</div>
-            </div>
-            <div class="slider-window mt-3">
-                <div class="slider-track" data-track>
-                    @foreach ($bookedLessons as $lesson)
-                        @if (!empty($lesson['empty']))
-                            <article class="slider-card">
-                                <div class="title">{{ $lesson['message'] }}</div>
-                                <div class="coach">{{ $lesson['hint'] }}</div>
-                            </article>
-                        @else
-                            <article class="slider-card">
-                                <span class="tag">{{ strtoupper($lesson['date']) }} - {{ $lesson['time'] }}</span>
-                                <div class="title">{{ $lesson['title'] }}</div>
-                                <div class="coach mb-2">Coach: {{ $lesson['coach'] }}</div>
-                                <div class="coach text-success fw-semibold">{{ $lesson['status'] }}</div>
-                            </article>
-                        @endif
-                    @endforeach
-                </div>
-            </div>
-            <div class="slider-dots" data-dots>
-                @foreach ($bookedLessons as $index => $lesson)
-                    <button type="button" aria-label="Slide {{ $index + 1 }}" data-slide="{{ $index }}"></button>
-                @endforeach
-            </div>
-        </section>
-
-        <section class="slider-block" data-slider>
-            <div class="d-flex justify-content-between align-items-center">
-                <div class="section-title text-success">Corsi disponibili per la tua sede</div>
-            </div>
-            <div class="slider-window mt-3">
-                <div class="slider-track" data-track>
-                    @foreach ($availableCourses as $course)
-                        <article class="slider-card">
-                            <span class="tag">{{ ($course['tag'] ?? '') . ' - ' . $course['time'] }}</span>
-                            <div class="title">{{ $course['title'] }}</div>
-                            <div class="coach mb-2">Coach: {{ $course['coach'] }}</div>
-                            <a href="#" class="cta link">{{ $course['cta'] }}</a>
-                        </article>
-                    @endforeach
-                </div>
-            </div>
-            <div class="slider-dots" data-dots>
-                @foreach ($availableCourses as $index => $course)
-                    <button type="button" aria-label="Slide {{ $index + 1 }}" data-slide="{{ $index }}"></button>
-                @endforeach
-            </div>
-            <a href="#" class="bottom-link">
-                <span>Scopri tutti i corsi disponibili</span>
-                <i class="bi bi-chevron-right"></i>
-            </a>
         </section>
     </main>
-
 </div>
-
-@push('scripts')
-    <script>
-        (function () {
-            const setupSliders = () => {
-                document.querySelectorAll('[data-slider]').forEach((slider) => {
-                    const track = slider.querySelector('[data-track]');
-                    const dots = Array.from(slider.querySelectorAll('[data-slide]'));
-                    if (!track || dots.length === 0) {
-                        return;
-                    }
-                    let index = 0;
-                    const setIndex = (next) => {
-                        index = Math.max(0, Math.min(next, dots.length - 1));
-                        track.style.setProperty('--index', index);
-                        dots.forEach((dot, dotIndex) => dot.classList.toggle('active', dotIndex === index));
-                    };
-                    dots.forEach((dot, dotIndex) => {
-                        dot.addEventListener('click', () => setIndex(dotIndex));
-                    });
-                    setIndex(0);
-                });
-            };
-
-            document.addEventListener('DOMContentLoaded', setupSliders);
-            document.addEventListener('livewire:navigated', setupSliders);
-        }());
-    </script>
-@endpush

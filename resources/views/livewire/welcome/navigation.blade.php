@@ -1,7 +1,7 @@
 <nav class="d-flex gap-2 justify-content-end">
     @auth
         <a
-            href="{{ url('/dashboard') }}"
+            href="{{ route('home') }}"
             class="btn btn-primary btn-sm"
         >
             Dashboard

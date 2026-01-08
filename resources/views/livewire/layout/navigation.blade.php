@@ -18,7 +18,7 @@ new class extends Component
 
 <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
     <div class="container">
-        <a class="navbar-brand d-flex align-items-center" href="{{ route('dashboard') }}" wire:navigate>
+        <a class="navbar-brand d-flex align-items-center" href="{{ route('home') }}" wire:navigate>
             <x-application-logo class="text-secondary" style="width: 2rem; height: 2rem;" />
         </a>
 
@@ -29,8 +29,8 @@ new class extends Component
         <div class="collapse navbar-collapse" id="mainNavbar">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <li class="nav-item">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
-                        {{ __('Dashboard') }}
+                    <x-nav-link :href="route('home')" :active="request()->routeIs('home')" wire:navigate>
+                        {{ __('Home') }}
                     </x-nav-link>
                 </li>
             </ul>
@@ -44,14 +44,16 @@ new class extends Component
                     </x-slot>
 
                     <x-slot name="content">
-                        <x-dropdown-link :href="route('profile')" wire:navigate>
-                            {{ __('Profile') }}
-                        </x-dropdown-link>
+                        @if (Route::has('profile'))
+                            <x-dropdown-link :href="route('profile')" wire:navigate>
+                                {{ __('Profilo') }}
+                            </x-dropdown-link>
 
-                        <div class="dropdown-divider"></div>
+                            <div class="dropdown-divider"></div>
+                        @endif
 
                         <button wire:click="logout" class="dropdown-item">
-                            {{ __('Log Out') }}
+                            {{ __('Esci') }}
                         </button>
                     </x-slot>
                 </x-dropdown>

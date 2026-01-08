@@ -13,7 +13,6 @@ class Calendar extends Component
     public array $trainers = [];
     public array $calendar = [];
     public array $lessonCards = [];
-    public array $menuLinks = [];
 
     public function mount(): void
     {
@@ -70,14 +69,6 @@ class Calendar extends Component
             ],
         ];
 
-        $this->menuLinks = [
-            ['icon' => 'bi-house-door', 'label' => 'Home', 'url' => route('dashboard')],
-            ['icon' => 'bi-calendar4-week', 'label' => 'Calendario', 'url' => route('calendar')],
-            ['icon' => 'bi-calendar-check', 'label' => 'Prenota', 'url' => '#'],
-            ['icon' => 'bi-heart', 'label' => 'Allenamenti', 'url' => '#'],
-            ['icon' => 'bi-chat-dots', 'label' => 'Supporto', 'url' => '#'],
-            ['icon' => 'bi-person', 'label' => 'Profilo', 'url' => '#'],
-        ];
     }
 
     public function render()

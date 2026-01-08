@@ -47,14 +47,22 @@
                 border-bottom: 1px solid var(--line);
             }
             .brand {
-                letter-spacing: 5px;
-                font-weight: 700;
-                font-size: 15px;
                 display: flex;
                 align-items: center;
                 gap: 6px;
+                text-decoration: none;
+                color: inherit;
             }
-            .brand span { color: var(--accent); }
+            .app-logo {
+                height: 22px;
+                width: auto;
+                display: block;
+            }
+            .app-logo-text {
+                letter-spacing: 5px;
+                font-weight: 700;
+                font-size: 15px;
+            }
             .top-icons { display: flex; gap: 14px; font-size: 18px; color: var(--text); }
             .hamburger {
                 width: 34px;
@@ -94,7 +102,7 @@
                 background: #0a0a0c;
                 border-top: 1px solid var(--line);
                 display: grid;
-                grid-template-columns: repeat(5, 1fr);
+                grid-template-columns: repeat(3, 1fr);
                 padding: 10px 4px;
                 color: var(--muted);
                 font-size: 12px;
@@ -156,51 +164,11 @@
         @stack('styles')
     </head>
     <body>
-        <header class="topbar">
-            <button id="menuToggle" class="hamburger" aria-label="Apri menu">
-                <span></span>
-            </button>
-            <div class="brand" aria-label="Reverbia">
-                <span>RE</span>VER<span>B</span>IA
-            </div>
-            <div class="top-icons" aria-label="Azioni rapide">
-                <i class="bi bi-cart3"></i>
-                <i class="bi bi-bell"></i>
-            </div>
-        </header>
+        @include('livewire.layout.navbar')
 
         {{ $slot }}
 
-        <nav class="nav-bottom" aria-label="Navigazione principale">
-            <a class="{{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}" wire:navigate>
-                <i class="bi bi-house-door"></i><span>Home</span>
-            </a>
-            <a href="#"><i class="bi bi-calendar-check"></i><span>Prenota</span></a>
-            <a href="#"><i class="bi bi-heart"></i><span>Allenamenti</span></a>
-            <a href="#"><i class="bi bi-chat-dots"></i><span>Supporto</span></a>
-            <a class="{{ request()->routeIs('calendar') ? 'active' : '' }}" href="{{ route('calendar') }}" wire:navigate>
-                <i class="bi bi-calendar4-week"></i><span>Calendario</span>
-            </a>
-        </nav>
-
-        <div id="menuOverlay" class="menu-overlay" aria-hidden="true">
-            <div class="menu-panel">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div class="brand"><span>RE</span>VER<span>B</span>IA</div>
-                    <button class="btn-close-menu" type="button" data-close aria-label="Chiudi menu">
-                        <i class="bi bi-x-lg"></i>
-                    </button>
-                </div>
-                <div class="menu-items">
-                    @foreach ($menuLinks ?? [] as $link)
-                        <a href="{{ $link['url'] }}" @if(!str_starts_with($link['url'], '#')) wire:navigate @endif>
-                            <i class="bi {{ $link['icon'] }}"></i>
-                            <span>{{ $link['label'] }}</span>
-                        </a>
-                    @endforeach
-                </div>
-            </div>
-        </div>
+        @include('livewire.layout.menu')
 
         <script>
             (function () {
