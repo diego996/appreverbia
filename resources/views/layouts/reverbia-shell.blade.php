@@ -40,9 +40,9 @@
                 top: 0;
                 z-index: 30;
                 padding: 14px 18px;
-                display: flex;
+                display: grid;
+                grid-template-columns: 1fr auto 1fr;
                 align-items: center;
-                justify-content: space-between;
                 background: linear-gradient(180deg, rgba(126,252,91,0.08), rgba(5,5,5,0.94));
                 border-bottom: 1px solid var(--line);
             }
@@ -52,6 +52,8 @@
                 gap: 6px;
                 text-decoration: none;
                 color: inherit;
+                justify-self: center;
+                grid-column: 2;
             }
             .app-logo {
                 height: 22px;
@@ -63,7 +65,15 @@
                 font-weight: 700;
                 font-size: 15px;
             }
-            .top-icons { display: flex; gap: 14px; font-size: 18px; color: var(--text); }
+            .top-icons {
+                display: flex;
+                gap: 14px;
+                font-size: 18px;
+                color: var(--text);
+                justify-self: end;
+                grid-column: 3;
+            }
+            .top-icons a { color: inherit; text-decoration: none; }
             .hamburger {
                 width: 34px;
                 height: 34px;
