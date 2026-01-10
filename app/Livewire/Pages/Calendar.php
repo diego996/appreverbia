@@ -228,6 +228,12 @@ class Calendar extends Component
         $this->confirmingOccurrenceId = $occurrenceId;
         $this->duettoTokens = null;
 
+        if (!in_array($action, ['book', 'waitlist'], true)) {
+            $this->bookingError = 'Seleziona una lezione valida.';
+            $this->dispatch('open-modal', 'booking-confirm');
+            return;
+        }
+
         $occurrence = CourseOccurrence::query()
             ->with(['course.trainer', 'course.branch'])
             ->withCount('bookings')

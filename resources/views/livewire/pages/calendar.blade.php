@@ -252,6 +252,10 @@
             align-self: flex-start;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
+        .btn-cta:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
         .btn-cta.is-secondary {
             background: #131316;
             color: var(--text);
@@ -625,7 +629,7 @@
                                         type="button"
                                         id="cta-{{ $card['id'] }}"
                                         @if ($ctaDisabled) disabled @endif
-                                        @if ($card['action'] && !$ctaDisabled) wire:click="openBookingModal({{ $card['occurrence_id'] }}, '{{ $card['action'] }}')" @endif>
+                                        wire:click="openBookingModal({{ $card['occurrence_id'] }}, '{{ $card['action'] ?? 'book' }}')">
                                     {{ $ctaLabel }}
                                 </button>
                             </div>
