@@ -6,7 +6,7 @@ use App\Models\Item;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 
-#[Layout('layouts.reverbia', ['title' => 'Acquista Crediti'])]
+#[Layout('layouts.reverbia-shell', ['title' => 'Acquista Crediti'])]
 class Pricing extends Component
 {
     public function render()

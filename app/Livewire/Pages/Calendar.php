@@ -282,6 +282,9 @@ class Calendar extends Component
         if ($this->hasDuetto && $user->duetto_id) {
             $this->duettoTokens = $this->calculateWalletBalance($user->duetto_id);
         }
+        if ($action === 'book' && $this->availableTokens < 1) {
+            $this->bookingError = 'Token insufficienti per prenotare.';
+        }
         $this->dispatch('open-modal', 'booking-confirm');
     }
 

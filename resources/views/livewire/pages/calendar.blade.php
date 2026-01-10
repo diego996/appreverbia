@@ -122,6 +122,7 @@
             width: min(38px, 100%);
             aspect-ratio: 1 / 1;
             justify-self: center;
+            position: relative;
         }
         .day.selected {
             background: #7efc5b;
@@ -131,9 +132,19 @@
             box-shadow: 0 6px 14px rgba(126,252,91,0.45);
         }
         .day.busy {
-            background: #ffffff;
-            border-color: rgba(243,90,167,0.5);
-            color: #f35aa7;
+            background: #f7f7fb;
+            border-color: rgba(126,252,91,0.9);
+            color: #1b1b1e;
+        }
+        .day.busy::after {
+            content: "";
+            position: absolute;
+            bottom: 6px;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #7efc5b;
+            box-shadow: 0 0 0 2px rgba(126,252,91,0.2);
         }
         .day:hover { transform: translateY(-1px); }
         .list-card {
@@ -197,6 +208,20 @@
             color: var(--muted);
             font-size: 11px;
             border: 1px solid var(--line);
+        }
+        .token-pill {
+            align-self: flex-start;
+            padding: 6px 12px;
+            border-radius: 999px;
+            border: 1px solid #2a2a2f;
+            color: var(--muted);
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .token-pill strong {
+            color: var(--accent);
         }
         .list-actions {
             display: flex;
@@ -514,6 +539,10 @@
                 CALENDARIO <span>LEZIONI</span>
             </div>
 
+            <div class="token-pill">
+                Token disponibili <strong>{{ $availableTokens }}</strong>
+            </div>
+
             <section class="calendar-card">
                 <div class="calendar-header">
                     <div>
@@ -572,26 +601,32 @@
                                     <span>{{ $tag }}</span>
                                 @endforeach
                             </div>
+                            @php
+                                $insufficientTokens = $card['action'] === 'book' && $availableTokens < 1;
+                                $ctaDisabled = $card['cta_disabled'] || $insufficientTokens;
+                                $ctaLabel = $insufficientTokens ? 'Token insufficienti' : $card['cta'];
+                            @endphp
                             <div class="list-actions">
                                 <button class="btn-detail js-course-detail" type="button"
                                         data-course-id="{{ $card['id'] }}"
+                                        data-course-occurrence="{{ $card['occurrence_id'] }}"
                                         data-course-title="{{ $card['title'] }}"
                                         data-course-trainer="{{ $card['trainer'] }}"
                                         data-course-category="{{ $card['category'] }}"
                                         data-course-tags='@json($card['tags'])'
-                                        data-course-cta="{{ $card['cta'] }}"
+                                        data-course-cta="{{ $ctaLabel }}"
                                         data-course-cta-variant="{{ $card['cta_variant'] }}"
-                                        data-course-cta-disabled="{{ $card['cta_disabled'] ? '1' : '0' }}"
+                                        data-course-cta-disabled="{{ $ctaDisabled ? '1' : '0' }}"
                                         data-course-action="{{ $card['action'] ?? '' }}"
                                         data-course-target="cta-{{ $card['id'] }}">
                                     Dettagli <i class="bi bi-arrow-up-right"></i>
                                 </button>
-                                <button class="btn-cta {{ $card['cta_variant'] }} {{ $card['cta_disabled'] ? 'is-disabled' : '' }}"
+                                <button class="btn-cta {{ $card['cta_variant'] }} {{ $ctaDisabled ? 'is-disabled' : '' }}"
                                         type="button"
                                         id="cta-{{ $card['id'] }}"
-                                        @if ($card['cta_disabled']) disabled @endif
-                                        @if ($card['action']) wire:click="openBookingModal({{ $card['occurrence_id'] }}, '{{ $card['action'] }}')" @endif>
-                                    {{ $card['cta'] }}
+                                        @if ($ctaDisabled) disabled @endif
+                                        @if ($card['action'] && !$ctaDisabled) wire:click="openBookingModal({{ $card['occurrence_id'] }}, '{{ $card['action'] }}')" @endif>
+                                    {{ $ctaLabel }}
                                 </button>
                             </div>
                         </div>
@@ -794,6 +829,8 @@
                         cta.className = `btn-cta ${data.ctaVariant || ''} ${data.ctaDisabled ? 'is-disabled' : ''}`.trim();
                         cta.disabled = !data.action || data.ctaDisabled;
                         cta.dataset.ctaTarget = data.ctaTarget || '';
+                        cta.dataset.occurrenceId = data.occurrenceId || '';
+                        cta.dataset.action = data.action || '';
                     }
                 };
 
@@ -820,6 +857,7 @@
                         ctaDisabled: detailButton.dataset.courseCtaDisabled === '1',
                         action: detailButton.dataset.courseAction,
                         ctaTarget: detailButton.dataset.courseTarget,
+                        occurrenceId: detailButton.dataset.courseOccurrence,
                     });
                 });
 
@@ -838,8 +876,9 @@
                 const ctaButton = overlay.querySelector('[data-course-cta]');
                 if (ctaButton) {
                     ctaButton.addEventListener('click', () => {
+                        if (ctaButton.disabled) return;
                         const targetId = ctaButton.dataset.ctaTarget;
-                        if (!targetId || ctaButton.disabled) return;
+                        if (!targetId) return;
                         const target = document.getElementById(targetId);
                         if (target) {
                             closeOverlay();
