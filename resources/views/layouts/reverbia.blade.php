@@ -203,27 +203,16 @@
         <main style="padding-bottom: 70px;">
             {{ $slot ?? '' }}
             @yield('slot')
+            @unless(request()->routeIs('payment.success') || request()->routeIs('payment.cancel'))
+                @include('livewire.layout.menu')
+            @endunless
         </main>
 
         <!-- Bottom Navigation -->
-        <div class="nav-bottom">
-            <a href="{{ route('home') }}" class="{{ request()->routeIs('home') ? 'active' : '' }}">
-                <i class="bi bi-house"></i>
-                <span>Home</span>
-            </a>
-            <a href="{{ route('calendar') }}" class="{{ request()->routeIs('calendar') ? 'active' : '' }}">
-                <i class="bi bi-calendar-event"></i>
-                <span>Corsi</span>
-            </a>
-            <a href="{{ route('pricing') }}" class="{{ request()->routeIs('pricing') ? 'active' : '' }}">
-                <i class="bi bi-plus-circle-fill" style="font-size: 24px; color: var(--accent);"></i>
-                <span style="color: var(--accent);">Acquista</span>
-            </a>
-            <a href="{{ route('profile') }}" class="{{ request()->routeIs('profile') ? 'active' : '' }}">
-                <i class="bi bi-person"></i>
-                <span>Profilo</span>
-            </a>
-        </div>
+        
+            
+
+       
 
         <script>
             (function () {

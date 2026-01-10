@@ -20,6 +20,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('acquisti', \App\Livewire\Pages\Pricing::class)
         ->name('pricing');
 
+    Route::get('membership', \App\Livewire\Pages\Membership::class)
+        ->name('membership');
+
     Route::get('checkout/{item}', [\App\Http\Controllers\PaymentController::class, 'checkout'])
         ->name('payment.checkout');
     Route::get('payment/success', [\App\Http\Controllers\PaymentController::class, 'success'])

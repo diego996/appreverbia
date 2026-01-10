@@ -1,4 +1,4 @@
-@extends('layouts.reverbia-shell')
+@extends('layouts.reverbia')
 
 @section('title', 'Pagamento Completato')
 

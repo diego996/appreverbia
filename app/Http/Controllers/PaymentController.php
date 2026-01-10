@@ -111,11 +111,33 @@ class PaymentController extends Controller
                 'meta' => array_merge($payment->meta ?? [], ['stripe_payment_intent' => $session->payment_intent])
             ]);
 
-            // Credit the wallet
             // Found item via payment
             $item = $payment->item; // Assuming relation exists and is loaded or accessible
             
             if ($item) {
+                // Handle Membership (Property ID = 2)
+                if ($item->item_property_id == 2) {
+                     $membership = \App\Models\Membership::firstOrNew(['user_id' => $payment->user_id]);
+                     
+                     // Determine start date for calculation
+                     $startDate = ($membership->exists && $membership->end_date && $membership->end_date->isFuture()) 
+                         ? $membership->end_date 
+                         : now();
+
+                     // Add years based on token value
+                     $newEndDate = $startDate->copy()->addYears($item->token);
+                     
+                     $membership->fill([
+                         'start_date' => $membership->start_date ?? now(), // Keep original start date if exists, else now
+                         'end_date' => $newEndDate,
+                         'payment_id' => $payment->id, // Link latest payment
+                         'status' => 'active', // You might want a status field
+                     ])->save();
+                     
+                     Log::info("Membership updated for User {$payment->user_id}. New end date: {$newEndDate->toDateString()}");
+                }
+
+                // Credit the wallet (Standard Logic)
                 // Check if wallet entry already exists to avoid duplicates (idempotency)
                 // We use the payment as the unique model reference
                 $exists = Wallet::where('model_type', Payment::class)

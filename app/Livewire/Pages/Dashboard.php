@@ -3,6 +3,7 @@
 namespace App\Livewire\Pages;
 
 use App\Models\CourseBooking;
+use App\Models\CourseOccurrence;
 use App\Models\Wallet;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -13,6 +14,7 @@ use Livewire\Component;
 class Dashboard extends Component
 {
     public array $bookedLessons = [];
+    public array $availableLessons = [];
     public array $walletSummary = [];
 
     public function mount(): void
@@ -74,7 +76,7 @@ class Dashboard extends Component
                 $branch = $course?->branch;
 
                 $dateLabel = $occurrence?->date
-                    ? ucfirst($occurrence->date->locale('it')->translatedFormat('D d'))
+                    ? ucfirst($occurrence->date->locale('it')->translatedFormat('D d M'))
                     : '-- --';
 
                 return [
@@ -87,7 +89,71 @@ class Dashboard extends Component
                 ];
             })
             ->values()
-            ->take(4)
+            ->all();
+
+        // Load available lessons
+        $this->loadAvailableLessons($user);
+    }
+
+    protected function loadAvailableLessons($user): void
+    {
+        if (!$user) {
+            $this->availableLessons = [];
+            return;
+        }
+
+        $today = now()->startOfDay();
+        
+        // Get user's booked occurrence IDs
+        $bookedOccurrenceIds = CourseBooking::query()
+            ->where('user_id', $user->id)
+            ->pluck('occurrence_id')
+            ->toArray();
+
+        // Query available lessons
+        $occurrences = CourseOccurrence::query()
+            ->with(['course.trainer', 'course.branch'])
+            ->withCount('bookings')
+            ->where('date', '>=', $today)
+            ->whereNotIn('id', $bookedOccurrenceIds)
+            ->orderBy('date')
+            ->orderBy('start_time')
+            ->limit(6)
+            ->get()
+            ->filter(function (CourseOccurrence $occurrence) {
+                // Filter out full lessons
+                if ($occurrence->max_participants > 0) {
+                    return $occurrence->bookings_count < $occurrence->max_participants;
+                }
+                return true;
+            });
+
+        $this->availableLessons = $occurrences
+            ->map(function (CourseOccurrence $occurrence): array {
+                $course = $occurrence->course;
+                $trainer = $course?->trainer;
+                $branch = $course?->branch;
+
+                $dateLabel = $occurrence->date
+                    ? ucfirst($occurrence->date->locale('it')->translatedFormat('D d M'))
+                    : '-- --';
+
+                $bookingsCount = (int) ($occurrence->bookings_count ?? 0);
+                $maxParticipants = (int) ($occurrence->max_participants ?? 0);
+                $spotsLeft = $maxParticipants > 0 ? max(0, $maxParticipants - $bookingsCount) : null;
+
+                return [
+                    'occurrence_id' => $occurrence->id,
+                    'date' => $dateLabel,
+                    'time' => $occurrence->start_time ? substr($occurrence->start_time, 0, 5) : '--:--',
+                    'title' => $course?->title ?? 'Lezione',
+                    'coach' => $trainer?->name ?? 'Trainer',
+                    'room' => $branch?->name ?? 'Sede',
+                    'spots_left' => $spotsLeft,
+                    'full_date' => $occurrence->date?->toDateString(),
+                ];
+            })
+            ->values()
             ->all();
     }
 

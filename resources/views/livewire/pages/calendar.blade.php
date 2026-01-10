@@ -10,32 +10,50 @@
             position: relative;
         }
         .filters-panel {
-            background: #0b0b0e;
-            border: 1px solid var(--line);
-            border-radius: 18px;
-            padding: 14px;
-            box-shadow: var(--shadow);
-            display: grid;
-            gap: 12px 14px;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            background: linear-gradient(135deg, #0f0f12 0%, #0b0b0e 100%);
+            border: 1px solid rgba(126, 252, 91, 0.15);
+            border-radius: 16px;
+            padding: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: stretch;
         }
         .filter-group {
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 8px;
             color: var(--muted);
-            font-size: 12px;
+            font-size: 11px;
             text-transform: uppercase;
             letter-spacing: 0.08em;
-            min-width: 0;
+            flex: 1;
+            min-width: 140px;
         }
         .filter-select {
-            background: #111114;
-            border: 1px solid #1f1f22;
+            background: #1a1a1e;
+            border: 2px solid #2a2a2e;
             border-radius: 12px;
-            padding: 10px 12px;
+            padding: 12px 14px;
             color: var(--text);
             font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237efc5b' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 36px;
+        }
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(126, 252, 91, 0.1);
+        }
+        .filter-select:active {
+            transform: scale(0.98);
         }
         .title-block {
             text-align: center;
@@ -109,9 +127,12 @@
             letter-spacing: 0.12em;
         }
         .day {
-            height: 38px;
-            display: grid;
-            place-items: center;
+            height: 42px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
             border-radius: 10px;
             border: 1px solid #e2e2e6;
             color: #1b1b1e;
@@ -119,10 +140,11 @@
             cursor: pointer;
             transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
             font-weight: 600;
-            width: min(38px, 100%);
+            width: min(42px, 100%);
             aspect-ratio: 1 / 1;
             justify-self: center;
             position: relative;
+            padding: 4px 2px;
         }
         .day.selected {
             background: #7efc5b;
@@ -136,17 +158,97 @@
             border-color: rgba(126,252,91,0.9);
             color: #1b1b1e;
         }
-        .day.busy::after {
-            content: "";
-            position: absolute;
-            bottom: 6px;
-            width: 6px;
-            height: 6px;
+        .day-number {
+            font-size: 13px;
+            line-height: 1;
+        }
+        .trainer-dots {
+            display: flex;
+            gap: 2px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 100%;
+        }
+        .trainer-dot {
+            width: 4px;
+            height: 4px;
             border-radius: 50%;
-            background: #7efc5b;
-            box-shadow: 0 0 0 2px rgba(126,252,91,0.2);
+            flex-shrink: 0;
         }
         .day:hover { transform: translateY(-1px); }
+        .trainer-section {
+            margin-bottom: 20px;
+        }
+        .trainer-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            background: var(--panel-2);
+            border: 1px solid var(--line);
+            border-radius: 14px 14px 0 0;
+            margin-bottom: 0;
+        }
+        .trainer-badge {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-size: 11px;
+            font-weight: 700;
+            color: #0a0a0a;
+            flex-shrink: 0;
+        }
+        .trainer-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text);
+        }
+        .trainer-section .list-card {
+            border-radius: 0;
+            margin-bottom: 0;
+            border-top: none;
+        }
+        .trainer-section .list-card:last-child {
+            border-radius: 0 0 14px 14px;
+        }
+        .time-slot-selector {
+            margin: 10px 0;
+        }
+        .time-label {
+            display: block;
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+        .time-select {
+            width: 100%;
+            background: #0f0f12;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 10px 12px;
+            color: var(--text);
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .time-select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        .single-time {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--muted);
+            font-size: 13px;
+            margin: 8px 0;
+        }
+        .single-time i {
+            color: var(--accent);
+        }
         .list-card {
             display: grid;
             grid-template-columns: 94px 1fr;
@@ -487,7 +589,20 @@
         }
         @media (max-width: 640px) {
             .filters-panel {
-                grid-template-columns: 1fr;
+                flex-direction: column;
+                gap: 12px;
+                padding: 14px;
+            }
+            .filter-group {
+                width: 100%;
+                min-width: 100%;
+            }
+            .filter-select {
+                width: 100%;
+                padding: 14px 16px;
+                font-size: 15px;
+                border-radius: 14px;
+                background-position: right 14px center;
             }
         }
     </style>
@@ -503,24 +618,6 @@
                         <option value="">Qualsiasi</option>
                         @foreach ($branches as $branch)
                             <option value="{{ $branch['id'] }}">{{ $branch['name'] }}</option>
-                        @endforeach
-                    </select>
-                </label>
-                <label class="filter-group">
-                    Trainer
-                    <select class="filter-select" wire:model="selectedTrainer">
-                        <option value="">Qualsiasi</option>
-                        @foreach ($trainers as $trainer)
-                            <option value="{{ $trainer['id'] }}">{{ $trainer['name'] }}</option>
-                        @endforeach
-                    </select>
-                </label>
-                <label class="filter-group">
-                    Giorno
-                    <select class="filter-select" wire:model="selectedWeekday">
-                        <option value="">Qualsiasi</option>
-                        @foreach ($calendar['weekdays'] as $weekday)
-                            <option value="{{ $weekday }}">{{ $weekday }}</option>
                         @endforeach
                     </select>
                 </label>
@@ -577,60 +674,103 @@
                                 } elseif ($day !== null && isset($calendar['specialDays'][$day])) {
                                     $classes[] = 'busy';
                                 }
+                                $dayTrainers = $day !== null && isset($calendar['trainersByDay'][$day]) 
+                                    ? $calendar['trainersByDay'][$day] 
+                                    : [];
                             @endphp
                             @if ($day === null)
                                 <div></div>
                             @else
-                                <div class="{{ implode(' ', $classes) }}" wire:click="selectDay({{ $day }})">{{ $day }}</div>
+                                <div class="{{ implode(' ', $classes) }}" wire:click="selectDay({{ $day }})">
+                                    <span class="day-number">{{ $day }}</span>
+                                    @if (!empty($dayTrainers))
+                                        <div class="trainer-dots">
+                                            @foreach (array_slice($dayTrainers, 0, 3) as $trainer)
+                                                <div class="trainer-dot" style="background: {{ $trainer['color'] }};" title="{{ $trainer['name'] }}"></div>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </div>
                             @endif
                         @endforeach
                     </div>
                 @endforeach
             </section>
 
-            @if (!empty($lessonCards))
-                @foreach ($lessonCards as $card)
-                    <article class="list-card" id="{{ $card['id'] }}">
-                        <div class="thumb" aria-hidden="true"></div>
-                        <div class="list-body d-flex flex-column">
-                            <div class="category">{{ $card['category'] }}</div>
-                            <div class="trainer">Trainer: {{ $card['trainer'] }}</div>
-                            <div class="title">{{ $card['title'] }}</div>
-                            <div class="list-tags">
-                                @foreach ($card['tags'] as $tag)
-                                    <span>{{ $tag }}</span>
-                                @endforeach
+
+            @if (!empty($lessonCardsByTrainer))
+                @foreach ($lessonCardsByTrainer as $trainerGroup)
+                    <div class="trainer-section">
+                        <div class="trainer-header">
+                            <div class="trainer-badge" style="background: {{ $trainerGroup['trainer_color'] }};">
+                                {{ $this->getTrainerInitials($trainerGroup['trainer_name']) }}
                             </div>
-                            @php
-                                $insufficientTokens = $card['action'] === 'book' && $availableTokens < 1;
-                                $ctaDisabled = $card['cta_disabled'] || $insufficientTokens;
-                                $ctaLabel = $insufficientTokens ? 'Token insufficienti' : $card['cta'];
-                            @endphp
-                            <div class="list-actions">
-                                <button class="btn-detail js-course-detail" type="button"
-                                        data-course-id="{{ $card['id'] }}"
-                                        data-course-occurrence="{{ $card['occurrence_id'] }}"
-                                        data-course-title="{{ $card['title'] }}"
-                                        data-course-trainer="{{ $card['trainer'] }}"
-                                        data-course-category="{{ $card['category'] }}"
-                                        data-course-tags='@json($card['tags'])'
-                                        data-course-cta="{{ $ctaLabel }}"
-                                        data-course-cta-variant="{{ $card['cta_variant'] }}"
-                                        data-course-cta-disabled="{{ $ctaDisabled ? '1' : '0' }}"
-                                        data-course-action="{{ $card['action'] ?? '' }}"
-                                        data-course-target="cta-{{ $card['id'] }}">
-                                    Dettagli <i class="bi bi-arrow-up-right"></i>
-                                </button>
-                                <button class="btn-cta {{ $card['cta_variant'] }} {{ $ctaDisabled ? 'is-disabled' : '' }}"
-                                        type="button"
-                                        id="cta-{{ $card['id'] }}"
-                                        @if ($ctaDisabled) disabled @endif
-                                        @if ($card['action'] && !$ctaDisabled) wire:click="openBookingModal({{ $card['occurrence_id'] }}, '{{ $card['action'] }}')" @endif>
-                                    {{ $ctaLabel }}
-                                </button>
+                            <div class="trainer-name">{{ $trainerGroup['trainer_name'] }}</div>
+                            <div style="margin-left: auto; color: var(--muted); font-size: 13px;">
+                                {{ count($trainerGroup['courses']) }} {{ count($trainerGroup['courses']) === 1 ? 'corso' : 'corsi' }}
                             </div>
                         </div>
-                    </article>
+                        @foreach ($trainerGroup['courses'] as $course)
+                            <article class="list-card course-card">
+                                <div class="thumb" aria-hidden="true"></div>
+                                <div class="list-body d-flex flex-column">
+                                    <div class="category">{{ $course['category'] }}</div>
+                                    <div class="title">{{ $course['title'] }}</div>
+                                    
+                                    @if (count($course['time_slots']) > 1)
+                                        <div class="time-slot-selector">
+                                            <label for="time-{{ $course['title'] }}" class="time-label">Seleziona orario:</label>
+                                            <select class="time-select" id="time-{{ $course['title'] }}" data-course-title="{{ $course['title'] }}">
+                                                @foreach ($course['time_slots'] as $index => $slot)
+                                                    <option value="{{ $index }}" 
+                                                            data-occurrence-id="{{ $slot['occurrence_id'] }}"
+                                                            data-action="{{ $slot['action'] ?? '' }}"
+                                                            data-cta="{{ $slot['cta'] }}"
+                                                            data-cta-variant="{{ $slot['cta_variant'] }}"
+                                                            data-cta-disabled="{{ $slot['cta_disabled'] ? '1' : '0' }}">
+                                                        {{ $slot['time'] }} 
+                                                        @if (!empty($slot['tags']))
+                                                            - {{ implode(', ', array_slice($slot['tags'], 0, 2)) }}
+                                                        @endif
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    @else
+                                        @php
+                                            $slot = $course['time_slots'][0] ?? null;
+                                        @endphp
+                                        @if ($slot)
+                                            <div class="single-time">
+                                                <i class="bi bi-clock"></i> {{ $slot['time'] }}
+                                            </div>
+                                        @endif
+                                    @endif
+
+                                    @php
+                                        $firstSlot = $course['time_slots'][0] ?? null;
+                                        $insufficientTokens = $firstSlot && $firstSlot['action'] === 'book' && $availableTokens < 1;
+                                        $ctaDisabled = $firstSlot ? ($firstSlot['cta_disabled'] || $insufficientTokens) : true;
+                                        $ctaLabel = $insufficientTokens ? 'Token insufficienti' : ($firstSlot['cta'] ?? 'Non disponibile');
+                                        $ctaVariant = $firstSlot['cta_variant'] ?? '';
+                                        $action = $firstSlot['action'] ?? '';
+                                        $occurrenceId = $firstSlot['occurrence_id'] ?? 0;
+                                    @endphp
+
+                                    <div class="list-actions">
+                                        <button class="btn-cta {{ $ctaVariant }} {{ $ctaDisabled ? 'is-disabled' : '' }} js-book-course"
+                                                type="button"
+                                                data-course-title="{{ $course['title'] }}"
+                                                data-occurrence-id="{{ $occurrenceId }}"
+                                                data-action="{{ $action }}"
+                                                @if ($ctaDisabled) disabled @endif>
+                                            {{ $ctaLabel }}
+                                        </button>
+                                    </div>
+                                </div>
+                            </article>
+                        @endforeach
+                    </div>
                 @endforeach
             @else
                 <article class="list-card">
@@ -758,6 +898,18 @@
                 if (window.__reverbiaModalHandlers) return;
                 window.__reverbiaModalHandlers = true;
 
+                // Listen to Livewire events
+                document.addEventListener('livewire:init', () => {
+                    Livewire.on('open-modal', (modalName) => {
+                        openModal(modalName);
+                    });
+
+                    Livewire.on('close-modal', (modalName) => {
+                        closeModal(modalName);
+                    });
+                });
+
+                // Fallback for window events
                 window.addEventListener('open-modal', (event) => {
                     const name = typeof event.detail === 'string' ? event.detail : event.detail?.name;
                     openModal(name);
@@ -877,20 +1029,96 @@
                 if (ctaButton) {
                     ctaButton.addEventListener('click', () => {
                         if (ctaButton.disabled) return;
-                        const targetId = ctaButton.dataset.ctaTarget;
-                        if (!targetId) return;
-                        const target = document.getElementById(targetId);
-                        if (target) {
-                            closeOverlay();
-                            target.click();
+                        const occurrenceId = ctaButton.dataset.occurrenceId;
+                        const action = ctaButton.dataset.action;
+                        if (!occurrenceId || !action) return;
+                        
+                        closeOverlay();
+                        
+                        // Dispatch Livewire event
+                        const component = window.Livewire.find(
+                            document.querySelector('[wire\\\\:id]').getAttribute('wire:id')
+                        );
+                        if (component) {
+                            component.call('openBookingModal', parseInt(occurrenceId), action);
                         }
                     });
                 }
             };
 
+            const setupTimeSlotHandlers = () => {
+                const root = document.getElementById('calendar-root');
+                if (!root) return;
+
+                // Handle time slot selection changes
+                root.addEventListener('change', (event) => {
+                    if (!event.target.classList.contains('time-select')) return;
+                    
+                    const select = event.target;
+                    const selectedOption = select.options[select.selectedIndex];
+                    const courseTitle = select.dataset.courseTitle;
+                    
+                    // Find the booking button for this course
+                    const card = select.closest('.course-card');
+                    if (!card) return;
+                    
+                    const bookButton = card.querySelector('.js-book-course');
+                    if (!bookButton) return;
+                    
+                    // Update button with selected slot data
+                    const occurrenceId = selectedOption.dataset.occurrenceId;
+                    const action = selectedOption.dataset.action;
+                    const cta = selectedOption.dataset.cta;
+                    const ctaVariant = selectedOption.dataset.ctaVariant;
+                    const ctaDisabled = selectedOption.dataset.ctaDisabled === '1';
+                    
+                    bookButton.dataset.occurrenceId = occurrenceId;
+                    bookButton.dataset.action = action;
+                    bookButton.textContent = cta;
+                    bookButton.className = `btn-cta ${ctaVariant} ${ctaDisabled ? 'is-disabled' : ''} js-book-course`;
+                    bookButton.disabled = ctaDisabled;
+                });
+
+                // Handle booking button clicks
+                root.addEventListener('click', (event) => {
+                    if (!event.target.classList.contains('js-book-course')) return;
+                    
+                    const button = event.target;
+                    if (button.disabled) return;
+                    
+                    const occurrenceId = parseInt(button.dataset.occurrenceId);
+                    const action = button.dataset.action;
+                    
+                    if (!occurrenceId || !action) {
+                        console.error('Missing occurrence ID or action', {occurrenceId, action});
+                        return;
+                    }
+                    
+                    // Call Livewire method
+                    try {
+                        const wireId = document.querySelector('[wire\\:id]')?.getAttribute('wire:id');
+                        if (!wireId) {
+                            console.error('Livewire component not found');
+                            return;
+                        }
+                        
+                        const component = window.Livewire?.find(wireId);
+                        if (component) {
+                            console.log('Calling openBookingModal', {occurrenceId, action});
+                            component.call('openBookingModal', occurrenceId, action);
+                        } else {
+                            console.error('Livewire component instance not found');
+                        }
+                    } catch (error) {
+                        console.error('Error calling Livewire method:', error);
+                    }
+                });
+            };
+
             const init = () => {
                 setupGlobalModalHandlers();
                 setupCourseOverlay();
+                setupTimeSlotHandlers();
             };
 
             document.addEventListener('DOMContentLoaded', init);

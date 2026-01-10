@@ -13,18 +13,22 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 
 #[Layout('layouts.reverbia-shell')]
 #[Title('Reverbia - Calendario')]
 class Calendar extends Component
 {
-    public array $trainers = [];
     public array $calendar = [];
     public array $lessonCards = [];
+    public array $lessonCardsByTrainer = [];
+    public array $trainerIndicators = [];
     public array $menuLinks = [];
     public array $branches = [];
     public array $courses = [];
+    public array $trainers = [];
+    
     public int $currentMonth;
     public int $currentYear;
     public ?string $selectedDate = null;
@@ -32,15 +36,20 @@ class Calendar extends Component
     public ?int $selectedTrainer = null;
     public ?int $selectedCourse = null;
     public ?string $selectedWeekday = null;
+    
     public ?int $confirmingOccurrenceId = null;
     public ?string $confirmingAction = null;
     public bool $confirmDuetto = false;
     public array $confirmingDetails = [];
+    
     public int $availableTokens = 0;
     public ?int $duettoTokens = null;
     public string $bookingError = '';
     public bool $hasDuetto = false;
     public ?string $duettoName = null;
+
+    private ?int $cachedUserId = null;
+    private ?int $cachedWalletBalance = null;
 
     public function mount(): void
     {
@@ -48,11 +57,14 @@ class Calendar extends Component
         $this->currentMonth = $today->month;
         $this->currentYear = $today->year;
         $this->selectedDate = $today->toDateString();
+        
         $user = auth()->user();
         $this->selectedBranch = $user?->branch_id;
         $this->hasDuetto = (bool) $user?->duetto_id;
-        $this->duettoName = $user && $user->duetto_id ? User::query()->find($user->duetto_id)?->name : null;
-        $this->availableTokens = $user ? $this->calculateWalletBalance($user->id) : 0;
+        $this->duettoName = $user && $user->duetto_id 
+            ? User::query()->find($user->duetto_id)?->name 
+            : null;
+        $this->availableTokens = $user ? $this->getWalletBalance($user->id) : 0;
 
         $this->menuLinks = [
             ['icon' => 'bi-house-door', 'label' => 'Home', 'url' => route('home')],
@@ -83,6 +95,245 @@ class Calendar extends Component
 
     public function updatedSelectedCourse(): void
     {
+        $this->loadCalendar();
+    }
+
+    public function updatedConfirmDuetto(): void
+    {
+        if (!$this->hasDuetto || $this->confirmingAction !== 'book') {
+            $this->confirmDuetto = false;
+        }
+    }
+
+    public function previousMonth(): void
+    {
+        $date = Carbon::create($this->currentYear, $this->currentMonth, 1)->subMonthNoOverflow();
+        $this->currentMonth = $date->month;
+        $this->currentYear = $date->year;
+        $this->selectedDate = $date->toDateString();
+        $this->loadCalendar();
+    }
+
+    public function nextMonth(): void
+    {
+        $date = Carbon::create($this->currentYear, $this->currentMonth, 1)->addMonthNoOverflow();
+        $this->currentMonth = $date->month;
+        $this->currentYear = $date->year;
+        $this->selectedDate = $date->toDateString();
+        $this->loadCalendar();
+    }
+
+    public function selectDay(int $day): void
+    {
+        $date = Carbon::create($this->currentYear, $this->currentMonth, 1)->day($day);
+        $this->selectedDate = $date->toDateString();
+        $this->loadCalendar();
+    }
+
+    public function openBookingModal(int $occurrenceId, string $action = 'book'): void
+    {
+        $user = auth()->user();
+        if (!$user) {
+            return;
+        }
+
+        $this->resetBookingState();
+        $this->confirmingOccurrenceId = $occurrenceId;
+
+        $occurrence = CourseOccurrence::query()
+            ->with(['course.trainer', 'course.branch'])
+            ->withCount('bookings')
+            ->find($occurrenceId);
+
+        if (!$occurrence || !$occurrence->date) {
+            $this->bookingError = 'Lezione non disponibile.';
+            $this->dispatch('open-modal', 'booking-confirm');
+            return;
+        }
+
+        // Check existing bookings/waitlist
+        $alreadyBooked = CourseBooking::query()
+            ->where('user_id', $user->id)
+            ->where('occurrence_id', $occurrenceId)
+            ->exists();
+
+        $alreadyWaitlisted = CourseWaitlist::query()
+            ->where('user_id', $user->id)
+            ->where('occurrence_id', $occurrenceId)
+            ->exists();
+
+        if ($alreadyBooked) {
+            $this->bookingError = 'Risulti gia prenotato per questa lezione.';
+        } elseif ($alreadyWaitlisted) {
+            $this->bookingError = 'Sei gia in lista d\'attesa per questa lezione.';
+        }
+
+        // Check if full
+        $isFull = $occurrence->max_participants > 0 
+            && $occurrence->bookings_count >= $occurrence->max_participants;
+
+        if ($isFull && $action === 'book') {
+            $action = 'waitlist';
+        }
+
+        $this->confirmingAction = $action;
+        $this->confirmDuetto = $this->hasDuetto && $action === 'book' ? $this->confirmDuetto : false;
+
+        // Build confirmation details
+        $this->confirmingDetails = [
+            'title' => $occurrence->course?->title ?? 'Lezione',
+            'date' => $occurrence->date->translatedFormat('D d M'),
+            'time' => substr($occurrence->start_time ?? '--:--', 0, 5),
+            'trainer' => $occurrence->course?->trainer?->name ?? 'Trainer',
+            'branch' => $occurrence->course?->branch?->name ?? 'Sede',
+            'max' => $occurrence->max_participants,
+            'booked' => $occurrence->bookings_count,
+        ];
+
+        // Update token counts
+        $this->availableTokens = $this->getWalletBalance($user->id);
+        if ($this->hasDuetto && $user->duetto_id) {
+            $this->duettoTokens = $this->getWalletBalance($user->duetto_id);
+        }
+        
+        // Validate tokens before showing modal
+        if ($action === 'book' && $this->availableTokens < 1) {
+            $this->bookingError = 'Token insufficienti per prenotare.';
+        }
+        
+        // Validate duetto tokens if duetto booking is enabled
+        if ($action === 'book' && $this->confirmDuetto && $this->hasDuetto && $user->duetto_id) {
+            if ($this->duettoTokens < 1) {
+                $this->bookingError = 'Il tuo duetto non ha token sufficienti per questa prenotazione.';
+                $this->confirmDuetto = false; // Disable duetto option
+            }
+            
+            // Check if duetto is already booked
+            $duettoBooked = CourseBooking::query()
+                ->where('user_id', $user->duetto_id)
+                ->where('occurrence_id', $occurrenceId)
+                ->exists();
+                
+            $duettoWaitlisted = CourseWaitlist::query()
+                ->where('user_id', $user->duetto_id)
+                ->where('occurrence_id', $occurrenceId)
+                ->exists();
+                
+            if ($duettoBooked || $duettoWaitlisted) {
+                $this->bookingError = 'Il tuo duetto ha già una prenotazione o è in lista d\'attesa per questa lezione.';
+                $this->confirmDuetto = false; // Disable duetto option
+            }
+        }
+        
+        $this->dispatch('open-modal', 'booking-confirm');
+    }
+
+    public function confirmBooking(): void
+    {
+        $user = auth()->user();
+        if (!$user || !$this->confirmingOccurrenceId || !$this->confirmingAction) {
+            return;
+        }
+
+        $this->bookingError = '';
+
+        $action = $this->confirmingAction;
+        $isDuetto = $action === 'book' && $this->confirmDuetto && $user->duetto_id;
+        $requiredSeats = $isDuetto ? 2 : 1;
+
+        try {
+            DB::transaction(function () use ($user, $action, $isDuetto, $requiredSeats) {
+                $occurrence = CourseOccurrence::query()
+                    ->lockForUpdate()
+                    ->find($this->confirmingOccurrenceId);
+
+                if (!$occurrence) {
+                    throw new \RuntimeException('Lezione non disponibile.');
+                }
+
+                // Verify not already booked
+                $alreadyBooked = CourseBooking::query()
+                    ->where('user_id', $user->id)
+                    ->where('occurrence_id', $occurrence->id)
+                    ->exists();
+
+                if ($alreadyBooked) {
+                    throw new \RuntimeException('Risulti gia prenotato per questa lezione.');
+                }
+
+                $alreadyWaitlisted = CourseWaitlist::query()
+                    ->where('user_id', $user->id)
+                    ->where('occurrence_id', $occurrence->id)
+                    ->exists();
+
+                // Handle waitlist
+                if ($action === 'waitlist') {
+                    if ($alreadyWaitlisted) {
+                        throw new \RuntimeException('Sei gia in lista d\'attesa per questa lezione.');
+                    }
+
+                    CourseWaitlist::query()->create([
+                        'occurrence_id' => $occurrence->id,
+                        'user_id' => $user->id,
+                        'added_at' => now(),
+                        'status' => 'waiting',
+                    ]);
+
+                    return;
+                }
+
+                // Handle booking
+                $bookingsCount = CourseBooking::query()
+                    ->where('occurrence_id', $occurrence->id)
+                    ->lockForUpdate()
+                    ->count();
+
+                if ($occurrence->max_participants > 0 
+                    && $bookingsCount + $requiredSeats > $occurrence->max_participants) {
+                    throw new \RuntimeException('Posti esauriti per questa lezione.');
+                }
+
+                $availableTokens = $this->getWalletBalance($user->id);
+                if ($availableTokens < 1) {
+                    throw new \RuntimeException('Token insufficienti per completare la prenotazione.');
+                }
+
+                $duettoId = $isDuetto ? $user->duetto_id : null;
+                if ($duettoId) {
+                    $this->validateDuettoBooking($duettoId, $occurrence->id);
+                }
+
+                // Create booking
+                CourseBooking::query()->create([
+                    'occurrence_id' => $occurrence->id,
+                    'user_id' => $user->id,
+                    'booked_at' => now(),
+                    'status' => $isDuetto ? 'confirmed_duetto' : 'booked',
+                ]);
+
+                if ($duettoId) {
+                    CourseBooking::query()->create([
+                        'occurrence_id' => $occurrence->id,
+                        'user_id' => $duettoId,
+                        'booked_at' => now(),
+                        'status' => 'pending_duetto',
+                    ]);
+                }
+
+                // Deduct tokens
+                $this->deductToken($user->id, $occurrence->id, $duettoId);
+                if ($duettoId) {
+                    $this->deductToken($duettoId, $occurrence->id, $user->id);
+                }
+            });
+
+            $this->invalidateWalletCache();
+        } catch (\Throwable $exception) {
+            $this->bookingError = $exception->getMessage();
+            return;
+        }
+
+        $this->dispatch('close-modal', 'booking-confirm');
         $this->loadCalendar();
     }
 
@@ -119,39 +370,15 @@ class Calendar extends Component
     {
         $user = auth()->user();
         if ($user) {
-            $this->availableTokens = $this->calculateWalletBalance($user->id);
+            $this->availableTokens = $this->getWalletBalance($user->id);
         }
 
         $month = Carbon::create($this->currentYear, $this->currentMonth, 1)->startOfMonth();
-        $occurrences = CourseOccurrence::query()
-            ->with(['course.trainer', 'course.branch'])
-            ->withCount('bookings')
-            ->when($this->selectedBranch, function ($query) {
-                $query->whereHas('course', function ($courseQuery) {
-                    $courseQuery->where('branch_id', $this->selectedBranch);
-                });
-            })
-            ->when($this->selectedTrainer, function ($query) {
-                $query->whereHas('course', function ($courseQuery) {
-                    $courseQuery->where('trainer_id', $this->selectedTrainer);
-                });
-            })
-            ->when($this->selectedCourse, function ($query) {
-                $query->where('course_id', $this->selectedCourse);
-            })
-            ->whereBetween('date', [$month->copy()->startOfMonth(), $month->copy()->endOfMonth()])
-            ->orderBy('date')
-            ->orderBy('start_time')
-            ->get();
+        $occurrences = $this->getOccurrencesForMonth($month);
 
+        // Filter by weekday if selected
         if ($this->selectedWeekday) {
-            $weekdayMap = $this->weekdayMap();
-            $weekday = $weekdayMap[$this->selectedWeekday] ?? null;
-            if ($weekday !== null) {
-                $occurrences = $occurrences
-                    ->filter(fn (CourseOccurrence $occurrence) => $occurrence->date?->dayOfWeek === $weekday)
-                    ->values();
-            }
+            $occurrences = $this->filterByWeekday($occurrences);
         }
 
         $specialDays = $occurrences
@@ -159,313 +386,49 @@ class Calendar extends Component
             ->map(fn () => true)
             ->all();
 
-        $selectedDate = $this->selectedDate ? Carbon::parse($this->selectedDate)->startOfDay() : now()->startOfDay();
-        if ($selectedDate->month !== $month->month || $selectedDate->year !== $month->year) {
-            $selectedDate = $month->copy();
-        }
-
+        $selectedDate = $this->getValidatedSelectedDate($month);
         $this->selectedDate = $selectedDate->toDateString();
 
-        $userBookings = collect();
-        $userWaitlist = collect();
-        if ($user && $occurrences->isNotEmpty()) {
-            $occurrenceIds = $occurrences->pluck('id');
-            $userBookings = CourseBooking::query()
-                ->where('user_id', $user->id)
-                ->whereIn('occurrence_id', $occurrenceIds)
-                ->get()
-                ->keyBy('occurrence_id');
+        // Get user bookings and waitlist
+        [$userBookings, $userWaitlist] = $this->getUserBookingsAndWaitlist($user, $occurrences);
 
-            $userWaitlist = CourseWaitlist::query()
-                ->where('user_id', $user->id)
-                ->whereIn('occurrence_id', $occurrenceIds)
-                ->get()
-                ->keyBy('occurrence_id');
-        }
-
-        $this->calendar = $this->buildCalendarPayload($month, $selectedDate, $specialDays);
+        $this->calendar = $this->buildCalendarPayload($month, $selectedDate, $specialDays, $occurrences);
         $this->lessonCards = $this->buildLessonCards($occurrences, $selectedDate, $userBookings, $userWaitlist);
+        $this->lessonCardsByTrainer = $this->groupLessonsByTrainer($this->lessonCards);
+        $this->trainerIndicators = $this->buildTrainerIndicators($occurrences);
         $this->trainers = $this->buildTrainers($occurrences);
     }
 
-    public function previousMonth(): void
+    protected function getOccurrencesForMonth(Carbon $month): Collection
     {
-        $date = Carbon::create($this->currentYear, $this->currentMonth, 1)->subMonthNoOverflow();
-        $this->currentMonth = $date->month;
-        $this->currentYear = $date->year;
-        $this->selectedDate = $date->toDateString();
-
-        $this->loadCalendar();
-    }
-
-    public function nextMonth(): void
-    {
-        $date = Carbon::create($this->currentYear, $this->currentMonth, 1)->addMonthNoOverflow();
-        $this->currentMonth = $date->month;
-        $this->currentYear = $date->year;
-        $this->selectedDate = $date->toDateString();
-
-        $this->loadCalendar();
-    }
-
-    public function selectDay(int $day): void
-    {
-        $date = Carbon::create($this->currentYear, $this->currentMonth, 1)->day($day);
-        $this->selectedDate = $date->toDateString();
-
-        $this->loadCalendar();
-    }
-
-    public function openBookingModal(int $occurrenceId, string $action = 'book'): void
-    {
-        $user = auth()->user();
-        if (!$user) {
-            return;
-        }
-
-        $this->bookingError = '';
-        $this->confirmingDetails = [];
-        $this->confirmingOccurrenceId = $occurrenceId;
-        $this->duettoTokens = null;
-
-        $occurrence = CourseOccurrence::query()
+        $query = CourseOccurrence::query()
             ->with(['course.trainer', 'course.branch'])
             ->withCount('bookings')
-            ->find($occurrenceId);
+            ->whereBetween('date', [
+                $month->copy()->startOfMonth(),
+                $month->copy()->endOfMonth()
+            ])
+            ->orderBy('date')
+            ->orderBy('start_time');
 
-        if (!$occurrence || !$occurrence->date) {
-            $this->bookingError = 'Lezione non disponibile.';
-            $this->dispatch('open-modal', 'booking-confirm');
-            return;
+        if ($this->selectedBranch) {
+            $query->whereHas('course', fn ($q) => $q->where('branch_id', $this->selectedBranch));
         }
 
-        $alreadyBooked = CourseBooking::query()
-            ->where('user_id', $user->id)
-            ->where('occurrence_id', $occurrenceId)
-            ->exists();
-
-        $alreadyWaitlisted = CourseWaitlist::query()
-            ->where('user_id', $user->id)
-            ->where('occurrence_id', $occurrenceId)
-            ->exists();
-
-        if ($alreadyBooked) {
-            $this->bookingError = 'Risulti gia prenotato per questa lezione.';
-        } elseif ($alreadyWaitlisted) {
-            $this->bookingError = 'Sei gia in lista d\'attesa per questa lezione.';
+        if ($this->selectedTrainer) {
+            $query->whereHas('course', fn ($q) => $q->where('trainer_id', $this->selectedTrainer));
         }
 
-        $isFull = $occurrence->max_participants > 0 && $occurrence->bookings_count >= $occurrence->max_participants;
-
-        if ($isFull && $action === 'book') {
-            $action = 'waitlist';
+        if ($this->selectedCourse) {
+            $query->where('course_id', $this->selectedCourse);
         }
 
-        $this->confirmingAction = $action;
-        $this->confirmDuetto = $this->hasDuetto && $action === 'book' ? $this->confirmDuetto : false;
-
-        $course = $occurrence->course;
-        $trainer = $course?->trainer;
-        $branch = $course?->branch;
-
-        $this->confirmingDetails = [
-            'title' => $course?->title ?? 'Lezione',
-            'date' => $occurrence->date->translatedFormat('D d M'),
-            'time' => substr($occurrence->start_time ?? '--:--', 0, 5),
-            'trainer' => $trainer?->name ?? 'Trainer',
-            'branch' => $branch?->name ?? 'Sede',
-            'max' => $occurrence->max_participants,
-            'booked' => $occurrence->bookings_count,
-        ];
-
-        $this->availableTokens = $this->calculateWalletBalance($user->id);
-        if ($this->hasDuetto && $user->duetto_id) {
-            $this->duettoTokens = $this->calculateWalletBalance($user->duetto_id);
-        }
-        if ($action === 'book' && $this->availableTokens < 1) {
-            $this->bookingError = 'Token insufficienti per prenotare.';
-        }
-        $this->dispatch('open-modal', 'booking-confirm');
+        return $query->get();
     }
 
-    public function updatedConfirmDuetto(): void
+    protected function filterByWeekday(Collection $occurrences): Collection
     {
-        if (!$this->hasDuetto || $this->confirmingAction !== 'book') {
-            $this->confirmDuetto = false;
-        }
-    }
-
-    public function confirmBooking(): void
-    {
-        $user = auth()->user();
-        if (!$user || !$this->confirmingOccurrenceId || !$this->confirmingAction) {
-            return;
-        }
-
-        $this->bookingError = '';
-
-        $action = $this->confirmingAction;
-        $isDuetto = $action === 'book' && $this->confirmDuetto && $user->duetto_id;
-        $requiredSeats = $isDuetto ? 2 : 1;
-        $requiredTokens = $action === 'book' ? 1 : 0;
-
-        try {
-            DB::transaction(function () use ($user, $action, $isDuetto, $requiredSeats, $requiredTokens) {
-                $occurrence = CourseOccurrence::query()
-                    ->lockForUpdate()
-                    ->find($this->confirmingOccurrenceId);
-
-                if (!$occurrence) {
-                    throw new \RuntimeException('Lezione non disponibile.');
-                }
-
-                $alreadyBooked = CourseBooking::query()
-                    ->where('user_id', $user->id)
-                    ->where('occurrence_id', $occurrence->id)
-                    ->exists();
-
-                if ($alreadyBooked) {
-                    throw new \RuntimeException('Risulti gia prenotato per questa lezione.');
-                }
-
-                $alreadyWaitlisted = CourseWaitlist::query()
-                    ->where('user_id', $user->id)
-                    ->where('occurrence_id', $occurrence->id)
-                    ->exists();
-
-                if ($action === 'waitlist') {
-                    if ($alreadyWaitlisted) {
-                        throw new \RuntimeException('Sei gia in lista d\'attesa per questa lezione.');
-                    }
-
-                    CourseWaitlist::query()->create([
-                        'occurrence_id' => $occurrence->id,
-                        'user_id' => $user->id,
-                        'added_at' => now(),
-                        'status' => 'waiting',
-                    ]);
-
-                    return;
-                }
-
-                $bookingsCount = CourseBooking::query()
-                    ->where('occurrence_id', $occurrence->id)
-                    ->lockForUpdate()
-                    ->count();
-
-                if ($occurrence->max_participants > 0 && $bookingsCount + $requiredSeats > $occurrence->max_participants) {
-                    throw new \RuntimeException('Posti esauriti per questa lezione.');
-                }
-
-                $availableTokens = $this->calculateWalletBalance($user->id);
-                if ($availableTokens < $requiredTokens) {
-                    throw new \RuntimeException('Token insufficienti per completare la prenotazione.');
-                }
-
-                $duettoId = $isDuetto ? $user->duetto_id : null;
-                if ($duettoId) {
-                    $duettoTokens = $this->calculateWalletBalance($duettoId);
-                    if ($duettoTokens < 1) {
-                        throw new \RuntimeException('Il tuo duetto non ha token disponibili.');
-                    }
-                    $duettoBooked = CourseBooking::query()
-                        ->where('user_id', $duettoId)
-                        ->where('occurrence_id', $occurrence->id)
-                        ->exists();
-                    $duettoWaitlisted = CourseWaitlist::query()
-                        ->where('user_id', $duettoId)
-                        ->where('occurrence_id', $occurrence->id)
-                        ->exists();
-                    if ($duettoBooked || $duettoWaitlisted) {
-                        throw new \RuntimeException('Il tuo duetto ha gia una prenotazione o e in attesa.');
-                    }
-                }
-
-                CourseBooking::query()->create([
-                    'occurrence_id' => $occurrence->id,
-                    'user_id' => $user->id,
-                    'booked_at' => now(),
-                    'status' => $isDuetto ? 'confirmed_duetto' : 'booked',
-                ]);
-
-                if ($duettoId) {
-                    CourseBooking::query()->create([
-                        'occurrence_id' => $occurrence->id,
-                        'user_id' => $duettoId,
-                        'booked_at' => now(),
-                        'status' => 'pending_duetto',
-                    ]);
-                }
-
-                $existingWallet = DB::table('wallets')
-                    ->where('user_id', $user->id)
-                    ->where('model_type', CourseOccurrence::class)
-                    ->where('model_id', $occurrence->id)
-                    ->where('reason', 'booking')
-                    ->first();
-
-                if (!$existingWallet) {
-                    DB::table('wallets')->insert([
-                        'user_id' => $user->id,
-                        'model_type' => CourseOccurrence::class,
-                        'model_id' => $occurrence->id,
-                        'token_delta' => -1,
-                        'reason' => 'booking',
-                        'meta' => json_encode([
-                            'duetto_id' => $duettoId,
-                        ]),
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                }
-
-                if ($duettoId) {
-                    $duettoWallet = DB::table('wallets')
-                        ->where('user_id', $duettoId)
-                        ->where('model_type', CourseOccurrence::class)
-                        ->where('model_id', $occurrence->id)
-                        ->where('reason', 'booking')
-                        ->first();
-
-                    if (!$duettoWallet) {
-                        DB::table('wallets')->insert([
-                            'user_id' => $duettoId,
-                            'model_type' => CourseOccurrence::class,
-                            'model_id' => $occurrence->id,
-                            'token_delta' => -1,
-                            'reason' => 'booking',
-                            'meta' => json_encode([
-                                'duetto_id' => $user->id,
-                            ]),
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ]);
-                    }
-                }
-            });
-        } catch (\Throwable $exception) {
-            $this->bookingError = $exception->getMessage();
-            return;
-        }
-
-        $this->dispatch('close-modal', 'booking-confirm');
-        $this->loadCalendar();
-    }
-
-    protected function calculateWalletBalance(int $userId): int
-    {
-        return (int) DB::table('wallets')
-            ->where('user_id', $userId)
-            ->where(function ($query) {
-                $query->whereNull('expires_at')
-                    ->orWhere('expires_at', '>=', now()->toDateString());
-            })
-            ->sum('token_delta');
-    }
-
-    protected function weekdayMap(): array
-    {
-        return [
+        $weekdayMap = [
             'Lun' => Carbon::MONDAY,
             'Mar' => Carbon::TUESDAY,
             'Mer' => Carbon::WEDNESDAY,
@@ -474,9 +437,54 @@ class Calendar extends Component
             'Sab' => Carbon::SATURDAY,
             'Dom' => Carbon::SUNDAY,
         ];
+
+        $weekday = $weekdayMap[$this->selectedWeekday] ?? null;
+        if ($weekday === null) {
+            return $occurrences;
+        }
+
+        return $occurrences
+            ->filter(fn (CourseOccurrence $occurrence) => $occurrence->date?->dayOfWeek === $weekday)
+            ->values();
     }
 
-    protected function buildCalendarPayload(Carbon $month, Carbon $selectedDate, array $specialDays): array
+    protected function getValidatedSelectedDate(Carbon $month): Carbon
+    {
+        $selectedDate = $this->selectedDate 
+            ? Carbon::parse($this->selectedDate)->startOfDay() 
+            : now()->startOfDay();
+
+        if ($selectedDate->month !== $month->month || $selectedDate->year !== $month->year) {
+            $selectedDate = $month->copy();
+        }
+
+        return $selectedDate;
+    }
+
+    protected function getUserBookingsAndWaitlist(?User $user, Collection $occurrences): array
+    {
+        if (!$user || $occurrences->isEmpty()) {
+            return [collect(), collect()];
+        }
+
+        $occurrenceIds = $occurrences->pluck('id');
+        
+        $userBookings = CourseBooking::query()
+            ->where('user_id', $user->id)
+            ->whereIn('occurrence_id', $occurrenceIds)
+            ->get()
+            ->keyBy('occurrence_id');
+
+        $userWaitlist = CourseWaitlist::query()
+            ->where('user_id', $user->id)
+            ->whereIn('occurrence_id', $occurrenceIds)
+            ->get()
+            ->keyBy('occurrence_id');
+
+        return [$userBookings, $userWaitlist];
+    }
+
+    protected function buildCalendarPayload(Carbon $month, Carbon $selectedDate, array $specialDays, Collection $occurrences): array
     {
         $weeks = [];
         $cursor = $month->copy()->startOfMonth()->startOfWeek(Carbon::MONDAY);
@@ -499,6 +507,9 @@ class Calendar extends Component
             'Domenica', 'Lunedi', 'Martedi', 'Mercoledi', 'Giovedi', 'Venerdi', 'Sabato',
         ];
 
+        // Build trainer indicators for each day
+        $trainersByDay = $this->buildTrainerIndicators($occurrences);
+
         return [
             'selectedLabel' => $weekdayNames[$selectedDate->dayOfWeek] . ' ' . $selectedDate->day . ' ' . $monthNames[$selectedDate->month - 1],
             'monthLabel' => $monthNames[$month->month - 1] . ' ' . $month->year,
@@ -506,76 +517,35 @@ class Calendar extends Component
             'weeks' => $weeks,
             'selectedDay' => $selectedDate->day,
             'specialDays' => $specialDays,
+            'trainersByDay' => $trainersByDay,
         ];
     }
 
-    protected function buildLessonCards(Collection $occurrences, Carbon $selectedDate, Collection $userBookings, Collection $userWaitlist): array
-    {
+    protected function buildLessonCards(
+        Collection $occurrences, 
+        Carbon $selectedDate, 
+        Collection $userBookings, 
+        Collection $userWaitlist
+    ): array {
         return $occurrences
             ->filter(fn (CourseOccurrence $occurrence) => $occurrence->date->isSameDay($selectedDate))
             ->map(function (CourseOccurrence $occurrence) use ($userBookings, $userWaitlist): array {
                 $course = $occurrence->course;
                 $trainer = $course?->trainer;
                 $branch = $course?->branch;
-                $tags = [];
+                
                 $bookingsCount = (int) ($occurrence->bookings_count ?? 0);
                 $maxParticipants = (int) ($occurrence->max_participants ?? 0);
                 $remaining = $maxParticipants > 0 ? max(0, $maxParticipants - $bookingsCount) : null;
 
-                if ($occurrence->start_time && $occurrence->end_time) {
-                    $duration = Carbon::parse($occurrence->start_time)
-                        ->diffInMinutes(Carbon::parse($occurrence->end_time));
-                    $tags[] = $duration . ' min';
-                    $tags[] = substr($occurrence->start_time, 0, 5) . ' - ' . substr($occurrence->end_time, 0, 5);
-                }
-
-                if ($occurrence->max_participants) {
-                    $tags[] = 'Max ' . $occurrence->max_participants . ' persone';
-                }
-
-                if ($remaining !== null) {
-                    $tags[] = 'Posti disponibili ' . $remaining;
-                }
-
-                if ($branch?->name) {
-                    $tags[] = $branch->name;
-                }
-
-                if (!$tags) {
-                    $tags[] = 'Dettagli disponibili';
-                }
-
-                $booking = $userBookings->get($occurrence->id);
-                $isBooked = $booking !== null;
-                $isWaitlisted = $userWaitlist->has($occurrence->id);
-                $isFull = $maxParticipants > 0 && $bookingsCount >= $maxParticipants;
-
-                if ($isBooked && in_array($booking->status, ['pending_duetto', 'confirmed_duetto'], true)) {
-                    $cta = 'In attesa duetto';
-                    $ctaVariant = 'is-secondary';
-                    $ctaDisabled = true;
-                    $action = null;
-                } elseif ($isBooked) {
-                    $cta = 'Prenotato';
-                    $ctaVariant = 'is-secondary';
-                    $ctaDisabled = true;
-                    $action = null;
-                } elseif ($isWaitlisted) {
-                    $cta = 'In lista';
-                    $ctaVariant = 'is-secondary';
-                    $ctaDisabled = true;
-                    $action = null;
-                } elseif ($isFull) {
-                    $cta = 'Lista d\'attesa';
-                    $ctaVariant = 'is-waitlist';
-                    $ctaDisabled = false;
-                    $action = 'waitlist';
-                } else {
-                    $cta = 'Prenota ora';
-                    $ctaVariant = '';
-                    $ctaDisabled = false;
-                    $action = 'book';
-                }
+                $tags = $this->buildLessonTags($occurrence, $remaining, $branch);
+                [$cta, $ctaVariant, $ctaDisabled, $action] = $this->buildLessonCta(
+                    $occurrence, 
+                    $userBookings, 
+                    $userWaitlist, 
+                    $maxParticipants, 
+                    $bookingsCount
+                );
 
                 return [
                     'id' => 'occurrence-' . $occurrence->id,
@@ -583,15 +553,75 @@ class Calendar extends Component
                     'category' => $branch?->name ?? 'Corso',
                     'trainer' => $trainer?->name ?? 'Trainer',
                     'title' => $course?->title ?? 'Lezione',
+                    'time' => substr($occurrence->start_time ?? '--:--', 0, 5),
                     'tags' => $tags,
                     'cta' => $cta,
                     'cta_variant' => $ctaVariant,
                     'cta_disabled' => $ctaDisabled,
                     'action' => $action,
+                    'trainer_id' => $trainer?->id,
+                    'trainer_color' => $this->getTrainerColor($trainer?->id),
                 ];
             })
             ->values()
             ->all();
+    }
+
+    protected function buildLessonTags(CourseOccurrence $occurrence, ?int $remaining, ?Branch $branch): array
+    {
+        $tags = [];
+
+        if ($occurrence->start_time && $occurrence->end_time) {
+            $duration = Carbon::parse($occurrence->start_time)
+                ->diffInMinutes(Carbon::parse($occurrence->end_time));
+            $tags[] = $duration . ' min';
+            $tags[] = substr($occurrence->start_time, 0, 5) . ' - ' . substr($occurrence->end_time, 0, 5);
+        }
+
+        if ($occurrence->max_participants) {
+            $tags[] = 'Max ' . $occurrence->max_participants . ' persone';
+        }
+
+        if ($remaining !== null) {
+            $tags[] = 'Posti disponibili ' . $remaining;
+        }
+
+        if ($branch?->name) {
+            $tags[] = $branch->name;
+        }
+
+        return $tags ?: ['Dettagli disponibili'];
+    }
+
+    protected function buildLessonCta(
+        CourseOccurrence $occurrence,
+        Collection $userBookings,
+        Collection $userWaitlist,
+        int $maxParticipants,
+        int $bookingsCount
+    ): array {
+        $booking = $userBookings->get($occurrence->id);
+        $isBooked = $booking !== null;
+        $isWaitlisted = $userWaitlist->has($occurrence->id);
+        $isFull = $maxParticipants > 0 && $bookingsCount >= $maxParticipants;
+
+        if ($isBooked && in_array($booking->status, ['pending_duetto', 'confirmed_duetto'], true)) {
+            return ['In attesa duetto', 'is-secondary', true, null];
+        }
+        
+        if ($isBooked) {
+            return ['Prenotato', 'is-secondary', true, null];
+        }
+        
+        if ($isWaitlisted) {
+            return ['In lista', 'is-secondary', true, null];
+        }
+        
+        if ($isFull) {
+            return ['Lista d\'attesa', 'is-waitlist', false, 'waitlist'];
+        }
+        
+        return ['Prenota ora', '', false, 'book'];
     }
 
     protected function buildTrainers(Collection $occurrences): array
@@ -619,15 +649,206 @@ class Calendar extends Component
             ->orderBy('name')
             ->get()
             ->map(function (User $trainer): array {
-                $courseTitle = $trainer->courses->first()?->title;
-
                 return [
                     'id' => $trainer->id,
                     'name' => $trainer->name,
-                    'specialty' => $courseTitle ?? 'Trainer',
+                    'specialty' => $trainer->courses->first()?->title ?? 'Trainer',
                 ];
             })
             ->all();
+    }
+
+    protected function validateDuettoBooking(int $duettoId, int $occurrenceId): void
+    {
+        $duettoTokens = $this->getWalletBalance($duettoId);
+        if ($duettoTokens < 1) {
+            throw new \RuntimeException('Il tuo duetto non ha token disponibili.');
+        }
+
+        $duettoBooked = CourseBooking::query()
+            ->where('user_id', $duettoId)
+            ->where('occurrence_id', $occurrenceId)
+            ->exists();
+
+        $duettoWaitlisted = CourseWaitlist::query()
+            ->where('user_id', $duettoId)
+            ->where('occurrence_id', $occurrenceId)
+            ->exists();
+
+        if ($duettoBooked || $duettoWaitlisted) {
+            throw new \RuntimeException('Il tuo duetto ha gia una prenotazione o e in attesa.');
+        }
+    }
+
+    protected function deductToken(int $userId, int $occurrenceId, ?int $duettoId): void
+    {
+        $existingWallet = DB::table('wallets')
+            ->where('user_id', $userId)
+            ->where('model_type', CourseOccurrence::class)
+            ->where('model_id', $occurrenceId)
+            ->where('reason', 'booking')
+            ->first();
+
+        if (!$existingWallet) {
+            DB::table('wallets')->insert([
+                'user_id' => $userId,
+                'model_type' => CourseOccurrence::class,
+                'model_id' => $occurrenceId,
+                'token_delta' => -1,
+                'reason' => 'booking',
+                'meta' => json_encode(['duetto_id' => $duettoId]),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+    }
+
+    protected function getWalletBalance(int $userId): int
+    {
+        if ($this->cachedUserId === $userId && $this->cachedWalletBalance !== null) {
+            return $this->cachedWalletBalance;
+        }
+
+        $balance = (int) DB::table('wallets')
+            ->where('user_id', $userId)
+            ->where(function ($query) {
+                $query->whereNull('expires_at')
+                    ->orWhere('expires_at', '>=', now()->toDateString());
+            })
+            ->sum('token_delta');
+
+        $this->cachedUserId = $userId;
+        $this->cachedWalletBalance = $balance;
+
+        return $balance;
+    }
+
+    protected function invalidateWalletCache(): void
+    {
+        $this->cachedUserId = null;
+        $this->cachedWalletBalance = null;
+    }
+
+    protected function resetBookingState(): void
+    {
+        $this->bookingError = '';
+        $this->confirmingDetails = [];
+        $this->duettoTokens = null;
+    }
+
+    protected function groupLessonsByTrainer(array $lessonCards): array
+    {
+        $grouped = [];
+        
+        foreach ($lessonCards as $lesson) {
+            $trainerId = $lesson['trainer_id'] ?? 0;
+            $trainerName = $lesson['trainer'] ?? 'Trainer';
+            $courseTitle = $lesson['title'] ?? 'Corso';
+            
+            // Initialize trainer group if not exists
+            if (!isset($grouped[$trainerId])) {
+                $grouped[$trainerId] = [
+                    'trainer_id' => $trainerId,
+                    'trainer_name' => $trainerName,
+                    'trainer_color' => $lesson['trainer_color'] ?? '#7efc5b',
+                    'courses' => [],
+                ];
+            }
+            
+            // Initialize course group if not exists
+            if (!isset($grouped[$trainerId]['courses'][$courseTitle])) {
+                $grouped[$trainerId]['courses'][$courseTitle] = [
+                    'title' => $courseTitle,
+                    'category' => $lesson['category'] ?? 'Corso',
+                    'time_slots' => [],
+                ];
+            }
+            
+            // Add time slot to course
+            $grouped[$trainerId]['courses'][$courseTitle]['time_slots'][] = [
+                'occurrence_id' => $lesson['occurrence_id'],
+                'time' => $lesson['time'] ?? '--:--',
+                'tags' => $lesson['tags'] ?? [],
+                'cta' => $lesson['cta'],
+                'cta_variant' => $lesson['cta_variant'],
+                'cta_disabled' => $lesson['cta_disabled'],
+                'action' => $lesson['action'],
+            ];
+        }
+        
+        // Convert courses associative array to indexed array and sort
+        foreach ($grouped as &$trainerGroup) {
+            $trainerGroup['courses'] = array_values($trainerGroup['courses']);
+            // Sort courses by title
+            usort($trainerGroup['courses'], fn($a, $b) => strcmp($a['title'], $b['title']));
+        }
+        
+        // Sort by trainer name
+        usort($grouped, fn($a, $b) => strcmp($a['trainer_name'], $b['trainer_name']));
+        
+        return array_values($grouped);
+    }
+
+    protected function buildTrainerIndicators(Collection $occurrences): array
+    {
+        $indicators = [];
+        
+        // Group occurrences by day
+        $byDay = $occurrences->groupBy(fn (CourseOccurrence $occ) => $occ->date->day);
+        
+        foreach ($byDay as $day => $dayOccurrences) {
+            $trainers = [];
+            $seenTrainers = [];
+            
+            foreach ($dayOccurrences as $occurrence) {
+                $trainer = $occurrence->course?->trainer;
+                if ($trainer && !isset($seenTrainers[$trainer->id])) {
+                    $trainers[] = [
+                        'id' => $trainer->id,
+                        'name' => $trainer->name,
+                        'initials' => $this->getTrainerInitials($trainer->name),
+                        'color' => $this->getTrainerColor($trainer->id),
+                    ];
+                    $seenTrainers[$trainer->id] = true;
+                }
+            }
+            
+            if (!empty($trainers)) {
+                $indicators[$day] = $trainers;
+            }
+        }
+        
+        return $indicators;
+    }
+
+    protected function getTrainerColor(?int $trainerId): string
+    {
+        if (!$trainerId) {
+            return '#7efc5b';
+        }
+        
+        // Predefined color palette for trainers
+        $colors = [
+            '#7efc5b', // Green
+            '#f35aa7', // Pink
+            '#5b9cfc', // Blue
+            '#fcb45b', // Orange
+            '#a45bfc', // Purple
+            '#5bfcdb', // Cyan
+            '#fc5b5b', // Red
+            '#fcfc5b', // Yellow
+        ];
+        
+        return $colors[$trainerId % count($colors)];
+    }
+
+    protected function getTrainerInitials(string $name): string
+    {
+        $words = explode(' ', trim($name));
+        if (count($words) >= 2) {
+            return strtoupper(substr($words[0], 0, 1) . substr($words[1], 0, 1));
+        }
+        return strtoupper(substr($name, 0, 2));
     }
 
     public function render()
