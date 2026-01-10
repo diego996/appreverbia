@@ -552,6 +552,9 @@
         }
         .premium-modal .modal-body {
             padding: 32px 24px;
+            max-height: 70vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
         }
         .premium-modal .info-grid {
             display: grid;
@@ -686,6 +689,30 @@
             height: 22px;
             accent-color: var(--accent);
         }
+        .premium-modal .simple-item {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 10px 4px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+        }
+        .premium-modal .simple-item .label {
+            font-size: 9px;
+            color: #666;
+            letter-spacing: 0.05em;
+            margin: 0;
+        }
+        .premium-modal .simple-item .value {
+            font-size: 13px;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.2;
+        }
+
         .premium-modal .status-message {
             padding: 14px;
             border-radius: 12px;
@@ -753,50 +780,54 @@
         /* Mobile Optimization */
         @media (max-width: 480px) {
             .premium-modal .modal-header {
-                padding: 24px 16px 16px;
+                padding: 20px 16px 12px;
             }
             .premium-modal .course-title {
-                font-size: 24px;
+                font-size: 22px;
+                margin-bottom: 8px;
             }
             .premium-modal .modal-body {
-                padding: 20px 16px;
+                padding: 16px;
+            }
+            .premium-modal .context-info {
+                margin-bottom: 16px;
+                gap: 8px;
+            }
+            .premium-modal .info-pill {
+                padding: 4px 10px;
+                font-size: 11px;
             }
             .premium-modal .info-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(3, 1fr); /* Force 3 columns */
                 gap: 8px;
-                padding: 12px;
+                padding: 0;
+                background: transparent;
+                border: none;
+                margin-bottom: 20px;
             }
-            .premium-modal .info-item {
-                flex-direction: row;
-                gap: 16px;
+            .premium-modal .simple-item {
                 background: rgba(255,255,255,0.03);
-                padding: 12px;
-                border-radius: 12px;
-            }
-            .premium-modal .info-item i {
-                width: 36px;
-                height: 36px;
-                font-size: 18px;
-            }
-            .premium-modal .info-item .text-group {
-                text-align: left;
-                align-items: flex-start;
+                border: 1px solid rgba(255,255,255,0.05);
+                border-radius: 10px;
+                padding: 8px 4px;
             }
             .premium-modal .token-summary {
-                flex-direction: column;
-                gap: 8px;
-                text-align: center;
+                padding: 12px;
+                display: flex;
+                flex-direction: row; /* Keep horizontal on mobile if possible */
+                justify-content: space-between;
+                margin-bottom: 16px;
             }
-            .premium-modal .modal-footer {
-                grid-template-columns: 1fr;
+            .premium-modal .duetto-section {
+                padding: 12px;
+                margin-bottom: 16px;
             }
-            .premium-modal .btn-cancel {
-                order: 2;
-                padding: 14px;
+            .premium-modal .duetto-toggle {
+                font-size: 13px;
             }
-            .premium-modal .btn-confirm {
-                order: 1;
+            .premium-modal .btn-cancel, .premium-modal .btn-confirm {
                 padding: 16px;
+                font-size: 14px;
             }
         }
     </style>
@@ -1010,27 +1041,18 @@
                         </div>
                     </div>
 
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <i class="bi bi-calendar2-week"></i>
-                            <div class="text-group">
-                                <div class="label">DATA</div>
-                                <div class="value">{{ $confirmingDetails['date'] ?? '--' }}</div>
-                            </div>
+                    <div class="info-grid context-info-grid">
+                        <div class="info-item simple-item">
+                            <div class="label">DATA</div>
+                            <div class="value">{{ $confirmingDetails['date'] ?? '--' }}</div>
                         </div>
-                        <div class="info-item">
-                            <i class="bi bi-clock"></i>
-                            <div class="text-group">
-                                <div class="label">ORA</div>
-                                <div class="value">{{ $confirmingDetails['time'] ?? '--:--' }}</div>
-                            </div>
+                        <div class="info-item simple-item">
+                            <div class="label">ORA</div>
+                            <div class="value">{{ $confirmingDetails['time'] ?? '--:--' }}</div>
                         </div>
-                        <div class="info-item">
-                            <i class="bi bi-hourglass-split"></i>
-                            <div class="text-group">
-                                <div class="label">DURATA</div>
-                                <div class="value">{{ $confirmingDetails['duration'] ?? '-- min' }}</div>
-                            </div>
+                        <div class="info-item simple-item">
+                            <div class="label">DURATA</div>
+                            <div class="value">{{ $confirmingDetails['duration'] ?? '-- min' }}</div>
                         </div>
                     </div>
 

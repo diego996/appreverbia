@@ -211,7 +211,7 @@ class Calendar extends Component
         // Build confirmation details
         $this->confirmingDetails = [
             'title' => $occurrence->course?->title ?? 'Lezione',
-            'date' => $occurrence->date->translatedFormat('D d M'),
+            'date' => $occurrence->date->locale('it')->translatedFormat('D d M'), // Ensures Italian format like 'Lun 10 Gen'
             'time' => substr($occurrence->start_time ?? '--:--', 0, 5),
             'duration' => $duration,
             'trainer' => $occurrence->course?->trainer?->name ?? 'Trainer',
