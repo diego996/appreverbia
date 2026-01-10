@@ -75,6 +75,12 @@ class Calendar extends Component
 
         $this->loadFilters();
         $this->loadCalendar();
+
+        // Check for booking request from other pages
+        $bookId = request()->query('book');
+        if ($bookId) {
+            $this->openBookingModal((int) $bookId, 'book');
+        }
     }
 
     public function updatedSelectedBranch(): void
@@ -150,6 +156,14 @@ class Calendar extends Component
             $this->dispatch('open-modal', 'booking-confirm');
             return;
         }
+        
+        // Ensure calendar is focused on the occurrence date if opened via link
+        if ($occurrence->date->month !== $this->currentMonth || $occurrence->date->year !== $this->currentYear) {
+            $this->currentMonth = $occurrence->date->month;
+            $this->currentYear = $occurrence->date->year;
+            $this->loadCalendar();
+        }
+        $this->selectedDate = $occurrence->date->toDateString();
 
         // Check existing bookings/waitlist
         $alreadyBooked = CourseBooking::query()
@@ -166,6 +180,14 @@ class Calendar extends Component
             $this->bookingError = 'Risulti gia prenotato per questa lezione.';
         } elseif ($alreadyWaitlisted) {
             $this->bookingError = 'Sei gia in lista d\'attesa per questa lezione.';
+        } elseif ($occurrence->start_time) {
+            $startDateTime = $occurrence->date->copy()->setTimeFromTimeString($occurrence->start_time);
+            $bookingCutoff = $startDateTime->copy()->subHour();
+            if (now()->greaterThanOrEqualTo($bookingCutoff)) {
+                $this->bookingError = now()->greaterThan($startDateTime) 
+                    ? 'Lezione terminata o in corso.' 
+                    : 'Le iscrizioni sono chiuse (scadenza 1 ora prima dell\'inizio).';
+            }
         }
 
         // Check if full
@@ -179,15 +201,25 @@ class Calendar extends Component
         $this->confirmingAction = $action;
         $this->confirmDuetto = $this->hasDuetto && $action === 'book' ? $this->confirmDuetto : false;
 
+        // Calculate duration
+        $duration = '-- min';
+        if ($occurrence->start_time && $occurrence->end_time) {
+            $duration = Carbon::parse($occurrence->start_time)
+                ->diffInMinutes(Carbon::parse($occurrence->end_time)) . ' min';
+        }
+
         // Build confirmation details
         $this->confirmingDetails = [
             'title' => $occurrence->course?->title ?? 'Lezione',
             'date' => $occurrence->date->translatedFormat('D d M'),
             'time' => substr($occurrence->start_time ?? '--:--', 0, 5),
+            'duration' => $duration,
             'trainer' => $occurrence->course?->trainer?->name ?? 'Trainer',
             'branch' => $occurrence->course?->branch?->name ?? 'Sede',
             'max' => $occurrence->max_participants,
             'booked' => $occurrence->bookings_count,
+            'trainer_initials' => $this->getTrainerInitials($occurrence->course?->trainer?->name ?? 'Trainer'),
+            'trainer_color' => $this->getTrainerColor($occurrence->course?->trainer?->id),
         ];
 
         // Update token counts
@@ -265,6 +297,15 @@ class Calendar extends Component
                     ->where('user_id', $user->id)
                     ->where('occurrence_id', $occurrence->id)
                     ->exists();
+
+                // Check Time
+                if ($occurrence->start_time) {
+                    $startDateTime = $occurrence->date->copy()->setTimeFromTimeString($occurrence->start_time);
+                    $bookingCutoff = $startDateTime->copy()->subHour();
+                    if (now()->greaterThanOrEqualTo($bookingCutoff)) {
+                        throw new \RuntimeException('Il tempo utile per prenotare questa lezione è scaduto.');
+                    }
+                }
 
                 // Handle waitlist
                 if ($action === 'waitlist') {
@@ -617,6 +658,19 @@ class Calendar extends Component
             return ['In lista', 'is-secondary', true, null];
         }
         
+        // Time validation: prevent booking if in the past or within 1 hour of start
+        if ($occurrence->start_time) {
+            $startDateTime = $occurrence->date->copy()->setTimeFromTimeString($occurrence->start_time);
+            $bookingCutoff = $startDateTime->copy()->subHour();
+
+            if (now()->greaterThanOrEqualTo($bookingCutoff)) {
+                if (now()->greaterThan($startDateTime)) {
+                    return ['Terminata', 'is-disabled', true, null];
+                }
+                return ['Iscrizioni chiuse', 'is-disabled', true, null];
+            }
+        }
+
         if ($isFull) {
             return ['Lista d\'attesa', 'is-waitlist', false, 'waitlist'];
         }

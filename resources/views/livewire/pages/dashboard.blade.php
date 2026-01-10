@@ -379,7 +379,7 @@
                                 <i class="bi bi-geo-alt"></i>
                                 {{ $lesson['room'] }}
                             </div>
-                            <a href="{{ route('calendar') }}?date={{ $lesson['full_date'] }}" 
+                            <a href="{{ route('calendar') }}?book={{ $lesson['occurrence_id'] }}" 
                                class="btn-book-lesson" 
                                wire:navigate>
                                 <i class="bi bi-calendar-check"></i>

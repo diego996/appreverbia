@@ -490,6 +490,315 @@
                 background-position: right 14px center;
             }
         }
+        /* Premium Modal Styles */
+        .rv-modal .premium-modal {
+            background: linear-gradient(135deg, #16161a 0%, #0d0d10 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 0;
+            overflow: hidden;
+            border-radius: 24px;
+            box-shadow: 0 24px 48px rgba(0,0,0,0.5);
+        }
+        .premium-modal .modal-header {
+            background: rgba(126, 252, 91, 0.03);
+            padding: 32px 24px 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            text-align: center;
+        }
+        .premium-modal .category-badge {
+            display: inline-block;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--accent);
+            border: 1px solid rgba(126, 252, 91, 0.3);
+            padding: 6px 14px;
+            border-radius: 100px;
+            margin-bottom: 16px;
+            background: rgba(126, 252, 91, 0.05);
+            font-weight: 700;
+        }
+        .premium-modal .course-title {
+            font-size: 28px;
+            font-weight: 800;
+            color: #fff;
+            margin: 0 0 12px;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+        }
+        .premium-modal .course-trainer {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: #a0a0aa;
+            font-size: 14px;
+            background: rgba(255,255,255,0.05);
+            padding: 6px 16px;
+            border-radius: 100px;
+        }
+        .premium-modal .trainer-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: #000;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+        .premium-modal .modal-body {
+            padding: 32px 24px;
+        }
+        .premium-modal .info-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 28px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 20px;
+            padding: 20px 16px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .premium-modal .info-item {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        .premium-modal .info-item i {
+            font-size: 24px;
+            color: var(--accent);
+            display: block;
+            opacity: 0.9;
+            background: rgba(126, 252, 91, 0.1);
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+        }
+        .premium-modal .info-item .text-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .premium-modal .info-item .label {
+            font-size: 10px;
+            text-transform: uppercase;
+            color: #666;
+            letter-spacing: 0.05em;
+            margin-bottom: 2px;
+        }
+        .premium-modal .info-item .value {
+            font-size: 15px;
+            font-weight: 700;
+            color: #fff;
+        }
+        .premium-modal .token-summary {
+            background: linear-gradient(90deg, rgba(126, 252, 91, 0.05) 0%, rgba(126, 252, 91, 0.02) 100%);
+            border-left: 3px solid var(--accent);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .premium-modal .token-text {
+            font-size: 14px;
+            color: #ccc;
+        }
+        .premium-modal .token-cost {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .premium-modal .context-info {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .premium-modal .info-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 100px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .premium-modal .status-pill {
+            background: rgba(126, 252, 91, 0.08);
+            color: var(--accent);
+            border: 1px solid rgba(126, 252, 91, 0.2);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .premium-modal .trainer-pill {
+            background: rgba(255, 255, 255, 0.05);
+            color: #d0d0d5;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .premium-modal .trainer-avatar-small {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: #000;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+        }
+
+        .premium-modal .duetto-section {
+            background: #1a1a1e;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 24px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .premium-modal .duetto-toggle {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+            margin: 0;
+            color: #fff;
+            font-weight: 600;
+            font-size: 15px;
+        }
+        .premium-modal .duetto-toggle input {
+            width: 22px;
+            height: 22px;
+            accent-color: var(--accent);
+        }
+        .premium-modal .status-message {
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 14px;
+            text-align: center;
+            margin-top: 20px;
+            font-weight: 600;
+        }
+        .premium-modal .status-error {
+            background: rgba(255, 87, 87, 0.1);
+            color: #ff6b6b;
+            border: 1px solid rgba(255, 87, 87, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .premium-modal .modal-footer {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 16px;
+            padding-top: 0;
+        }
+        .premium-modal .btn-cancel {
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            color: #999;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            padding: 18px;
+            transition: all 0.2s;
+        }
+        .premium-modal .btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+        .premium-modal .btn-confirm {
+            background: linear-gradient(135deg, var(--accent) 0%, #8fff6b 100%);
+            border: none;
+            color: #000;
+            border-radius: 14px;
+            font-weight: 800;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 18px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(126, 252, 91, 0.2);
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+        }
+        .premium-modal .btn-confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(126, 252, 91, 0.3);
+        }
+        .premium-modal .btn-confirm:disabled {
+            filter: grayscale(1);
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Mobile Optimization */
+        @media (max-width: 480px) {
+            .premium-modal .modal-header {
+                padding: 24px 16px 16px;
+            }
+            .premium-modal .course-title {
+                font-size: 24px;
+            }
+            .premium-modal .modal-body {
+                padding: 20px 16px;
+            }
+            .premium-modal .info-grid {
+                grid-template-columns: 1fr;
+                gap: 8px;
+                padding: 12px;
+            }
+            .premium-modal .info-item {
+                flex-direction: row;
+                gap: 16px;
+                background: rgba(255,255,255,0.03);
+                padding: 12px;
+                border-radius: 12px;
+            }
+            .premium-modal .info-item i {
+                width: 36px;
+                height: 36px;
+                font-size: 18px;
+            }
+            .premium-modal .info-item .text-group {
+                text-align: left;
+                align-items: flex-start;
+            }
+            .premium-modal .token-summary {
+                flex-direction: column;
+                gap: 8px;
+                text-align: center;
+            }
+            .premium-modal .modal-footer {
+                grid-template-columns: 1fr;
+            }
+            .premium-modal .btn-cancel {
+                order: 2;
+                padding: 14px;
+            }
+            .premium-modal .btn-confirm {
+                order: 1;
+                padding: 16px;
+            }
+        }
     </style>
 @endpush
 
@@ -677,61 +986,111 @@
             <button class="rv-modal-close" type="button" data-modal-close aria-label="Chiudi modal">
                 <i class="bi bi-x-lg"></i>
             </button>
-            <div class="modal-card">
-                <div>
-                    <div class="modal-title">
-                        {{ $confirmingAction === 'waitlist' ? 'Conferma lista d\'attesa' : 'Conferma prenotazione' }}
-                    </div>
-                    <div class="modal-meta">
-                        {{ $confirmingDetails['title'] ?? 'Lezione' }} - {{ $confirmingDetails['date'] ?? '' }}
-                        @if (!empty($confirmingDetails['time']))
-                            - {{ $confirmingDetails['time'] }}
-                        @endif
-                    </div>
-                    <div class="modal-meta">
-                        Trainer: {{ $confirmingDetails['trainer'] ?? 'Trainer' }} - {{ $confirmingDetails['branch'] ?? 'Sede' }}
-                    </div>
+            <div class="premium-modal">
+                {{-- Header --}}
+                <div class="modal-header">
+                    <h2 class="course-title" style="font-size: {{ strlen($confirmingDetails['title'] ?? '') > 25 ? '22px' : '28px' }}">
+                        {{ $confirmingDetails['title'] ?? 'Lezione' }}
+                    </h2>
                 </div>
 
-                @php
-                    $hasAction = in_array($confirmingAction, ['book', 'waitlist'], true);
-                    $requiredTokens = $confirmingAction === 'book' ? 1 : 0;
-                    $duettoInsufficient = $confirmDuetto && $duettoTokens !== null && $duettoTokens < 1;
-                    $insufficientTokens = $confirmingAction === 'book' && ($availableTokens < 1 || $duettoInsufficient);
-                    $requiredLabel = $confirmDuetto ? '2 (1 ciascuno)' : '1';
-                    $hasBlockingError = $insufficientTokens || $bookingError || !$hasAction;
-                @endphp
-
-                @if ($hasAction)
-                    <div class="modal-note">
-                        Token tuoi: {{ $availableTokens }}
-                        @if ($confirmDuetto && $duettoTokens !== null)
-                            - Duetto: {{ $duettoTokens }}
-                        @endif
-                        - Richiesti: {{ $requiredLabel }}
+                {{-- Body --}}
+                <div class="modal-body">
+                    {{-- Context Info (Branch & Trainer) --}}
+                    <div class="context-info">
+                        <div class="info-pill status-pill">
+                            <i class="bi bi-geo-alt-fill"></i>
+                            {{ $confirmingDetails['branch'] ?? 'SEDE' }}
+                        </div>
+                        <div class="info-pill trainer-pill">
+                            <div class="trainer-avatar-small" style="background-color: {{ $confirmingDetails['trainer_color'] ?? '#7efc5b' }}">
+                                {{ $confirmingDetails['trainer_initials'] ?? 'T' }}
+                            </div>
+                            {{ $confirmingDetails['trainer'] ?? 'Trainer' }}
+                        </div>
                     </div>
-                @endif
 
-                @if ($confirmingAction === 'book' && $hasDuetto)
-                    <label class="duetto-toggle">
-                        <input type="checkbox" wire:model="confirmDuetto">
-                        Prenota in duetto {{ $duettoName ? 'con ' . $duettoName : '' }}
-                    </label>
-                @endif
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <i class="bi bi-calendar2-week"></i>
+                            <div class="text-group">
+                                <div class="label">DATA</div>
+                                <div class="value">{{ $confirmingDetails['date'] ?? '--' }}</div>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <i class="bi bi-clock"></i>
+                            <div class="text-group">
+                                <div class="label">ORA</div>
+                                <div class="value">{{ $confirmingDetails['time'] ?? '--:--' }}</div>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <i class="bi bi-hourglass-split"></i>
+                            <div class="text-group">
+                                <div class="label">DURATA</div>
+                                <div class="value">{{ $confirmingDetails['duration'] ?? '-- min' }}</div>
+                            </div>
+                        </div>
+                    </div>
 
-                @if ($bookingError)
-                    <div class="modal-error">{{ $bookingError }}</div>
-                @endif
-                @if ($insufficientTokens)
-                    <div class="modal-error">Token insufficienti per questa prenotazione.</div>
-                @endif
-                @if (!$hasAction && !$bookingError)
-                    <div class="modal-error">Seleziona una lezione valida.</div>
-                @endif
+                    @php
+                        $hasAction = in_array($confirmingAction, ['book', 'waitlist'], true);
+                        $requiredTokens = $confirmingAction === 'book' ? 1 : 0;
+                        $duettoInsufficient = $confirmDuetto && $duettoTokens !== null && $duettoTokens < 1;
+                        $insufficientTokens = $confirmingAction === 'book' && ($availableTokens < 1 || $duettoInsufficient);
+                        $requiredLabel = $confirmDuetto ? '2 TOKEN (1 + 1)' : '1 TOKEN';
+                        $hasBlockingError = $insufficientTokens || $bookingError || !$hasAction;
+                    @endphp
 
-                <div class="modal-actions">
-                    <button class="btn-secondary" type="button" data-modal-close>Annulla</button>
-                    <button class="btn-primary" type="button" wire:click="confirmBooking" @if ($hasBlockingError) disabled @endif>Conferma</button>
+                    @if ($hasAction)
+                        <div class="token-summary">
+                            <div class="token-text">
+                                Disponibili: <strong>{{ $availableTokens }}</strong>
+                                @if ($confirmDuetto && $duettoTokens !== null)
+                                    (+ {{ $duettoTokens }} partner)
+                                @endif
+                            </div>
+                            <div class="token-cost">
+                                -{{ $requiredLabel }}
+                            </div>
+                        </div>
+                    @endif
+
+                    @if ($confirmingAction === 'book' && $hasDuetto)
+                        <div class="duetto-section">
+                            <label class="duetto-toggle">
+                                <input type="checkbox" wire:model.live="confirmDuetto">
+                                <span>Prenota in duetto {{ $duettoName ? 'con ' . $duettoName : '' }}</span>
+                            </label>
+                        </div>
+                    @endif
+
+                    @if ($bookingError)
+                        <div class="status-message status-error">
+                            <i class="bi bi-exclamation-circle-fill"></i>
+                            {{ $bookingError }}
+                        </div>
+                    @endif
+                    
+                    @if ($insufficientTokens && !$bookingError)
+                        <div class="status-message status-error">
+                            <i class="bi bi-coin"></i>
+                            Token insufficienti per questa prenotazione.
+                        </div>
+                    @endif
+
+                    {{-- Footer --}}
+                    <div class="modal-footer">
+                        <button class="btn-cancel" type="button" data-modal-close>Annulla</button>
+                        <button class="btn-confirm" 
+                                type="button" 
+                                wire:click="confirmBooking" 
+                                wire:loading.attr="disabled"
+                                @if ($hasBlockingError) disabled @endif>
+                            {{ $confirmingAction === 'waitlist' ? 'Entra in lista' : 'Conferma' }}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
