@@ -2,6 +2,8 @@
 
 namespace App\Livewire\Pages;
 
+use App\Models\CourseBooking;
+use App\Models\Wallet;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -15,38 +17,76 @@ class Dashboard extends Component
 
     public function mount(): void
     {
+        $user = auth()->user();
+
+        if (!$user) {
+            $this->walletSummary = [
+                'available' => 0,
+                'label' => 'Lezioni disponibili',
+            ];
+
+            return;
+        }
+
+        $walletBalance = Wallet::query()
+            ->where('user_id', $user->id)
+            ->where(function ($query) {
+                $query->whereNull('expires_at')
+                    ->orWhere('expires_at', '>=', now()->toDateString());
+            })
+            ->sum('token_delta');
+
         $this->walletSummary = [
-            'available' => 12,
+            'available' => max(0, (int) $walletBalance),
             'label' => 'Lezioni disponibili',
         ];
 
-        $this->bookedLessons = [
-            [
-                'date' => 'Mar 12',
-                'time' => '18:30',
-                'title' => 'Reverbia Strength',
-                'coach' => 'Sofia L.',
-                'room' => 'Sala North',
-                'status' => 'Confermato',
-            ],
-            [
-                'date' => 'Gio 14',
-                'time' => '07:45',
-                'title' => 'Power Pilates',
-                'coach' => 'Marco V.',
-                'room' => 'Studio Flow',
-                'status' => 'In attesa',
-            ],
-            [
-                'date' => 'Sab 16',
-                'time' => '10:15',
-                'title' => 'Functional Core',
-                'coach' => 'Giulia P.',
-                'room' => 'Sala Studio',
-                'status' => 'Confermato',
-            ],
+        $today = now()->startOfDay();
+        $bookings = CourseBooking::query()
+            ->where('user_id', $user->id)
+            ->with(['occurrence.course.trainer', 'occurrence.course.branch'])
+            ->get()
+            ->filter(function (CourseBooking $booking) use ($today) {
+                return $booking->occurrence?->date && $booking->occurrence->date->greaterThanOrEqualTo($today);
+            })
+            ->sortBy(function (CourseBooking $booking) {
+                $occurrence = $booking->occurrence;
+                if (!$occurrence || !$occurrence->date) {
+                    return '9999-12-31 23:59:59';
+                }
+                return $occurrence->date->format('Y-m-d') . ' ' . ($occurrence->start_time ?? '23:59:59');
+            });
+
+        $statusLabels = [
+            'booked' => 'Confermato',
+            'confirmed' => 'Confermato',
+            'waiting' => 'In attesa',
+            'cancelled' => 'Annullato',
         ];
 
+        $this->bookedLessons = $bookings
+            ->map(function (CourseBooking $booking) use ($statusLabels): array {
+                $occurrence = $booking->occurrence;
+                $course = $occurrence?->course;
+                $trainer = $course?->trainer;
+                $branch = $course?->branch;
+
+                $dateLabel = $occurrence?->date
+                    ? ucfirst($occurrence->date->locale('it')->translatedFormat('D d'))
+                    : '-- --';
+
+                return [
+                    'date' => $dateLabel,
+                    'time' => $occurrence?->start_time ? substr($occurrence->start_time, 0, 5) : '--:--',
+                    'title' => $course?->title ?? 'Lezione',
+                    'coach' => $trainer?->name ?? 'Trainer',
+                    'room' => $branch?->name ?? 'Sede',
+                    'status' => $statusLabels[$booking->status] ?? ucfirst($booking->status ?? 'Prenotato'),
+                ];
+            })
+            ->values()
+            ->take(4)
+            ->all();
     }
 
     public function render()

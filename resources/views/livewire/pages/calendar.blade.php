@@ -176,6 +176,22 @@
             font-weight: 700;
             font-size: 13px;
             align-self: flex-start;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .btn-cta.is-secondary {
+            background: #131316;
+            color: var(--text);
+            border: 1px solid var(--line);
+        }
+        .btn-cta.is-waitlist {
+            background: rgba(243,90,167,0.18);
+            color: var(--accent-2);
+            border: 1px solid rgba(243,90,167,0.5);
+        }
+        .btn-cta.is-disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            box-shadow: none;
         }
     </style>
 @endpush
@@ -185,35 +201,38 @@
         <div class="filters-panel mt-2">
             <label class="filter-group">
                 Sede
-                <select class="filter-select">
-                    <option>Qualsiasi</option>
-                    <option>Milano Centro</option>
-                    <option>Milano Nord</option>
+                <select class="filter-select" wire:model="selectedBranch">
+                    <option value="">Qualsiasi</option>
+                    @foreach ($branches as $branch)
+                        <option value="{{ $branch['id'] }}">{{ $branch['name'] }}</option>
+                    @endforeach
                 </select>
             </label>
             <label class="filter-group">
                 Trainer
-                <select class="filter-select">
-                    <option>Qualsiasi</option>
+                <select class="filter-select" wire:model="selectedTrainer">
+                    <option value="">Qualsiasi</option>
                     @foreach ($trainers as $trainer)
-                        <option>{{ $trainer['name'] }}</option>
+                        <option value="{{ $trainer['id'] }}">{{ $trainer['name'] }}</option>
                     @endforeach
                 </select>
             </label>
             <label class="filter-group">
                 Giorno
-                <select class="filter-select">
-                    <option>Qualsiasi</option>
+                <select class="filter-select" wire:model="selectedWeekday">
+                    <option value="">Qualsiasi</option>
                     @foreach ($calendar['weekdays'] as $weekday)
-                        <option>{{ $weekday }}</option>
+                        <option value="{{ $weekday }}">{{ $weekday }}</option>
                     @endforeach
                 </select>
             </label>
             <label class="filter-group">
                 Corso
-                <select class="filter-select">
-                    <option>Pilates</option>
-                    <option>Functional</option>
+                <select class="filter-select" wire:model="selectedCourse">
+                    <option value="">Qualsiasi</option>
+                    @foreach ($courses as $course)
+                        <option value="{{ $course['id'] }}">{{ $course['title'] }}</option>
+                    @endforeach
                 </select>
             </label>
         </div>
@@ -267,21 +286,37 @@
             @endforeach
         </section>
 
-        @foreach ($lessonCards as $card)
-            <article class="list-card" id="{{ $card['id'] }}">
+        @if (!empty($lessonCards))
+            @foreach ($lessonCards as $card)
+                <article class="list-card" id="{{ $card['id'] }}">
+                    <div class="thumb" aria-hidden="true"></div>
+                    <div class="list-body d-flex flex-column">
+                        <div class="category">{{ $card['category'] }}</div>
+                        <div class="trainer">Trainer: {{ $card['trainer'] }}</div>
+                        <div class="title">{{ $card['title'] }}</div>
+                        <div class="list-tags">
+                            @foreach ($card['tags'] as $tag)
+                                <span>{{ $tag }}</span>
+                            @endforeach
+                        </div>
+                        <button class="btn-cta {{ $card['cta_variant'] }} {{ $card['cta_disabled'] ? 'is-disabled' : '' }}"
+                                type="button"
+                                @if ($card['cta_disabled']) disabled @endif
+                                wire:click="bookOccurrence({{ $card['occurrence_id'] }})">
+                            {{ $card['cta'] }}
+                        </button>
+                    </div>
+                </article>
+            @endforeach
+        @else
+            <article class="list-card">
                 <div class="thumb" aria-hidden="true"></div>
                 <div class="list-body d-flex flex-column">
-                    <div class="category">{{ $card['category'] }}</div>
-                    <div class="trainer">Trainer: {{ $card['trainer'] }}</div>
-                    <div class="title">{{ $card['title'] }}</div>
-                    <div class="list-tags">
-                        @foreach ($card['tags'] as $tag)
-                            <span>{{ $tag }}</span>
-                        @endforeach
-                    </div>
-                    <button class="btn-cta" type="button">{{ $card['cta'] }}</button>
+                    <div class="category">Nessuna lezione</div>
+                    <div class="title">Non ci sono lezioni disponibili</div>
+                    <div class="trainer">Prova a modificare i filtri o il giorno.</div>
                 </div>
             </article>
-        @endforeach
+        @endif
     </main>
 </div>
