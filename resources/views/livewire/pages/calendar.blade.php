@@ -590,24 +590,9 @@
                             <div class="trainer-badge" style="background: {{ $trainerGroup['trainer_color'] }};">
                                 {{ $this->getTrainerInitials($trainerGroup['trainer_name']) }}
                             </div>
-<<<<<<< HEAD
                             <div class="trainer-name">{{ $trainerGroup['trainer_name'] }}</div>
                             <div style="margin-left: auto; color: var(--muted); font-size: 13px;">
                                 {{ count($trainerGroup['courses']) }} {{ count($trainerGroup['courses']) === 1 ? 'corso' : 'corsi' }}
-=======
-                            @php
-                                $insufficientTokens = $card['action'] === 'book' && $availableTokens < 1;
-                                $ctaDisabled = $card['cta_disabled'] || $insufficientTokens;
-                                $ctaLabel = $insufficientTokens ? 'Token insufficienti' : $card['cta'];
-                            @endphp
-                            <div class="list-actions">
-                                <button class="btn-cta {{ $card['cta_variant'] }} {{ $ctaDisabled ? 'is-disabled' : '' }}"
-                                        type="button"
-                                        @if ($ctaDisabled) disabled @endif
-                                        wire:click="openBookingModal({{ $card['occurrence_id'] }}, '{{ $card['action'] ?? 'book' }}')">
-                                    {{ $ctaLabel }}
-                                </button>
->>>>>>> ed21cc5fd1c083279ba37b43a2e6ae28f4a4219f
                             </div>
                         </div>
                         @foreach ($trainerGroup['courses'] as $course)
@@ -817,7 +802,6 @@
                 });
             };
 
-<<<<<<< HEAD
             const setupCourseOverlay = () => {
                 const root = document.getElementById('calendar-root');
                 if (!root || root.__courseOverlayInit) return;
@@ -999,10 +983,7 @@
                 setupGlobalModalHandlers();
                 setupCourseOverlay();
                 setupTimeSlotHandlers();
-=======
-            const init = () => {
-                setupGlobalModalHandlers();
->>>>>>> ed21cc5fd1c083279ba37b43a2e6ae28f4a4219f
+
             };
 
             document.addEventListener('DOMContentLoaded', init);
