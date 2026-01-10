@@ -230,17 +230,6 @@
             margin-top: 4px;
             flex-wrap: wrap;
         }
-        .btn-detail {
-            background: transparent;
-            border: 1px solid #2a2a2f;
-            color: var(--muted);
-            padding: 8px 12px;
-            border-radius: 999px;
-            font-size: 12px;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
         .btn-cta {
             background: var(--accent);
             color: #0a0a0a;
@@ -270,114 +259,6 @@
             opacity: 0.7;
             cursor: not-allowed;
             box-shadow: none;
-        }
-        .course-overlay {
-            position: fixed;
-            inset: 0;
-            z-index: 35;
-            display: grid;
-            place-items: center;
-            padding: 20px;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.25s ease;
-        }
-        .course-overlay.is-open {
-            opacity: 1;
-            pointer-events: auto;
-        }
-        .course-backdrop {
-            position: absolute;
-            inset: 0;
-            background: rgba(6, 6, 8, 0.78);
-            backdrop-filter: blur(12px);
-        }
-        .course-card {
-            position: relative;
-            width: min(420px, 100%);
-            background: #0f0f12;
-            border-radius: 22px;
-            padding: 18px;
-            border: 1px solid rgba(255,255,255,0.06);
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
-            display: grid;
-            gap: 12px;
-        }
-        .course-close {
-            position: absolute;
-            top: 14px;
-            right: 14px;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            border: 1px solid #2a2a2f;
-            background: #141418;
-            color: var(--text);
-            display: grid;
-            place-items: center;
-        }
-        .course-eyebrow {
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.18em;
-            color: var(--muted);
-        }
-        .course-title {
-            font-size: 20px;
-            font-weight: 700;
-        }
-        .course-title span { color: var(--accent); }
-        .course-meta {
-            color: var(--muted);
-            font-size: 13px;
-        }
-        .course-media {
-            height: 180px;
-            border-radius: 18px;
-            background: linear-gradient(140deg, rgba(126,252,91,0.2), rgba(243,90,167,0.15)), #0b0b0e;
-            border: 1px solid rgba(255,255,255,0.05);
-            position: relative;
-            overflow: hidden;
-        }
-        .course-media::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: repeating-linear-gradient(
-                120deg,
-                rgba(255,255,255,0.04),
-                rgba(255,255,255,0.04) 14px,
-                transparent 14px,
-                transparent 28px
-            );
-            opacity: 0.4;
-        }
-        .course-tags {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        .course-tags span {
-            padding: 6px 10px;
-            background: #131317;
-            border-radius: 999px;
-            color: var(--muted);
-            font-size: 11px;
-            border: 1px solid #242428;
-        }
-        .course-actions {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-        }
-        .btn-ghost {
-            background: transparent;
-            border: 1px solid #2a2a2f;
-            color: var(--muted);
-            border-radius: 999px;
-            padding: 9px 14px;
-            font-size: 12px;
         }
         .rv-modal {
             position: fixed;
@@ -611,23 +492,8 @@
                                 $ctaLabel = $insufficientTokens ? 'Token insufficienti' : $card['cta'];
                             @endphp
                             <div class="list-actions">
-                                <button class="btn-detail js-course-detail" type="button"
-                                        data-course-id="{{ $card['id'] }}"
-                                        data-course-occurrence="{{ $card['occurrence_id'] }}"
-                                        data-course-title="{{ $card['title'] }}"
-                                        data-course-trainer="{{ $card['trainer'] }}"
-                                        data-course-category="{{ $card['category'] }}"
-                                        data-course-tags='@json($card['tags'])'
-                                        data-course-cta="{{ $ctaLabel }}"
-                                        data-course-cta-variant="{{ $card['cta_variant'] }}"
-                                        data-course-cta-disabled="{{ $ctaDisabled ? '1' : '0' }}"
-                                        data-course-action="{{ $card['action'] ?? '' }}"
-                                        data-course-target="cta-{{ $card['id'] }}">
-                                    Dettagli <i class="bi bi-arrow-up-right"></i>
-                                </button>
                                 <button class="btn-cta {{ $card['cta_variant'] }} {{ $ctaDisabled ? 'is-disabled' : '' }}"
                                         type="button"
-                                        id="cta-{{ $card['id'] }}"
                                         @if ($ctaDisabled) disabled @endif
                                         wire:click="openBookingModal({{ $card['occurrence_id'] }}, '{{ $card['action'] ?? 'book' }}')">
                                     {{ $ctaLabel }}
@@ -649,27 +515,6 @@
         </div>
     </main>
 
-    <div class="course-overlay" data-course-overlay aria-hidden="true">
-        <div class="course-backdrop" data-course-close></div>
-        <div class="course-card">
-            <button class="course-close" type="button" data-course-close>
-                <i class="bi bi-x-lg"></i>
-            </button>
-            <div class="course-eyebrow" data-course-eyebrow>Corso</div>
-            <div class="course-title">
-                Lezione <span data-course-title>Reverbia</span>
-            </div>
-            <div class="course-meta">
-                Trainer: <span data-course-trainer>Trainer</span>
-            </div>
-            <div class="course-media" aria-hidden="true"></div>
-            <div class="course-tags" data-course-tags></div>
-            <div class="course-actions">
-                <button class="btn-ghost" type="button" data-course-close>Chiudi</button>
-                <button class="btn-cta" type="button" data-course-cta>Prenota ora</button>
-            </div>
-        </div>
-    </div>
 
     <div class="rv-modal" data-modal="booking-confirm" aria-hidden="true">
         <div class="rv-modal-backdrop" data-modal-close></div>
@@ -790,111 +635,8 @@
                 });
             };
 
-            const setupCourseOverlay = () => {
-                const root = document.getElementById('calendar-root');
-                if (!root || root.__courseOverlayInit) return;
-                root.__courseOverlayInit = true;
-
-                const overlay = root.querySelector('[data-course-overlay]');
-                if (!overlay) return;
-
-                const closeOverlay = () => {
-                    overlay.classList.remove('is-open');
-                    overlay.setAttribute('aria-hidden', 'true');
-                    document.body.classList.remove('modal-open');
-                };
-
-                const openOverlay = (data) => {
-                    overlay.classList.add('is-open');
-                    overlay.setAttribute('aria-hidden', 'false');
-                    document.body.classList.add('modal-open');
-
-                    const eyebrow = overlay.querySelector('[data-course-eyebrow]');
-                    const title = overlay.querySelector('[data-course-title]');
-                    const trainer = overlay.querySelector('[data-course-trainer]');
-                    const tags = overlay.querySelector('[data-course-tags]');
-                    const cta = overlay.querySelector('[data-course-cta]');
-
-                    if (eyebrow) eyebrow.textContent = data.category || 'Corso';
-                    if (title) title.textContent = data.title || 'Reverbia';
-                    if (trainer) trainer.textContent = data.trainer || 'Trainer';
-
-                    if (tags) {
-                        tags.innerHTML = '';
-                        (data.tags || []).forEach((tag) => {
-                            const span = document.createElement('span');
-                            span.textContent = tag;
-                            tags.appendChild(span);
-                        });
-                    }
-
-                    if (cta) {
-                        cta.textContent = data.cta || 'Prenota ora';
-                        cta.className = `btn-cta ${data.ctaVariant || ''} ${data.ctaDisabled ? 'is-disabled' : ''}`.trim();
-                        cta.disabled = !data.action || data.ctaDisabled;
-                        cta.dataset.ctaTarget = data.ctaTarget || '';
-                        cta.dataset.occurrenceId = data.occurrenceId || '';
-                        cta.dataset.action = data.action || '';
-                    }
-                };
-
-                root.addEventListener('click', (event) => {
-                    const detailButton = event.target.closest('.js-course-detail');
-                    if (!detailButton) return;
-
-                    let tags = [];
-                    if (detailButton.dataset.courseTags) {
-                        try {
-                            tags = JSON.parse(detailButton.dataset.courseTags);
-                        } catch (e) {
-                            tags = [];
-                        }
-                    }
-
-                    openOverlay({
-                        title: detailButton.dataset.courseTitle,
-                        trainer: detailButton.dataset.courseTrainer,
-                        category: detailButton.dataset.courseCategory,
-                        tags,
-                        cta: detailButton.dataset.courseCta,
-                        ctaVariant: detailButton.dataset.courseCtaVariant,
-                        ctaDisabled: detailButton.dataset.courseCtaDisabled === '1',
-                        action: detailButton.dataset.courseAction,
-                        ctaTarget: detailButton.dataset.courseTarget,
-                        occurrenceId: detailButton.dataset.courseOccurrence,
-                    });
-                });
-
-                overlay.addEventListener('click', (event) => {
-                    if (event.target.closest('[data-course-close]')) {
-                        closeOverlay();
-                    }
-                });
-
-                document.addEventListener('keydown', (event) => {
-                    if (event.key === 'Escape' && overlay.classList.contains('is-open')) {
-                        closeOverlay();
-                    }
-                });
-
-                const ctaButton = overlay.querySelector('[data-course-cta]');
-                if (ctaButton) {
-                    ctaButton.addEventListener('click', () => {
-                        if (ctaButton.disabled) return;
-                        const targetId = ctaButton.dataset.ctaTarget;
-                        if (!targetId) return;
-                        const target = document.getElementById(targetId);
-                        if (target) {
-                            closeOverlay();
-                            target.click();
-                        }
-                    });
-                }
-            };
-
             const init = () => {
                 setupGlobalModalHandlers();
-                setupCourseOverlay();
             };
 
             document.addEventListener('DOMContentLoaded', init);
