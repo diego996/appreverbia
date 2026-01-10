@@ -54,9 +54,24 @@ class Calendar extends Component
     public function mount(): void
     {
         $today = now();
-        $this->currentMonth = $today->month;
-        $this->currentYear = $today->year;
-        $this->selectedDate = $today->toDateString();
+        
+        $requestedDate = request()->query('date');
+        if ($requestedDate) {
+            try {
+                $date = Carbon::parse($requestedDate);
+                $this->currentMonth = $date->month;
+                $this->currentYear = $date->year;
+                $this->selectedDate = $date->toDateString();
+            } catch (\Exception $e) {
+                $this->currentMonth = $today->month;
+                $this->currentYear = $today->year;
+                $this->selectedDate = $today->toDateString();
+            }
+        } else {
+            $this->currentMonth = $today->month;
+            $this->currentYear = $today->year;
+            $this->selectedDate = $today->toDateString();
+        }
         
         $user = auth()->user();
         $this->selectedBranch = $user?->branch_id;

@@ -158,6 +158,16 @@
             border-color: rgba(126,252,91,0.9);
             color: #1b1b1e;
         }
+        .day.past {
+            background: #f4f3f7;
+            border-color: #e2e2e6;
+            color: #adadb5;
+        }
+        .day.past:hover {
+            transform: none;
+            cursor: default;
+        }
+
         .day-number {
             font-size: 13px;
             line-height: 1;
@@ -894,9 +904,19 @@
                         @foreach ($week as $day)
                             @php
                                 $classes = ['day'];
+                                $isPast = false;
+                                
+                                if ($day !== null) {
+                                    $dateObj = \Carbon\Carbon::create($currentYear, $currentMonth, $day)->startOfDay();
+                                    if ($dateObj->lt(now()->startOfDay())) {
+                                        $isPast = true;
+                                        $classes[] = 'past';
+                                    }
+                                }
+
                                 if ($day === $calendar['selectedDay']) {
                                     $classes[] = 'selected';
-                                } elseif ($day !== null && isset($calendar['specialDays'][$day])) {
+                                } elseif ($day !== null && isset($calendar['specialDays'][$day]) && !$isPast) {
                                     $classes[] = 'busy';
                                 }
                                 $dayTrainers = $day !== null && isset($calendar['trainersByDay'][$day]) 

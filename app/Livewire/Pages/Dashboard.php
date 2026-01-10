@@ -118,8 +118,19 @@ class Dashboard extends Component
             ->whereNotIn('id', $bookedOccurrenceIds)
             ->orderBy('date')
             ->orderBy('start_time')
-            ->limit(6)
+            ->limit(20) // Increase limit to account for filtered items
             ->get()
+            ->filter(function (CourseOccurrence $occurrence) {
+                // Filter out lessons starting in less than 1 hour
+                if ($occurrence->start_time && $occurrence->date) {
+                    $startDateTime = $occurrence->date->copy()->setTimeFromTimeString($occurrence->start_time);
+                    if (now()->addHour()->greaterThan($startDateTime)) {
+                        return false;
+                    }
+                }
+                return true;
+            })
+            ->take(6) // Take 6 after filtering
             ->filter(function (CourseOccurrence $occurrence) {
                 // Filter out full lessons
                 if ($occurrence->max_participants > 0) {
