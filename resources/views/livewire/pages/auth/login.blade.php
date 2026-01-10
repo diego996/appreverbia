@@ -64,9 +64,9 @@ new #[Layout('layouts.reverbia-guest')] #[Title('Reverbia - Login')] class exten
         <div class="links">
             @if (Route::has('password.request'))
                 Non ricordi le tue credenziali?<br>
-                Puoi fare un nuovo <a href="{{ route('password.request') }}" wire:navigate>reset</a> o contattare il <a href="#">supporto</a>.
+                Puoi fare un nuovo <a href="{{ route('password.request') }}" wire:navigate>reset</a>.
             @else
-                Hai bisogno di aiuto? Contatta il <a href="#">supporto</a>.
+                Hai bisogno di aiuto? Effettua un nuovo reset.
             @endif
         </div>
     </div>

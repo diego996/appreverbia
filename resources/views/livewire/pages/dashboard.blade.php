@@ -91,17 +91,24 @@
         <section class="section-block">
             <div class="section-title">Prossime lezioni</div>
             <div class="lesson-rail">
-                @foreach ($bookedLessons as $lesson)
+                @if (!empty($bookedLessons))
+                    @foreach ($bookedLessons as $lesson)
+                        <article class="lesson-card">
+                            <div class="lesson-top">
+                                <span>{{ strtoupper($lesson['date']) }} - {{ $lesson['time'] }}</span>
+                                <span class="badge-status">{{ $lesson['status'] }}</span>
+                            </div>
+                            <div class="lesson-title">{{ $lesson['title'] }}</div>
+                            <div class="lesson-meta">Coach: {{ $lesson['coach'] }}</div>
+                            <div class="lesson-meta">Sala: {{ $lesson['room'] }}</div>
+                        </article>
+                    @endforeach
+                @else
                     <article class="lesson-card">
-                        <div class="lesson-top">
-                            <span>{{ strtoupper($lesson['date']) }} - {{ $lesson['time'] }}</span>
-                            <span class="badge-status">{{ $lesson['status'] }}</span>
-                        </div>
-                        <div class="lesson-title">{{ $lesson['title'] }}</div>
-                        <div class="lesson-meta">Coach: {{ $lesson['coach'] }}</div>
-                        <div class="lesson-meta">Sala: {{ $lesson['room'] }}</div>
+                        <div class="lesson-title">Nessuna lezione prenotata</div>
+                        <div class="lesson-meta">Seleziona un corso dal calendario.</div>
                     </article>
-                @endforeach
+                @endif
 
                 <a class="lesson-card cta-card" href="#">
                     <div class="cta-title">I tuoi corsi</div>
