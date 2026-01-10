@@ -37,6 +37,7 @@ class Calendar extends Component
     public bool $confirmDuetto = false;
     public array $confirmingDetails = [];
     public int $availableTokens = 0;
+    public ?int $duettoTokens = null;
     public string $bookingError = '';
     public bool $hasDuetto = false;
     public ?string $duettoName = null;
@@ -225,6 +226,7 @@ class Calendar extends Component
         $this->bookingError = '';
         $this->confirmingDetails = [];
         $this->confirmingOccurrenceId = $occurrenceId;
+        $this->duettoTokens = null;
 
         $occurrence = CourseOccurrence::query()
             ->with(['course.trainer', 'course.branch'])
@@ -277,6 +279,9 @@ class Calendar extends Component
         ];
 
         $this->availableTokens = $this->calculateWalletBalance($user->id);
+        if ($this->hasDuetto && $user->duetto_id) {
+            $this->duettoTokens = $this->calculateWalletBalance($user->duetto_id);
+        }
         $this->dispatch('open-modal', 'booking-confirm');
     }
 
@@ -299,7 +304,7 @@ class Calendar extends Component
         $action = $this->confirmingAction;
         $isDuetto = $action === 'book' && $this->confirmDuetto && $user->duetto_id;
         $requiredSeats = $isDuetto ? 2 : 1;
-        $requiredTokens = $action === 'book' ? $requiredSeats : 0;
+        $requiredTokens = $action === 'book' ? 1 : 0;
 
         try {
             DB::transaction(function () use ($user, $action, $isDuetto, $requiredSeats, $requiredTokens) {
@@ -356,6 +361,10 @@ class Calendar extends Component
 
                 $duettoId = $isDuetto ? $user->duetto_id : null;
                 if ($duettoId) {
+                    $duettoTokens = $this->calculateWalletBalance($duettoId);
+                    if ($duettoTokens < 1) {
+                        throw new \RuntimeException('Il tuo duetto non ha token disponibili.');
+                    }
                     $duettoBooked = CourseBooking::query()
                         ->where('user_id', $duettoId)
                         ->where('occurrence_id', $occurrence->id)
@@ -373,7 +382,7 @@ class Calendar extends Component
                     'occurrence_id' => $occurrence->id,
                     'user_id' => $user->id,
                     'booked_at' => now(),
-                    'status' => 'booked',
+                    'status' => $isDuetto ? 'confirmed_duetto' : 'booked',
                 ]);
 
                 if ($duettoId) {
@@ -381,7 +390,7 @@ class Calendar extends Component
                         'occurrence_id' => $occurrence->id,
                         'user_id' => $duettoId,
                         'booked_at' => now(),
-                        'status' => 'booked',
+                        'status' => 'pending_duetto',
                     ]);
                 }
 
@@ -397,7 +406,7 @@ class Calendar extends Component
                         'user_id' => $user->id,
                         'model_type' => CourseOccurrence::class,
                         'model_id' => $occurrence->id,
-                        'token_delta' => -$requiredTokens,
+                        'token_delta' => -1,
                         'reason' => 'booking',
                         'meta' => json_encode([
                             'duetto_id' => $duettoId,
@@ -405,6 +414,30 @@ class Calendar extends Component
                         'created_at' => now(),
                         'updated_at' => now(),
                     ]);
+                }
+
+                if ($duettoId) {
+                    $duettoWallet = DB::table('wallets')
+                        ->where('user_id', $duettoId)
+                        ->where('model_type', CourseOccurrence::class)
+                        ->where('model_id', $occurrence->id)
+                        ->where('reason', 'booking')
+                        ->first();
+
+                    if (!$duettoWallet) {
+                        DB::table('wallets')->insert([
+                            'user_id' => $duettoId,
+                            'model_type' => CourseOccurrence::class,
+                            'model_id' => $occurrence->id,
+                            'token_delta' => -1,
+                            'reason' => 'booking',
+                            'meta' => json_encode([
+                                'duetto_id' => $user->id,
+                            ]),
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                    }
                 }
             });
         } catch (\Throwable $exception) {
@@ -509,11 +542,17 @@ class Calendar extends Component
                     $tags[] = 'Dettagli disponibili';
                 }
 
-                $isBooked = $userBookings->has($occurrence->id);
+                $booking = $userBookings->get($occurrence->id);
+                $isBooked = $booking !== null;
                 $isWaitlisted = $userWaitlist->has($occurrence->id);
                 $isFull = $maxParticipants > 0 && $bookingsCount >= $maxParticipants;
 
-                if ($isBooked) {
+                if ($isBooked && in_array($booking->status, ['pending_duetto', 'confirmed_duetto'], true)) {
+                    $cta = 'In attesa duetto';
+                    $ctaVariant = 'is-secondary';
+                    $ctaDisabled = true;
+                    $action = null;
+                } elseif ($isBooked) {
                     $cta = 'Prenotato';
                     $ctaVariant = 'is-secondary';
                     $ctaDisabled = true;

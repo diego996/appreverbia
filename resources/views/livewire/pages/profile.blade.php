@@ -1,6 +1,7 @@
 @push('styles')
     <style>
         main.page-profile { padding: 12px 14px 90px; }
+        body.modal-open { overflow: hidden; }
         .section-block { margin-bottom: 22px; }
         .section-title {
             font-size: 12px;
@@ -42,12 +43,22 @@
         .lesson-actions {
             display: flex;
             justify-content: flex-end;
+            gap: 8px;
             margin-top: 10px;
+            flex-wrap: wrap;
         }
         .btn-cancel {
             background: transparent;
             color: var(--accent-2);
             border: 1px solid rgba(243,90,167,0.5);
+            border-radius: 999px;
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        .btn-duetto {
+            background: rgba(126,252,91,0.18);
+            color: var(--accent);
+            border: 1px solid rgba(126,252,91,0.5);
             border-radius: 999px;
             padding: 6px 12px;
             font-size: 12px;
@@ -97,16 +108,45 @@
             text-decoration: none;
         }
         .link-item span { color: var(--muted); font-size: 12px; }
-        .modal-content {
-            background: transparent;
-            border: none;
-            box-shadow: none;
+        .rv-modal {
+            position: fixed;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            padding: 20px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+            z-index: 40;
         }
-        .modal-dialog {
-            max-width: min(520px, calc(100% - 28px));
+        .rv-modal.is-open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .rv-modal-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(4, 4, 6, 0.72);
+            backdrop-filter: blur(10px);
+        }
+        .rv-modal-panel {
+            position: relative;
+            width: min(520px, calc(100% - 32px));
             margin: 0 auto;
-            width: 100%;
-            padding: 0 6px;
+        }
+        .rv-modal-close {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 1px solid #2a2a2f;
+            background: #111114;
+            color: var(--text);
+            display: grid;
+            place-items: center;
+            z-index: 2;
         }
         .modal-card {
             background: #0f0f12;
@@ -196,6 +236,11 @@
                         <div class="meta">Trainer: {{ $lesson['trainer'] }}</div>
                         <div class="meta">Sede: {{ $lesson['location'] }}</div>
                         <div class="lesson-actions">
+                            @if ($lesson['can_confirm_duetto'])
+                                <button class="btn-duetto" type="button" wire:click="openDuettoConfirmModal({{ $lesson['booking_id'] }})">
+                                    Conferma duetto
+                                </button>
+                            @endif
                             <button class="btn-cancel" type="button" wire:click="openCancelModal({{ $lesson['booking_id'] }})">
                                 Disdici
                             </button>
@@ -263,29 +308,125 @@
         </section>
     </main>
 
-    <x-modal name="cancel-booking" maxWidth="md" :show="false" focusable>
-        <div class="modal-card">
-            <div>
-                <div class="modal-title">Conferma disdetta</div>
-                <div class="modal-meta">
-                    {{ $confirmingLesson['title'] ?? 'Lezione' }} · {{ $confirmingLesson['date'] ?? '' }}
-                    @if (!empty($confirmingLesson['time']))
-                        · {{ $confirmingLesson['time'] }}
-                    @endif
+        <div class="rv-modal" data-modal="cancel-booking" aria-hidden="true">
+        <div class="rv-modal-backdrop" data-modal-close></div>
+        <div class="rv-modal-panel">
+            <button class="rv-modal-close" type="button" data-modal-close aria-label="Chiudi modal">
+                <i class="bi bi-x-lg"></i>
+            </button>
+            <div class="modal-card">
+                <div>
+                    <div class="modal-title">Conferma disdetta</div>
+                    <div class="modal-meta">
+                        {{ $confirmingLesson['title'] ?? 'Lezione' }} - {{ $confirmingLesson['date'] ?? '' }}
+                        @if (!empty($confirmingLesson['time']))
+                            - {{ $confirmingLesson['time'] }}
+                        @endif
+                    </div>
+                    <div class="modal-meta">
+                        Trainer: {{ $confirmingLesson['trainer'] ?? 'Trainer' }} - {{ $confirmingLesson['branch'] ?? 'Sede' }}
+                    </div>
                 </div>
-                <div class="modal-meta">
-                    Trainer: {{ $confirmingLesson['trainer'] ?? 'Trainer' }} · {{ $confirmingLesson['branch'] ?? 'Sede' }}
+
+                @if ($cancelError)
+                    <div class="modal-error">{{ $cancelError }}</div>
+                @endif
+
+                <div class="modal-actions">
+                    <button class="btn-secondary" type="button" data-modal-close>Annulla</button>
+                    <button class="btn-primary" type="button" wire:click="confirmCancelBooking">Conferma disdetta</button>
                 </div>
-            </div>
-
-            @if ($cancelError)
-                <div class="modal-error">{{ $cancelError }}</div>
-            @endif
-
-            <div class="modal-actions">
-                <button class="btn-secondary" type="button" x-on:click="$dispatch('close-modal', 'cancel-booking')">Annulla</button>
-                <button class="btn-primary" type="button" wire:click="confirmCancelBooking">Conferma disdetta</button>
             </div>
         </div>
-    </x-modal>
+    </div>
+
+    <div class="rv-modal" data-modal="confirm-duetto" aria-hidden="true">
+        <div class="rv-modal-backdrop" data-modal-close></div>
+        <div class="rv-modal-panel">
+            <button class="rv-modal-close" type="button" data-modal-close aria-label="Chiudi modal">
+                <i class="bi bi-x-lg"></i>
+            </button>
+            <div class="modal-card">
+                <div>
+                    <div class="modal-title">Conferma duetto</div>
+                    <div class="modal-meta">
+                        {{ $confirmingDuettoLesson['title'] ?? 'Lezione' }} - {{ $confirmingDuettoLesson['date'] ?? '' }}
+                        @if (!empty($confirmingDuettoLesson['time']))
+                            - {{ $confirmingDuettoLesson['time'] }}
+                        @endif
+                    </div>
+                    <div class="modal-meta">
+                        Trainer: {{ $confirmingDuettoLesson['trainer'] ?? 'Trainer' }} - {{ $confirmingDuettoLesson['branch'] ?? 'Sede' }}
+                    </div>
+                </div>
+
+                @if ($duettoError)
+                    <div class="modal-error">{{ $duettoError }}</div>
+                @endif
+
+                <div class="modal-actions">
+                    <button class="btn-secondary" type="button" data-modal-close>Annulla</button>
+                    <button class="btn-primary" type="button" wire:click="confirmDuettoBooking">Conferma</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+@push('scripts')
+    <script>
+        (function () {
+            const openModal = (name) => {
+                if (!name) return;
+                const modal = document.querySelector(`[data-modal="${name}"]`);
+                if (!modal) return;
+                modal.classList.add('is-open');
+                modal.setAttribute('aria-hidden', 'false');
+                document.body.classList.add('modal-open');
+            };
+
+            const closeModal = (name, modalEl = null) => {
+                const modal = modalEl || document.querySelector(`[data-modal="${name}"]`);
+                if (!modal) return;
+                modal.classList.remove('is-open');
+                modal.setAttribute('aria-hidden', 'true');
+                document.body.classList.remove('modal-open');
+            };
+
+            const setupModalHandlers = () => {
+                if (window.__reverbiaProfileModalHandlers) return;
+                window.__reverbiaProfileModalHandlers = true;
+
+                window.addEventListener('open-modal', (event) => {
+                    const name = typeof event.detail === 'string' ? event.detail : event.detail?.name;
+                    openModal(name);
+                });
+
+                window.addEventListener('close-modal', (event) => {
+                    const name = typeof event.detail === 'string' ? event.detail : event.detail?.name;
+                    closeModal(name);
+                });
+
+                document.addEventListener('click', (event) => {
+                    const closeTrigger = event.target.closest('[data-modal-close]');
+                    if (!closeTrigger) return;
+                    const modal = closeTrigger.closest('[data-modal]');
+                    if (modal) {
+                        closeModal(null, modal);
+                    }
+                });
+
+                document.addEventListener('keydown', (event) => {
+                    if (event.key !== 'Escape') return;
+                    const modal = document.querySelector('[data-modal].is-open');
+                    if (modal) {
+                        closeModal(null, modal);
+                    }
+                });
+            };
+
+            document.addEventListener('DOMContentLoaded', setupModalHandlers);
+            document.addEventListener('livewire:navigated', setupModalHandlers);
+        })();
+    </script>
+@endpush

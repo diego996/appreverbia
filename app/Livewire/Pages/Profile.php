@@ -23,6 +23,9 @@ class Profile extends Component
     public ?int $confirmingCancelId = null;
     public array $confirmingLesson = [];
     public string $cancelError = '';
+    public ?int $confirmingDuettoId = null;
+    public array $confirmingDuettoLesson = [];
+    public string $duettoError = '';
 
     public function mount(): void
     {
@@ -74,6 +77,14 @@ class Profile extends Component
         $upcoming = [];
         $history = [];
 
+        $statusLabels = [
+            'booked' => 'Confermato',
+            'confirmed_duetto' => 'In attesa duetto',
+            'pending_duetto' => 'Richiesta duetto',
+            'waiting' => 'In attesa',
+            'cancelled' => 'Annullato',
+        ];
+
         foreach ($bookings as $booking) {
             $occurrence = $booking->occurrence;
             if (!$occurrence || !$occurrence->date) {
@@ -84,6 +95,7 @@ class Profile extends Component
             $trainer = $course?->trainer;
             $branch = $course?->branch;
 
+            $status = $booking->status ?? 'booked';
             $item = [
                 'booking_id' => $booking->id,
                 'occurrence_id' => $occurrence->id,
@@ -92,7 +104,8 @@ class Profile extends Component
                 'title' => $course?->title ?? 'Lezione',
                 'trainer' => $trainer?->name ?? 'Trainer',
                 'location' => $branch?->name ?? 'Sede',
-                'status' => $booking->status,
+                'status' => $statusLabels[$status] ?? ucfirst($status),
+                'can_confirm_duetto' => $status === 'pending_duetto',
             ];
 
             if ($occurrence->date->greaterThanOrEqualTo($today)) {
@@ -143,6 +156,104 @@ class Profile extends Component
         ];
 
         $this->dispatch('open-modal', 'cancel-booking');
+    }
+
+    public function openDuettoConfirmModal(int $bookingId): void
+    {
+        $user = auth()->user();
+        if (!$user) {
+            return;
+        }
+
+        $this->duettoError = '';
+        $this->confirmingDuettoLesson = [];
+        $this->confirmingDuettoId = $bookingId;
+
+        $booking = CourseBooking::query()
+            ->where('id', $bookingId)
+            ->where('user_id', $user->id)
+            ->where('status', 'pending_duetto')
+            ->with(['occurrence.course.trainer', 'occurrence.course.branch'])
+            ->first();
+
+        if (!$booking || !$booking->occurrence) {
+            $this->duettoError = 'Richiesta duetto non disponibile.';
+            $this->dispatch('open-modal', 'confirm-duetto');
+            return;
+        }
+
+        $occurrence = $booking->occurrence;
+        $course = $occurrence->course;
+
+        $this->confirmingDuettoLesson = [
+            'title' => $course?->title ?? 'Lezione',
+            'date' => $occurrence->date->translatedFormat('D d M'),
+            'time' => substr($occurrence->start_time ?? '--:--', 0, 5),
+            'trainer' => $course?->trainer?->name ?? 'Trainer',
+            'branch' => $course?->branch?->name ?? 'Sede',
+        ];
+
+        $this->dispatch('open-modal', 'confirm-duetto');
+    }
+
+    public function confirmDuettoBooking(): void
+    {
+        $user = auth()->user();
+        if (!$user || !$this->confirmingDuettoId) {
+            return;
+        }
+
+        $this->duettoError = '';
+
+        try {
+            DB::transaction(function () use ($user) {
+                $booking = CourseBooking::query()
+                    ->where('id', $this->confirmingDuettoId)
+                    ->where('user_id', $user->id)
+                    ->where('status', 'pending_duetto')
+                    ->lockForUpdate()
+                    ->first();
+
+                if (!$booking) {
+                    throw new \RuntimeException('Richiesta duetto non disponibile.');
+                }
+
+                $occurrenceId = $booking->occurrence_id;
+                $duettoId = $user->duetto_id;
+
+                $partnerBooking = null;
+                if ($duettoId) {
+                    $partnerBooking = CourseBooking::query()
+                        ->where('occurrence_id', $occurrenceId)
+                        ->where('user_id', $duettoId)
+                        ->whereIn('status', ['pending_duetto', 'confirmed_duetto'])
+                        ->lockForUpdate()
+                        ->first();
+                }
+
+                if (!$partnerBooking) {
+                    throw new \RuntimeException('Duetto non disponibile.');
+                }
+
+                $booking->update([
+                    'status' => 'confirmed_duetto',
+                ]);
+
+                if ($partnerBooking && $partnerBooking->status === 'confirmed_duetto') {
+                    CourseBooking::query()
+                        ->whereIn('id', [$booking->id, $partnerBooking->id])
+                        ->update([
+                            'status' => 'booked',
+                        ]);
+                }
+            });
+        } catch (\Throwable $exception) {
+            $this->duettoError = $exception->getMessage();
+            return;
+        }
+
+        $this->dispatch('close-modal', 'confirm-duetto');
+        $this->mount();
     }
 
     public function confirmCancelBooking(): void
@@ -204,6 +315,37 @@ class Profile extends Component
                             'created_at' => now(),
                             'updated_at' => now(),
                         ]);
+                    }
+                }
+
+                if ($duettoId) {
+                    $duettoWallet = DB::table('wallets')
+                        ->where('user_id', $duettoId)
+                        ->where('model_type', CourseOccurrence::class)
+                        ->where('model_id', $occurrenceId)
+                        ->where('reason', 'booking')
+                        ->first();
+
+                    if ($duettoWallet) {
+                        $duettoRefundExists = DB::table('wallets')
+                            ->where('user_id', $duettoId)
+                            ->where('model_type', CourseOccurrence::class)
+                            ->where('model_id', $occurrenceId)
+                            ->where('reason', 'refund')
+                            ->exists();
+
+                        if (!$duettoRefundExists) {
+                            $tokenDelta = (int) ($duettoWallet->token_delta ?? -1);
+                            DB::table('wallets')->insert([
+                                'user_id' => $duettoId,
+                                'model_type' => CourseOccurrence::class,
+                                'model_id' => $occurrenceId,
+                                'token_delta' => abs($tokenDelta),
+                                'reason' => 'refund',
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]);
+                        }
                     }
                 }
 

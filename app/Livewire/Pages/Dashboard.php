@@ -60,6 +60,8 @@ class Dashboard extends Component
         $statusLabels = [
             'booked' => 'Confermato',
             'confirmed' => 'Confermato',
+            'confirmed_duetto' => 'In attesa duetto',
+            'pending_duetto' => 'Richiesta duetto',
             'waiting' => 'In attesa',
             'cancelled' => 'Annullato',
         ];
