@@ -1163,8 +1163,8 @@
                 if (window.__reverbiaModalHandlers) return;
                 window.__reverbiaModalHandlers = true;
 
-                // Listen to Livewire events
-                document.addEventListener('livewire:init', () => {
+                // Register Livewire events
+                const registerLivewireEvents = () => {
                     Livewire.on('open-modal', (modalName) => {
                         openModal(modalName);
                     });
@@ -1172,7 +1172,13 @@
                     Livewire.on('close-modal', (modalName) => {
                         closeModal(modalName);
                     });
-                });
+                };
+
+                if (window.Livewire) {
+                    registerLivewireEvents();
+                } else {
+                    document.addEventListener('livewire:init', registerLivewireEvents);
+                }
 
                 // Fallback for window events
                 window.addEventListener('open-modal', (event) => {
@@ -1314,6 +1320,8 @@
             const setupTimeSlotHandlers = () => {
                 const root = document.getElementById('calendar-root');
                 if (!root) return;
+                if (root.dataset.timeHandlersInitialized) return;
+                root.dataset.timeHandlersInitialized = "true";
 
                 // Handle time slot selection changes
                 root.addEventListener('change', (event) => {

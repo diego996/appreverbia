@@ -403,129 +403,144 @@
 
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const carousel = document.getElementById('lessonsCarousel');
-        const dotsContainer = document.getElementById('carouselDots');
-        
-        if (!carousel) return;
-        
-        const cards = carousel.querySelectorAll('.lesson-card');
-        const totalCards = cards.length;
-        
-        if (totalCards <= 1) return;
-        
-        let currentIndex = 0;
-        let startX = 0;
-        let isDragging = false;
-        
-        // Create dots
-        for (let i = 0; i < totalCards; i++) {
-            const dot = document.createElement('div');
-            dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
-            dot.addEventListener('click', () => goToSlide(i));
-            dotsContainer.appendChild(dot);
-        }
-        
-        const dots = dotsContainer.querySelectorAll('.carousel-dot');
-        
-        function updateCarousel() {
-            const offset = -currentIndex * 100;
-            carousel.style.transform = `translateX(${offset}%)`;
+    (function() {
+        function initCarousel() {
+            const carousel = document.getElementById('lessonsCarousel');
+            const dotsContainer = document.getElementById('carouselDots');
             
-            dots.forEach((dot, index) => {
-                dot.classList.toggle('active', index === currentIndex);
+            if (!carousel) return;
+            if (carousel.dataset.initialized) return;
+            carousel.dataset.initialized = "true";
+            
+            const cards = carousel.querySelectorAll('.lesson-card');
+            const totalCards = cards.length;
+            
+            if (totalCards <= 1) return;
+            
+            let currentIndex = 0;
+            let startX = 0;
+            let isDragging = false;
+            
+            // Create dots
+            // Check if dots already exist (in case of partial update? unlikely but safe)
+            if (dotsContainer.innerHTML === '') {
+                for (let i = 0; i < totalCards; i++) {
+                    const dot = document.createElement('div');
+                    dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+                    dot.addEventListener('click', () => goToSlide(i));
+                    dotsContainer.appendChild(dot);
+                }
+            }
+            
+            const dots = dotsContainer.querySelectorAll('.carousel-dot');
+            
+            function updateCarousel() {
+                const offset = -currentIndex * 100;
+                carousel.style.transform = `translateX(${offset}%)`;
+                
+                dots.forEach((dot, index) => {
+                    dot.classList.toggle('active', index === currentIndex);
+                });
+            }
+            
+            function goToSlide(index) {
+                currentIndex = Math.max(0, Math.min(index, totalCards - 1));
+                updateCarousel();
+            }
+            
+            function nextSlide() {
+                if (currentIndex < totalCards - 1) {
+                    currentIndex++;
+                    updateCarousel();
+                }
+            }
+            
+            function prevSlide() {
+                if (currentIndex > 0) {
+                    currentIndex--;
+                    updateCarousel();
+                }
+            }
+            
+            // Touch events for swipe
+            carousel.addEventListener('touchstart', (e) => {
+                startX = e.touches[0].clientX;
+                isDragging = true;
             });
-        }
-        
-        function goToSlide(index) {
-            currentIndex = Math.max(0, Math.min(index, totalCards - 1));
-            updateCarousel();
-        }
-        
-        function nextSlide() {
-            if (currentIndex < totalCards - 1) {
-                currentIndex++;
-                updateCarousel();
-            }
-        }
-        
-        function prevSlide() {
-            if (currentIndex > 0) {
-                currentIndex--;
-                updateCarousel();
-            }
-        }
-        
-        // Touch events for swipe
-        carousel.addEventListener('touchstart', (e) => {
-            startX = e.touches[0].clientX;
-            isDragging = true;
-        });
-        
-        carousel.addEventListener('touchmove', (e) => {
-            if (!isDragging) return;
-        });
-        
-        carousel.addEventListener('touchend', (e) => {
-            if (!isDragging) return;
-            isDragging = false;
             
-            const endX = e.changedTouches[0].clientX;
-            const diff = startX - endX;
+            carousel.addEventListener('touchmove', (e) => {
+                if (!isDragging) return;
+            });
             
-            if (Math.abs(diff) > 50) {
-                if (diff > 0) {
-                    nextSlide();
-                } else {
-                    prevSlide();
+            carousel.addEventListener('touchend', (e) => {
+                if (!isDragging) return;
+                isDragging = false;
+                
+                const endX = e.changedTouches[0].clientX;
+                const diff = startX - endX;
+                
+                if (Math.abs(diff) > 50) {
+                    if (diff > 0) {
+                        nextSlide();
+                    } else {
+                        prevSlide();
+                    }
                 }
-            }
-        });
-        
-        // Mouse events for desktop drag
-        carousel.addEventListener('mousedown', (e) => {
-            startX = e.clientX;
-            isDragging = true;
-            carousel.style.cursor = 'grabbing';
-        });
-        
-        carousel.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            e.preventDefault();
-        });
-        
-        carousel.addEventListener('mouseup', (e) => {
-            if (!isDragging) return;
-            isDragging = false;
-            carousel.style.cursor = 'grab';
+            });
             
-            const endX = e.clientX;
-            const diff = startX - endX;
+            // Mouse events for desktop drag
+            carousel.addEventListener('mousedown', (e) => {
+                startX = e.clientX;
+                isDragging = true;
+                carousel.style.cursor = 'grabbing';
+            });
             
-            if (Math.abs(diff) > 50) {
-                if (diff > 0) {
-                    nextSlide();
-                } else {
-                    prevSlide();
-                }
-            }
-        });
-        
-        carousel.addEventListener('mouseleave', () => {
-            if (isDragging) {
+            carousel.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                e.preventDefault();
+            });
+            
+            carousel.addEventListener('mouseup', (e) => {
+                if (!isDragging) return;
                 isDragging = false;
                 carousel.style.cursor = 'grab';
-            }
-        });
-        
-        // Auto-advance carousel every 5 seconds
-        setInterval(() => {
-            if (currentIndex < totalCards - 1) {
-                nextSlide();
-            } else {
-                goToSlide(0);
-            }
-        }, 5000);
-    });
+                
+                const endX = e.clientX;
+                const diff = startX - endX;
+                
+                if (Math.abs(diff) > 50) {
+                    if (diff > 0) {
+                        nextSlide();
+                    } else {
+                        prevSlide();
+                    }
+                }
+            });
+            
+            carousel.addEventListener('mouseleave', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    carousel.style.cursor = 'grab';
+                }
+            });
+            
+            // Auto-advance carousel every 5 seconds
+            const intervalId = setInterval(() => {
+                // Check if carousel still exists in DOM
+                if (!document.getElementById('lessonsCarousel')) {
+                    clearInterval(intervalId);
+                    return;
+                }
+                if (currentIndex < totalCards - 1) {
+                    nextSlide();
+                } else {
+                    goToSlide(0);
+                }
+            }, 5000);
+        }
+
+        document.addEventListener('DOMContentLoaded', initCarousel);
+        document.addEventListener('livewire:navigated', initCarousel);
+    })();
 </script>
 @endpush
