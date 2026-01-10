@@ -8,9 +8,10 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\Title;
 use Livewire\Volt\Component;
 
-new #[Layout('layouts.guest')] class extends Component
+new #[Layout('layouts.reverbia-guest')] #[Title('Reverbia - Reset Password')] class extends Component
 {
     #[Locked]
     public string $token = '';
@@ -70,36 +71,42 @@ new #[Layout('layouts.guest')] class extends Component
 }; ?>
 
 <div>
-    <form wire:submit="resetPassword" class="vstack gap-3">
-        <!-- Email Address -->
-        <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input wire:model="email" id="email" type="email" name="email" required autofocus autocomplete="username" />
-            <x-input-error :messages="$errors->get('email')" class="mt-1" />
+    <div class="panel" aria-label="Reimposta password Reverbia">
+        <div class="logo" aria-hidden="true">
+            <x-application-logo class="app-logo" />
         </div>
+        <h1>Reimposta la tua password</h1>
 
-        <!-- Password -->
-        <div>
-            <x-input-label for="password" :value="__('Password')" />
-            <x-text-input wire:model="password" id="password" type="password" name="password" required autocomplete="new-password" />
-            <x-input-error :messages="$errors->get('password')" class="mt-1" />
+        <form wire:submit="resetPassword">
+            <div class="field">
+                <label for="email">Inserisci la tua email</label>
+                <input wire:model="email" id="email" type="email" name="email" placeholder="nome@domain.com" required autofocus autocomplete="username">
+                @error('email')
+                    <div class="error-text">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="field">
+                <label for="password">Nuova password</label>
+                <input wire:model="password" id="password" type="password" name="password" placeholder="********" required autocomplete="new-password">
+                @error('password')
+                    <div class="error-text">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="field">
+                <label for="password_confirmation">Conferma password</label>
+                <input wire:model="password_confirmation" id="password_confirmation" type="password" name="password_confirmation" placeholder="********" required autocomplete="new-password">
+                @error('password_confirmation')
+                    <div class="error-text">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <button class="btn" type="submit">Aggiorna password</button>
+        </form>
+
+        <div class="links">
+            Torna al <a href="{{ route('login') }}" wire:navigate>login</a>.
         </div>
-
-        <!-- Confirm Password -->
-        <div>
-            <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
-
-            <x-text-input wire:model="password_confirmation" id="password_confirmation"
-                          type="password"
-                          name="password_confirmation" required autocomplete="new-password" />
-
-            <x-input-error :messages="$errors->get('password_confirmation')" class="mt-1" />
-        </div>
-
-        <div class="d-flex justify-content-end">
-            <x-primary-button>
-                {{ __('Reset Password') }}
-            </x-primary-button>
-        </div>
-    </form>
+    </div>
 </div>
