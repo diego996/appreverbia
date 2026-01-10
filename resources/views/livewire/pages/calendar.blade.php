@@ -193,6 +193,72 @@
             cursor: not-allowed;
             box-shadow: none;
         }
+        .modal-card {
+            background: #0f0f12;
+            border-radius: 16px;
+            padding: 18px;
+            display: grid;
+            gap: 12px;
+        }
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .modal-meta {
+            color: var(--muted);
+            font-size: 13px;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 6px;
+        }
+        .btn-secondary {
+            background: transparent;
+            color: var(--muted);
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            padding: 9px 14px;
+            font-size: 13px;
+        }
+        .btn-primary {
+            background: var(--accent);
+            color: #0a0a0a;
+            border: none;
+            border-radius: 999px;
+            padding: 9px 14px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+        .modal-note {
+            background: rgba(126,252,91,0.12);
+            border: 1px solid rgba(126,252,91,0.3);
+            color: var(--accent);
+            padding: 8px 10px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+        .modal-error {
+            background: rgba(243,90,167,0.12);
+            border: 1px solid rgba(243,90,167,0.4);
+            color: var(--accent-2);
+            padding: 8px 10px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+        .duetto-toggle {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            font-size: 13px;
+            color: var(--muted);
+        }
+        .duetto-toggle input {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent);
+        }
     </style>
 @endpush
 
@@ -302,7 +368,7 @@
                         <button class="btn-cta {{ $card['cta_variant'] }} {{ $card['cta_disabled'] ? 'is-disabled' : '' }}"
                                 type="button"
                                 @if ($card['cta_disabled']) disabled @endif
-                                wire:click="bookOccurrence({{ $card['occurrence_id'] }})">
+                                @if ($card['action']) wire:click="openBookingModal({{ $card['occurrence_id'] }}, '{{ $card['action'] }}')" @endif>
                             {{ $card['cta'] }}
                         </button>
                     </div>
@@ -319,4 +385,52 @@
             </article>
         @endif
     </main>
+
+    <x-modal name="booking-confirm" :show="false" focusable>
+        <div class="modal-card">
+            <div>
+                <div class="modal-title">
+                    {{ $confirmingAction === 'waitlist' ? 'Conferma lista d\'attesa' : 'Conferma prenotazione' }}
+                </div>
+                <div class="modal-meta">
+                    {{ $confirmingDetails['title'] ?? 'Lezione' }} · {{ $confirmingDetails['date'] ?? '' }}
+                    @if (!empty($confirmingDetails['time']))
+                        · {{ $confirmingDetails['time'] }}
+                    @endif
+                </div>
+                <div class="modal-meta">
+                    Trainer: {{ $confirmingDetails['trainer'] ?? 'Trainer' }} · {{ $confirmingDetails['branch'] ?? 'Sede' }}
+                </div>
+            </div>
+
+            @php
+                $requiredTokens = $confirmingAction === 'book' ? ($confirmDuetto ? 2 : 1) : 0;
+                $insufficientTokens = $confirmingAction === 'book' && $availableTokens < $requiredTokens;
+                $hasBlockingError = $insufficientTokens || $bookingError;
+            @endphp
+
+            <div class="modal-note">
+                Token disponibili: {{ $availableTokens }} · Richiesti: {{ $requiredTokens }}
+            </div>
+
+            @if ($confirmingAction === 'book' && $hasDuetto)
+                <label class="duetto-toggle">
+                    <input type="checkbox" wire:model="confirmDuetto">
+                    Prenota in duetto {{ $duettoName ? 'con ' . $duettoName : '' }}
+                </label>
+            @endif
+
+            @if ($bookingError)
+                <div class="modal-error">{{ $bookingError }}</div>
+            @endif
+            @if ($insufficientTokens)
+                <div class="modal-error">Token insufficienti per questa prenotazione.</div>
+            @endif
+
+            <div class="modal-actions">
+                <button class="btn-secondary" type="button" x-on:click="$dispatch('close-modal', 'booking-confirm')">Annulla</button>
+                <button class="btn-primary" type="button" wire:click="confirmBooking" @if ($hasBlockingError) disabled @endif>Conferma</button>
+            </div>
+        </div>
+    </x-modal>
 </div>

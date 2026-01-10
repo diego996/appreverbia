@@ -39,6 +39,19 @@
             padding: 12px;
             background: #0f0f12;
         }
+        .lesson-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 10px;
+        }
+        .btn-cancel {
+            background: transparent;
+            color: var(--accent-2);
+            border: 1px solid rgba(243,90,167,0.5);
+            border-radius: 999px;
+            padding: 6px 12px;
+            font-size: 12px;
+        }
         .lesson-item .title {
             font-weight: 700;
             margin: 6px 0;
@@ -84,6 +97,52 @@
             text-decoration: none;
         }
         .link-item span { color: var(--muted); font-size: 12px; }
+        .modal-card {
+            background: #0f0f12;
+            border-radius: 16px;
+            padding: 18px;
+            display: grid;
+            gap: 12px;
+        }
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .modal-meta {
+            color: var(--muted);
+            font-size: 13px;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 6px;
+        }
+        .btn-secondary {
+            background: transparent;
+            color: var(--muted);
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            padding: 9px 14px;
+            font-size: 13px;
+        }
+        .btn-primary {
+            background: rgba(243,90,167,0.18);
+            color: var(--accent-2);
+            border: 1px solid rgba(243,90,167,0.5);
+            border-radius: 999px;
+            padding: 9px 14px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+        .modal-error {
+            background: rgba(243,90,167,0.12);
+            border: 1px solid rgba(243,90,167,0.4);
+            color: var(--accent-2);
+            padding: 8px 10px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
     </style>
 @endpush
 
@@ -125,6 +184,11 @@
                         <div class="title">{{ $lesson['title'] }}</div>
                         <div class="meta">Trainer: {{ $lesson['trainer'] }}</div>
                         <div class="meta">Sede: {{ $lesson['location'] }}</div>
+                        <div class="lesson-actions">
+                            <button class="btn-cancel" type="button" wire:click="openCancelModal({{ $lesson['booking_id'] }})">
+                                Disdici
+                            </button>
+                        </div>
                     </article>
                 @empty
                     <div class="empty-state">Nessuna lezione futura al momento.</div>
@@ -187,4 +251,30 @@
             </div>
         </section>
     </main>
+
+    <x-modal name="cancel-booking" :show="false" focusable>
+        <div class="modal-card">
+            <div>
+                <div class="modal-title">Conferma disdetta</div>
+                <div class="modal-meta">
+                    {{ $confirmingLesson['title'] ?? 'Lezione' }} · {{ $confirmingLesson['date'] ?? '' }}
+                    @if (!empty($confirmingLesson['time']))
+                        · {{ $confirmingLesson['time'] }}
+                    @endif
+                </div>
+                <div class="modal-meta">
+                    Trainer: {{ $confirmingLesson['trainer'] ?? 'Trainer' }} · {{ $confirmingLesson['branch'] ?? 'Sede' }}
+                </div>
+            </div>
+
+            @if ($cancelError)
+                <div class="modal-error">{{ $cancelError }}</div>
+            @endif
+
+            <div class="modal-actions">
+                <button class="btn-secondary" type="button" x-on:click="$dispatch('close-modal', 'cancel-booking')">Annulla</button>
+                <button class="btn-primary" type="button" wire:click="confirmCancelBooking">Conferma disdetta</button>
+            </div>
+        </div>
+    </x-modal>
 </div>
