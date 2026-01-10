@@ -2,7 +2,7 @@
     <a class="{{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}" wire:navigate>
         <i class="bi bi-house-door"></i><span>Home</span>
     </a>
-    <a href="#">
+     <a class="{{ request()->routeIs('pricing') ? 'active' : '' }}" href="{{ route('pricing') }}" wire:navigate>
         <i class="bi bi-bag-plus"></i><span>Acquista</span>
     </a>
     <a class="{{ request()->routeIs('calendar') ? 'active' : '' }}" href="{{ route('calendar') }}" wire:navigate>
