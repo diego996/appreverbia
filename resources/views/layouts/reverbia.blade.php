@@ -156,7 +156,74 @@
         @stack('styles')
     </head>
     <body>
-        {{ $slot }}
+        <!-- Topbar -->
+        <div class="topbar">
+            <a href="{{ route('home') }}" class="brand text-decoration-none" wire:navigate>
+                <span>RE</span>VERBIA
+            </a>
+            <div class="top-icons">
+                <a href="{{ route('pricing') }}" class="text-decoration-none text-white" wire:navigate>
+                    <i class="bi bi-bag-plus"></i>
+                </a>
+                <div class="hamburger" id="menuToggle">
+                    <span></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fullscreen Menu Overlay -->
+        <div class="menu-overlay" id="menuOverlay">
+            <div class="menu-panel">
+                <div class="d-flex justify-content-end mb-4">
+                    <div class="btn-close-menu" data-close>
+                        <i class="bi bi-x-lg"></i>
+                    </div>
+                </div>
+                <div class="menu-items d-flex flex-column">
+                    <a href="{{ route('home') }}" wire:navigate>
+                        <i class="bi bi-house"></i> Home
+                    </a>
+                    <a href="{{ route('pricing') }}" wire:navigate>
+                        <i class="bi bi-cart"></i> Acquista Crediti
+                    </a>
+                    <a href="{{ route('profile') }}" wire:navigate>
+                        <i class="bi bi-person"></i> Profilo
+                    </a>
+                    <form method="POST" action="{{ route('logout') }}" class="w-100">
+                        @csrf
+                        <a href="{{ route('logout') }}" onclick="event.preventDefault(); this.closest('form').submit();">
+                            <i class="bi bi-box-arrow-right"></i> Logout
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main style="padding-bottom: 70px;">
+            {{ $slot ?? '' }}
+            @yield('slot')
+        </main>
+
+        <!-- Bottom Navigation -->
+        <div class="nav-bottom">
+            <a href="{{ route('home') }}" class="{{ request()->routeIs('home') ? 'active' : '' }}">
+                <i class="bi bi-house"></i>
+                <span>Home</span>
+            </a>
+            <a href="{{ route('calendar') }}" class="{{ request()->routeIs('calendar') ? 'active' : '' }}">
+                <i class="bi bi-calendar-event"></i>
+                <span>Corsi</span>
+            </a>
+            <a href="{{ route('pricing') }}" class="{{ request()->routeIs('pricing') ? 'active' : '' }}">
+                <i class="bi bi-plus-circle-fill" style="font-size: 24px; color: var(--accent);"></i>
+                <span style="color: var(--accent);">Acquista</span>
+            </a>
+            <a href="{{ route('profile') }}" class="{{ request()->routeIs('profile') ? 'active' : '' }}">
+                <i class="bi bi-person"></i>
+                <span>Profilo</span>
+            </a>
+        </div>
 
         <script>
             (function () {
