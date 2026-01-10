@@ -332,17 +332,6 @@
             margin-top: 4px;
             flex-wrap: wrap;
         }
-        .btn-detail {
-            background: transparent;
-            border: 1px solid #2a2a2f;
-            color: var(--muted);
-            padding: 8px 12px;
-            border-radius: 999px;
-            font-size: 12px;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
         .btn-cta {
             background: var(--accent);
             color: #0a0a0a;
@@ -353,6 +342,10 @@
             font-size: 13px;
             align-self: flex-start;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .btn-cta:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
         .btn-cta.is-secondary {
             background: #131316;
@@ -368,114 +361,6 @@
             opacity: 0.7;
             cursor: not-allowed;
             box-shadow: none;
-        }
-        .course-overlay {
-            position: fixed;
-            inset: 0;
-            z-index: 35;
-            display: grid;
-            place-items: center;
-            padding: 20px;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.25s ease;
-        }
-        .course-overlay.is-open {
-            opacity: 1;
-            pointer-events: auto;
-        }
-        .course-backdrop {
-            position: absolute;
-            inset: 0;
-            background: rgba(6, 6, 8, 0.78);
-            backdrop-filter: blur(12px);
-        }
-        .course-card {
-            position: relative;
-            width: min(420px, 100%);
-            background: #0f0f12;
-            border-radius: 22px;
-            padding: 18px;
-            border: 1px solid rgba(255,255,255,0.06);
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
-            display: grid;
-            gap: 12px;
-        }
-        .course-close {
-            position: absolute;
-            top: 14px;
-            right: 14px;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            border: 1px solid #2a2a2f;
-            background: #141418;
-            color: var(--text);
-            display: grid;
-            place-items: center;
-        }
-        .course-eyebrow {
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.18em;
-            color: var(--muted);
-        }
-        .course-title {
-            font-size: 20px;
-            font-weight: 700;
-        }
-        .course-title span { color: var(--accent); }
-        .course-meta {
-            color: var(--muted);
-            font-size: 13px;
-        }
-        .course-media {
-            height: 180px;
-            border-radius: 18px;
-            background: linear-gradient(140deg, rgba(126,252,91,0.2), rgba(243,90,167,0.15)), #0b0b0e;
-            border: 1px solid rgba(255,255,255,0.05);
-            position: relative;
-            overflow: hidden;
-        }
-        .course-media::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: repeating-linear-gradient(
-                120deg,
-                rgba(255,255,255,0.04),
-                rgba(255,255,255,0.04) 14px,
-                transparent 14px,
-                transparent 28px
-            );
-            opacity: 0.4;
-        }
-        .course-tags {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        .course-tags span {
-            padding: 6px 10px;
-            background: #131317;
-            border-radius: 999px;
-            color: var(--muted);
-            font-size: 11px;
-            border: 1px solid #242428;
-        }
-        .course-actions {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-        }
-        .btn-ghost {
-            background: transparent;
-            border: 1px solid #2a2a2f;
-            color: var(--muted);
-            border-radius: 999px;
-            padding: 9px 14px;
-            font-size: 12px;
         }
         .rv-modal {
             position: fixed;
@@ -705,9 +590,24 @@
                             <div class="trainer-badge" style="background: {{ $trainerGroup['trainer_color'] }};">
                                 {{ $this->getTrainerInitials($trainerGroup['trainer_name']) }}
                             </div>
+<<<<<<< HEAD
                             <div class="trainer-name">{{ $trainerGroup['trainer_name'] }}</div>
                             <div style="margin-left: auto; color: var(--muted); font-size: 13px;">
                                 {{ count($trainerGroup['courses']) }} {{ count($trainerGroup['courses']) === 1 ? 'corso' : 'corsi' }}
+=======
+                            @php
+                                $insufficientTokens = $card['action'] === 'book' && $availableTokens < 1;
+                                $ctaDisabled = $card['cta_disabled'] || $insufficientTokens;
+                                $ctaLabel = $insufficientTokens ? 'Token insufficienti' : $card['cta'];
+                            @endphp
+                            <div class="list-actions">
+                                <button class="btn-cta {{ $card['cta_variant'] }} {{ $ctaDisabled ? 'is-disabled' : '' }}"
+                                        type="button"
+                                        @if ($ctaDisabled) disabled @endif
+                                        wire:click="openBookingModal({{ $card['occurrence_id'] }}, '{{ $card['action'] ?? 'book' }}')">
+                                    {{ $ctaLabel }}
+                                </button>
+>>>>>>> ed21cc5fd1c083279ba37b43a2e6ae28f4a4219f
                             </div>
                         </div>
                         @foreach ($trainerGroup['courses'] as $course)
@@ -785,27 +685,6 @@
         </div>
     </main>
 
-    <div class="course-overlay" data-course-overlay aria-hidden="true">
-        <div class="course-backdrop" data-course-close></div>
-        <div class="course-card">
-            <button class="course-close" type="button" data-course-close>
-                <i class="bi bi-x-lg"></i>
-            </button>
-            <div class="course-eyebrow" data-course-eyebrow>Corso</div>
-            <div class="course-title">
-                Lezione <span data-course-title>Reverbia</span>
-            </div>
-            <div class="course-meta">
-                Trainer: <span data-course-trainer>Trainer</span>
-            </div>
-            <div class="course-media" aria-hidden="true"></div>
-            <div class="course-tags" data-course-tags></div>
-            <div class="course-actions">
-                <button class="btn-ghost" type="button" data-course-close>Chiudi</button>
-                <button class="btn-cta" type="button" data-course-cta>Prenota ora</button>
-            </div>
-        </div>
-    </div>
 
     <div class="rv-modal" data-modal="booking-confirm" aria-hidden="true">
         <div class="rv-modal-backdrop" data-modal-close></div>
@@ -938,6 +817,7 @@
                 });
             };
 
+<<<<<<< HEAD
             const setupCourseOverlay = () => {
                 const root = document.getElementById('calendar-root');
                 if (!root || root.__courseOverlayInit) return;
@@ -1119,6 +999,10 @@
                 setupGlobalModalHandlers();
                 setupCourseOverlay();
                 setupTimeSlotHandlers();
+=======
+            const init = () => {
+                setupGlobalModalHandlers();
+>>>>>>> ed21cc5fd1c083279ba37b43a2e6ae28f4a4219f
             };
 
             document.addEventListener('DOMContentLoaded', init);
