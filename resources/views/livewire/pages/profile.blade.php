@@ -97,6 +97,17 @@
             text-decoration: none;
         }
         .link-item span { color: var(--muted); font-size: 12px; }
+        .modal-content {
+            background: transparent;
+            border: none;
+            box-shadow: none;
+        }
+        .modal-dialog {
+            max-width: min(520px, calc(100% - 28px));
+            margin: 0 auto;
+            width: 100%;
+            padding: 0 6px;
+        }
         .modal-card {
             background: #0f0f12;
             border-radius: 16px;
@@ -252,7 +263,7 @@
         </section>
     </main>
 
-    <x-modal name="cancel-booking" :show="false" focusable>
+    <x-modal name="cancel-booking" maxWidth="md" :show="false" focusable>
         <div class="modal-card">
             <div>
                 <div class="modal-title">Conferma disdetta</div>
