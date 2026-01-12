@@ -6,6 +6,7 @@ use App\Models\CourseBooking;
 use App\Models\CourseOccurrence;
 use App\Models\CourseWaitlist;
 use App\Models\User;
+use App\Models\Wallet;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -20,6 +21,7 @@ class Profile extends Component
     public array $historyLessons = [];
     public array $duetto = [];
     public array $usefulLinks = [];
+    public array $walletSummary = [];
     public ?int $confirmingCancelId = null;
     public array $confirmingLesson = [];
     public string $cancelError = '';
@@ -39,7 +41,7 @@ class Profile extends Component
             'name' => $user->name,
             'email' => $user->email,
             'phone' => $user->phone,
-            'branch' => $user->branch?->name,
+            'branch' => $user->branch?->nome,
             'status' => $user->status,
         ];
 
@@ -61,6 +63,16 @@ class Profile extends Component
             ['label' => 'FAQ', 'url' => '#'],
             ['label' => 'Contatti', 'url' => '#'],
             ['label' => 'Regolamento', 'url' => '#'],
+        ];
+
+        $this->walletSummary = [
+            'balance' => $this->calculateWalletBalance($user->id),
+            'next_expiry' => Wallet::query()
+                ->where('user_id', $user->id)
+                ->whereNotNull('expires_at')
+                ->where('expires_at', '>=', now()->toDateString())
+                ->orderBy('expires_at')
+                ->first()?->expires_at,
         ];
     }
 

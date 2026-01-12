@@ -2,6 +2,7 @@
 
 use App\Livewire\Pages\Calendar;
 use App\Livewire\Pages\Dashboard;
+use App\Livewire\Pages\PaymentsHistory;
 use App\Livewire\Pages\Profile;
 use Illuminate\Support\Facades\Route;
 
@@ -25,6 +26,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('supporto', \App\Livewire\Pages\Support::class)
         ->name('support');
+
+    Route::get('pagamenti', PaymentsHistory::class)
+        ->name('payments.history');
 
     Route::get('checkout/{item}', [\App\Http\Controllers\PaymentController::class, 'checkout'])
         ->name('payment.checkout');

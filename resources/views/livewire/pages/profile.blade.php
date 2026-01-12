@@ -1,6 +1,6 @@
 @push('styles')
     <style>
-        main.page-profile { padding: 12px 14px 90px; }
+        main.page-profile { padding: 14px 16px 90px; }
         body.modal-open { overflow: hidden; }
         .section-block { margin-bottom: 22px; }
         .section-title {
@@ -18,6 +18,33 @@
             padding: 16px;
             box-shadow: var(--shadow);
         }
+        .profile-hero {
+            display: grid;
+            gap: 16px;
+        }
+        .user-card {
+            display: grid;
+            gap: 10px;
+        }
+        .user-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .user-title strong {
+            font-size: 18px;
+        }
+        .status-pill {
+            background: rgba(126, 252, 91, 0.12);
+            color: var(--accent);
+            border: 1px solid rgba(126, 252, 91, 0.4);
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
         .info-grid {
             display: grid;
             gap: 10px;
@@ -30,17 +57,75 @@
             font-size: 13px;
         }
         .info-row strong { color: var(--text); font-weight: 600; }
-        .lesson-list {
+        .action-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            border: 1px solid var(--line);
+            background: #0f0f12;
+            text-decoration: none;
+            color: var(--text);
+        }
+        .action-card .left {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .action-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            border: 1px solid rgba(126, 252, 91, 0.3);
+            background: rgba(126, 252, 91, 0.12);
+            display: grid;
+            place-items: center;
+            color: var(--accent);
+        }
+        .action-card p {
+            margin: 0;
+            font-size: 12px;
+            color: var(--muted);
+        }
+        .action-card i.bi-chevron-right {
+            color: var(--muted);
+        }
+        .booking-list {
             display: grid;
             gap: 12px;
         }
-        .lesson-item {
+        .booking-item {
             border: 1px solid var(--line);
             border-radius: 14px;
             padding: 12px;
             background: #0f0f12;
         }
-        .lesson-actions {
+        .booking-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--muted);
+            font-size: 12px;
+        }
+        .booking-title {
+            font-weight: 700;
+            margin: 6px 0;
+        }
+        .booking-meta {
+            color: var(--muted);
+            font-size: 12px;
+        }
+        .badge-status {
+            background: rgba(126,252,91,0.12);
+            border: 1px solid rgba(126,252,91,0.4);
+            color: var(--accent);
+            padding: 3px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+        }
+        .booking-actions {
             display: flex;
             justify-content: flex-end;
             gap: 8px;
@@ -63,28 +148,17 @@
             padding: 6px 12px;
             font-size: 12px;
         }
-        .lesson-item .title {
-            font-weight: 700;
-            margin: 6px 0;
+        .wallet-card {
+            display: grid;
+            gap: 10px;
         }
-        .lesson-item .meta {
+        .wallet-balance {
+            font-size: 26px;
+            font-weight: 800;
+        }
+        .wallet-meta {
             color: var(--muted);
             font-size: 12px;
-        }
-        .lesson-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: var(--muted);
-            font-size: 12px;
-        }
-        .badge-status {
-            background: rgba(126,252,91,0.12);
-            border: 1px solid rgba(126,252,91,0.4);
-            color: var(--accent);
-            padding: 3px 8px;
-            border-radius: 999px;
-            font-size: 11px;
         }
         .empty-state {
             color: var(--muted);
@@ -92,22 +166,10 @@
             text-align: center;
             padding: 18px 12px;
         }
-        .link-list {
-            display: grid;
-            gap: 10px;
+        .link-hint {
+            font-size: 12px;
+            color: var(--muted);
         }
-        .link-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 14px;
-            border-radius: 12px;
-            background: #0f0f12;
-            border: 1px solid var(--line);
-            color: var(--text);
-            text-decoration: none;
-        }
-        .link-item span { color: var(--muted); font-size: 12px; }
         .rv-modal {
             position: fixed;
             inset: 0;
@@ -200,42 +262,60 @@
 <div>
     <main class="page-profile">
         <section class="section-block">
-            <div class="section-title">Dati utente</div>
-            <div class="card-panel">
-                <div class="info-grid">
-                    <div class="info-row">
+            <div class="section-title">Info base utente</div>
+            <div class="card-panel profile-hero">
+                <div class="user-card">
+                    <div class="user-title">
                         <strong>{{ $userInfo['name'] ?? 'Utente' }}</strong>
-                        <span>{{ $userInfo['status'] ?? 'attivo' }}</span>
+                        <span class="status-pill">{{ $userInfo['status'] ?? 'attivo' }}</span>
                     </div>
-                    <div class="info-row">
-                        <span>Email</span>
-                        <strong>{{ $userInfo['email'] ?? '-' }}</strong>
-                    </div>
-                    <div class="info-row">
-                        <span>Telefono</span>
-                        <strong>{{ $userInfo['phone'] ?? '-' }}</strong>
-                    </div>
-                    <div class="info-row">
-                        <span>Sede</span>
-                        <strong>{{ $userInfo['branch'] ?? 'Non assegnata' }}</strong>
+                    <div class="info-grid">
+                        <div class="info-row">
+                            <span>Email</span>
+                            <strong>{{ $userInfo['email'] ?? '-' }}</strong>
+                        </div>
+                        <div class="info-row">
+                            <span>Telefono</span>
+                            <strong>{{ $userInfo['phone'] ?? '-' }}</strong>
+                        </div>
+                        <div class="info-row">
+                            <span>Sede</span>
+                            <strong>{{ $userInfo['branch'] ?? 'Non assegnata' }}</strong>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
 
         <section class="section-block">
-            <div class="section-title">Lezioni in programma</div>
-            <div class="lesson-list">
+            <div class="section-title">Contatta supporto</div>
+            <a class="action-card" href="{{ route('support') }}" wire:navigate>
+                <div class="left">
+                    <div class="action-icon">
+                        <i class="bi bi-headset"></i>
+                    </div>
+                    <div>
+                        <strong>Apri una richiesta</strong>
+                        <p>Scrivi al team di supporto</p>
+                    </div>
+                </div>
+                <i class="bi bi-chevron-right"></i>
+            </a>
+        </section>
+
+        <section class="section-block">
+            <div class="section-title">Le tue prenotazioni</div>
+            <div class="booking-list">
                 @forelse ($upcomingLessons as $lesson)
-                    <article class="lesson-item">
-                        <div class="lesson-top">
+                    <article class="booking-item">
+                        <div class="booking-top">
                             <span>{{ strtoupper($lesson['date']) }} - {{ $lesson['time'] }}</span>
                             <span class="badge-status">{{ $lesson['status'] }}</span>
                         </div>
-                        <div class="title">{{ $lesson['title'] }}</div>
-                        <div class="meta">Trainer: {{ $lesson['trainer'] }}</div>
-                        <div class="meta">Sede: {{ $lesson['location'] }}</div>
-                        <div class="lesson-actions">
+                        <div class="booking-title">{{ $lesson['title'] }}</div>
+                        <div class="booking-meta">Trainer: {{ $lesson['trainer'] }}</div>
+                        <div class="booking-meta">Sede: {{ $lesson['location'] }}</div>
+                        <div class="booking-actions">
                             @if ($lesson['can_confirm_duetto'])
                                 <button class="btn-duetto" type="button" wire:click="openDuettoConfirmModal({{ $lesson['booking_id'] }})">
                                     Conferma duetto
@@ -253,58 +333,36 @@
         </section>
 
         <section class="section-block">
-            <div class="section-title">Storico lezioni</div>
-            <div class="lesson-list">
-                @forelse ($historyLessons as $lesson)
-                    <article class="lesson-item">
-                        <div class="lesson-top">
-                            <span>{{ strtoupper($lesson['date']) }} - {{ $lesson['time'] }}</span>
-                            <span class="badge-status">{{ $lesson['status'] }}</span>
-                        </div>
-                        <div class="title">{{ $lesson['title'] }}</div>
-                        <div class="meta">Trainer: {{ $lesson['trainer'] }}</div>
-                        <div class="meta">Sede: {{ $lesson['location'] }}</div>
-                    </article>
-                @empty
-                    <div class="empty-state">Nessuna lezione passata.</div>
-                @endforelse
+            <div class="section-title">Il tuo wallet</div>
+            <div class="card-panel wallet-card">
+                <div>
+                    <div class="wallet-balance">{{ $walletSummary['balance'] ?? 0 }} token</div>
+                    <div class="wallet-meta">Saldo attuale disponibile</div>
+                </div>
+                <div class="wallet-meta">
+                    @if (!empty($walletSummary['next_expiry']))
+                        Scadenza prossima: {{ $walletSummary['next_expiry']->format('d/m/Y') }}
+                    @else
+                        Nessuna scadenza imminente
+                    @endif
+                </div>
             </div>
         </section>
 
         <section class="section-block">
-            <div class="section-title">Duetto</div>
-            <div class="card-panel">
-                @if ($duetto)
-                    <div class="info-grid">
-                        <div class="info-row">
-                            <span>Nome</span>
-                            <strong>{{ $duetto['name'] }}</strong>
-                        </div>
-                        <div class="info-row">
-                            <span>Email</span>
-                            <strong>{{ $duetto['email'] ?? '-' }}</strong>
-                        </div>
-                        <div class="info-row">
-                            <span>Telefono</span>
-                            <strong>{{ $duetto['phone'] ?? '-' }}</strong>
-                        </div>
+            <div class="section-title">Storico pagamenti</div>
+            <a class="action-card" href="{{ route('payments.history') }}" wire:navigate>
+                <div class="left">
+                    <div class="action-icon">
+                        <i class="bi bi-receipt"></i>
                     </div>
-                @else
-                    <div class="empty-state">Nessun duetto associato al profilo.</div>
-                @endif
-            </div>
-        </section>
-
-        <section class="section-block">
-            <div class="section-title">Link utili</div>
-            <div class="link-list">
-                @foreach ($usefulLinks as $link)
-                    <a class="link-item" href="{{ $link['url'] }}">
-                        <strong>{{ $link['label'] }}</strong>
-                        <span>Apri</span>
-                    </a>
-                @endforeach
-            </div>
+                    <div>
+                        <strong>Visualizza pagamenti</strong>
+                        <p>Totali, date e motivazioni</p>
+                    </div>
+                </div>
+                <i class="bi bi-chevron-right"></i>
+            </a>
         </section>
     </main>
 
