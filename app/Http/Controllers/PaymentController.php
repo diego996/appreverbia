@@ -27,7 +27,7 @@ class PaymentController extends Controller
     {
         try {
             $user = Auth::user();
-            
+
             // Create Checkout Session
             $session = $this->stripeService->createCheckoutSession(
                 $item,
@@ -61,11 +61,11 @@ class PaymentController extends Controller
     public function success(Request $request)
     {
         $sessionId = $request->get('session_id');
-        
+
         // In a real app, we might retrieve the session from Stripe here to confirm status immediately
         // allowing for instant UI update even if webhook is slightly delayed.
         // For now, we display the success page.
-        
+
         return view('payment.success', ['session_id' => $sessionId]);
     }
 
@@ -82,12 +82,14 @@ class PaymentController extends Controller
 
         try {
             $event = Webhook::constructEvent(
-                $payload, $sig_header, $endpoint_secret
+                $payload,
+                $sig_header,
+                $endpoint_secret
             );
-        } catch(\UnexpectedValueException $e) {
+        } catch (\UnexpectedValueException $e) {
             // Invalid payload
             return response('Invalid payload', 400);
-        } catch(SignatureVerificationException $e) {
+        } catch (SignatureVerificationException $e) {
             // Invalid signature
             return response('Invalid signature', 400);
         }
@@ -113,28 +115,41 @@ class PaymentController extends Controller
 
             // Found item via payment
             $item = $payment->item; // Assuming relation exists and is loaded or accessible
-            
+
             if ($item) {
                 // Handle Membership (Property ID = 2)
                 if ($item->item_property_id == 2) {
-                     $membership = \App\Models\Membership::firstOrNew(['user_id' => $payment->user_id]);
-                     
-                     // Determine start date for calculation
-                     $startDate = ($membership->exists && $membership->end_date && $membership->end_date->isFuture()) 
-                         ? $membership->end_date 
-                         : now();
+                    $user = User::find($payment->user_id);
 
-                     // Add years based on token value
-                     $newEndDate = $startDate->copy()->addYears($item->token);
-                     
-                     $membership->fill([
-                         'start_date' => $membership->start_date ?? now(), // Keep original start date if exists, else now
-                         'end_date' => $newEndDate,
-                         'payment_id' => $payment->id, // Link latest payment
-                         'status' => 'active', // You might want a status field
-                     ])->save();
-                     
-                     Log::info("Membership updated for User {$payment->user_id}. New end date: {$newEndDate->toDateString()}");
+                    // Determine start and end dates
+                    // Check if user has an existing active membership
+                    $existingMembership = \App\Models\Membership::where('user_id', $payment->user_id)
+                        ->where('status', 'active')
+                        ->where('end_date', '>=', now()->toDateString())
+                        ->orderBy('end_date', 'desc')
+                        ->first();
+
+                    if ($existingMembership) {
+                        // Extend from existing end_date
+                        $startDate = $existingMembership->end_date;
+                        $endDate = $startDate->copy()->addMonths($item->validity_months);
+                    } else {
+                        // New membership starts today
+                        $startDate = now();
+                        $endDate = now()->addMonths($item->validity_months);
+                    }
+
+                    // Create new membership record
+                    \App\Models\Membership::create([
+                        'user_id' => $payment->user_id,
+                        'branch_id' => $user->branch_id,
+                        'start_date' => $startDate,
+                        'end_date' => $endDate,
+                        'payment_id' => $payment->id,
+                        'status' => 'active',
+                    ]);
+
+                    Log::info("Membership created for User {$payment->user_id}. Start: {$startDate->toDateString()}, End: {$endDate->toDateString()}");
                 }
 
                 // Credit the wallet (Standard Logic)
@@ -156,7 +171,7 @@ class PaymentController extends Controller
                         'expires_at' => $item->validity_months ? now()->addMonths($item->validity_months) : null,
                         'meta' => ['description' => $item->descrizione]
                     ]);
-                    
+
                     Log::info("Wallet credited for User {$payment->user_id} with {$item->token} tokens.");
                 }
             }
