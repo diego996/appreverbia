@@ -1,4 +1,4 @@
-@push('styles')
+﻿@push('styles')
     <style>
         main.page-dashboard { padding: 16px 16px 90px; }
         .section-block { margin-bottom: 24px; }
@@ -182,12 +182,15 @@
             margin-bottom: 8px;
         }
         
-        /* Available Lessons Grid */
-        .available-lessons-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        /* Available Lessons Carousel */
+        .available-carousel-container {
+            position: relative;
+            overflow: hidden;
+        }
+        .available-carousel {
+            display: flex;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             gap: 14px;
-            padding: 4px 2px;
         }
         .available-lesson-card {
             background: linear-gradient(150deg, #1b1b20, #0f0f12);
@@ -199,6 +202,8 @@
             flex-direction: column;
             gap: 10px;
             transition: all 0.3s ease;
+            flex-shrink: 0;
+            width: calc(100% - 4px);
         }
         .available-lesson-card:hover {
             transform: translateY(-2px);
@@ -327,7 +332,7 @@
                         @foreach ($bookedLessons as $lesson)
                             <article class="lesson-card">
                                 <div class="lesson-top">
-                                    <span class="lesson-date">{{ strtoupper($lesson['date']) }} • {{ $lesson['time'] }}</span>
+                                    <span class="lesson-date">{{ strtoupper($lesson['date']) }} â€¢ {{ $lesson['time'] }}</span>
                                     <span class="badge-status">{{ $lesson['status'] }}</span>
                                 </div>
                                 <div class="lesson-title">{{ $lesson['title'] }}</div>
@@ -361,32 +366,37 @@
         <section class="section-block">
             <div class="section-title">Lezioni Disponibili</div>
             @if (!empty($availableLessons))
-                <div class="available-lessons-grid">
-                    @foreach ($availableLessons as $lesson)
-                        <article class="available-lesson-card">
-                            <div class="lesson-top">
-                                <span class="lesson-date">{{ strtoupper($lesson['date']) }} • {{ $lesson['time'] }}</span>
-                                @if ($lesson['spots_left'] !== null)
-                                    <span class="badge-spots">{{ $lesson['spots_left'] }} posti</span>
-                                @endif
-                            </div>
-                            <div class="lesson-title">{{ $lesson['title'] }}</div>
-                            <div class="lesson-meta">
-                                <i class="bi bi-person"></i>
-                                {{ $lesson['coach'] }}
-                            </div>
-                            <div class="lesson-meta">
-                                <i class="bi bi-geo-alt"></i>
-                                {{ $lesson['room'] }}
-                            </div>
-                            <a href="{{ route('calendar') }}?date={{ $lesson['full_date'] }}&book={{ $lesson['occurrence_id'] }}" 
-                               class="btn-book-lesson" 
-                               wire:navigate>
-                                <i class="bi bi-calendar-check"></i>
-                                Prenota
-                            </a>
-                        </article>
-                    @endforeach
+                <div class="available-carousel-container">
+                    <div class="available-carousel" id="availableCarousel">
+                        @foreach ($availableLessons as $lesson)
+                            <article class="available-lesson-card">
+                                <div class="lesson-top">
+                                    <span class="lesson-date">{{ strtoupper($lesson['date']) }} ƒ?½ {{ $lesson['time'] }}</span>
+                                    @if ($lesson['spots_left'] !== null)
+                                        <span class="badge-spots">{{ $lesson['spots_left'] }} posti</span>
+                                    @endif
+                                </div>
+                                <div class="lesson-title">{{ $lesson['title'] }}</div>
+                                <div class="lesson-meta">
+                                    <i class="bi bi-person"></i>
+                                    {{ $lesson['coach'] }}
+                                </div>
+                                <div class="lesson-meta">
+                                    <i class="bi bi-geo-alt"></i>
+                                    {{ $lesson['room'] }}
+                                </div>
+                                <a href="{{ route('calendar') }}?date={{ $lesson['full_date'] }}&book={{ $lesson['occurrence_id'] }}"
+                                   class="btn-book-lesson"
+                                   wire:navigate>
+                                    <i class="bi bi-calendar-check"></i>
+                                    Prenota
+                                </a>
+                            </article>
+                        @endforeach
+                    </div>
+                    @if (count($availableLessons) > 1)
+                        <div class="carousel-dots" id="availableCarouselDots"></div>
+                    @endif
                 </div>
             @else
                 <article class="lesson-card empty-state">
@@ -543,4 +553,140 @@
         document.addEventListener('livewire:navigated', initCarousel);
     })();
 </script>
+<script>
+    (function() {
+        function initAvailableCarousel() {
+            const carousel = document.getElementById('availableCarousel');
+            const dotsContainer = document.getElementById('availableCarouselDots');
+
+            if (!carousel) return;
+            if (carousel.dataset.initialized) return;
+            carousel.dataset.initialized = "true";
+
+            const cards = carousel.querySelectorAll('.available-lesson-card');
+            const totalCards = cards.length;
+
+            if (totalCards <= 1) return;
+
+            let currentIndex = 0;
+            let startX = 0;
+            let isDragging = false;
+
+            if (dotsContainer && dotsContainer.innerHTML === '') {
+                for (let i = 0; i < totalCards; i++) {
+                    const dot = document.createElement('div');
+                    dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+                    dot.addEventListener('click', () => goToSlide(i));
+                    dotsContainer.appendChild(dot);
+                }
+            }
+
+            const dots = dotsContainer ? dotsContainer.querySelectorAll('.carousel-dot') : [];
+
+            function updateCarousel() {
+                const offset = -currentIndex * 100;
+                carousel.style.transform = `translateX(${offset}%)`;
+
+                dots.forEach((dot, index) => {
+                    dot.classList.toggle('active', index === currentIndex);
+                });
+            }
+
+            function goToSlide(index) {
+                currentIndex = Math.max(0, Math.min(index, totalCards - 1));
+                updateCarousel();
+            }
+
+            function nextSlide() {
+                if (currentIndex < totalCards - 1) {
+                    currentIndex++;
+                    updateCarousel();
+                }
+            }
+
+            function prevSlide() {
+                if (currentIndex > 0) {
+                    currentIndex--;
+                    updateCarousel();
+                }
+            }
+
+            carousel.addEventListener('touchstart', (e) => {
+                startX = e.touches[0].clientX;
+                isDragging = true;
+            });
+
+            carousel.addEventListener('touchmove', () => {
+                if (!isDragging) return;
+            });
+
+            carousel.addEventListener('touchend', (e) => {
+                if (!isDragging) return;
+                isDragging = false;
+
+                const endX = e.changedTouches[0].clientX;
+                const diff = startX - endX;
+
+                if (Math.abs(diff) > 50) {
+                    if (diff > 0) {
+                        nextSlide();
+                    } else {
+                        prevSlide();
+                    }
+                }
+            });
+
+            carousel.addEventListener('mousedown', (e) => {
+                startX = e.clientX;
+                isDragging = true;
+                carousel.style.cursor = 'grabbing';
+            });
+
+            carousel.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                e.preventDefault();
+            });
+
+            carousel.addEventListener('mouseup', (e) => {
+                if (!isDragging) return;
+                isDragging = false;
+                carousel.style.cursor = 'grab';
+
+                const endX = e.clientX;
+                const diff = startX - endX;
+
+                if (Math.abs(diff) > 50) {
+                    if (diff > 0) {
+                        nextSlide();
+                    } else {
+                        prevSlide();
+                    }
+                }
+            });
+
+            carousel.addEventListener('mouseleave', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    carousel.style.cursor = 'grab';
+                }
+            });
+
+            const intervalId = setInterval(() => {
+                if (!document.getElementById('availableCarousel')) {
+                    clearInterval(intervalId);
+                    return;
+                }
+                if (currentIndex < totalCards - 1) {
+                    nextSlide();
+                } else {
+                    goToSlide(0);
+                }
+            }, 6000);
+        }
+
+        document.addEventListener('DOMContentLoaded', initAvailableCarousel);
+        document.addEventListener('livewire:navigated', initAvailableCarousel);
+    })();
+</script>
 @endpush
+
