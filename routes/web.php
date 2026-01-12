@@ -23,6 +23,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('membership', \App\Livewire\Pages\Membership::class)
         ->name('membership');
 
+    Route::get('supporto', \App\Livewire\Pages\Support::class)
+        ->name('support');
+
     Route::get('checkout/{item}', [\App\Http\Controllers\PaymentController::class, 'checkout'])
         ->name('payment.checkout');
     Route::get('payment/success', [\App\Http\Controllers\PaymentController::class, 'success'])
@@ -31,4 +34,4 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('payment.cancel');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
