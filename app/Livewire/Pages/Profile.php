@@ -7,17 +7,20 @@ use App\Models\CourseOccurrence;
 use App\Models\CourseWaitlist;
 use App\Models\User;
 use App\Models\Wallet;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 #[Layout('layouts.reverbia-shell')]
 #[Title('Reverbia - Profilo')]
 class Profile extends Component
 {
+    use WithPagination;
+
     public array $userInfo = [];
-    public array $upcomingLessons = [];
     public array $historyLessons = [];
     public array $duetto = [];
     public array $usefulLinks = [];
@@ -28,6 +31,7 @@ class Profile extends Component
     public ?int $confirmingDuettoId = null;
     public array $confirmingDuettoLesson = [];
     public string $duettoError = '';
+    public int $upcomingPerPage = 3;
 
     public function mount(): void
     {
@@ -45,7 +49,7 @@ class Profile extends Component
             'status' => $user->status,
         ];
 
-        [$this->upcomingLessons, $this->historyLessons] = $this->buildLessons($user);
+        $this->historyLessons = $this->buildHistoryLessons($user);
 
         if ($user->duetto_id) {
             $duettoUser = User::query()->find($user->duetto_id);
@@ -76,7 +80,7 @@ class Profile extends Component
         ];
     }
 
-    protected function buildLessons(User $user): array
+    protected function buildHistoryLessons(User $user): array
     {
         $bookings = CourseBooking::query()
             ->where('user_id', $user->id)
@@ -86,7 +90,6 @@ class Profile extends Component
 
         $today = now()->startOfDay();
 
-        $upcoming = [];
         $history = [];
 
         $statusLabels = [
@@ -121,16 +124,88 @@ class Profile extends Component
             ];
 
             if ($occurrence->date->greaterThanOrEqualTo($today)) {
-                $upcoming[] = $item;
             } else {
                 $history[] = $item;
             }
         }
 
-        return [
-            array_slice($upcoming, 0, 4),
-            array_slice($history, 0, 6),
-        ];
+        return array_slice($history, 0, 6);
+    }
+
+    protected function resolveOccurrenceStartAt(CourseOccurrence $occurrence): Carbon
+    {
+        $date = $occurrence->date ? $occurrence->date->format('Y-m-d') : now()->toDateString();
+        $time = $occurrence->start_time ?? '00:00';
+
+        return Carbon::parse("{$date} {$time}");
+    }
+
+    protected function canCancelBooking(CourseBooking $booking): bool
+    {
+        if (!$booking->occurrence || !$booking->occurrence->date) {
+            return false;
+        }
+
+        $startAt = $this->resolveOccurrenceStartAt($booking->occurrence);
+
+        return $startAt->greaterThanOrEqualTo(now()->addHours(12));
+    }
+
+    public function getUpcomingBookingsProperty()
+    {
+        $user = auth()->user();
+        if (!$user) {
+            return collect();
+        }
+
+        $paginator = CourseBooking::query()
+            ->where('user_id', $user->id)
+            ->whereHas('occurrence', function ($query) {
+                $query->where('date', '>=', now()->toDateString());
+            })
+            ->with(['occurrence.course.trainer', 'occurrence.course.branch'])
+            ->orderByDesc('booked_at')
+            ->paginate($this->upcomingPerPage, ['*'], 'bookingsPage');
+
+        $paginator->setCollection($paginator->getCollection()->map(function ($booking) {
+            $occurrence = $booking->occurrence;
+            if (!$occurrence || !$occurrence->date) {
+                return null;
+            }
+
+            $course = $occurrence->course;
+            $trainer = $course?->trainer;
+            $branch = $course?->branch;
+
+            $statusLabels = [
+                'booked' => 'Confermato',
+                'confirmed_duetto' => 'In attesa duetto',
+                'pending_duetto' => 'Richiesta duetto',
+                'waiting' => 'In attesa',
+                'cancelled' => 'Annullato',
+            ];
+
+            $status = $booking->status ?? 'booked';
+            $canCancel = $this->canCancelBooking($booking);
+            $startAt = $this->resolveOccurrenceStartAt($occurrence);
+
+            return [
+                'booking_id' => $booking->id,
+                'occurrence_id' => $occurrence->id,
+                'date' => $occurrence->date->format('d M'),
+                'time' => $occurrence->start_time ? substr($occurrence->start_time, 0, 5) : '--:--',
+                'title' => $course?->title ?? 'Lezione',
+                'trainer' => $trainer?->name ?? 'Trainer',
+                'location' => $branch?->name ?? 'Sede',
+                'status' => $statusLabels[$status] ?? ucfirst($status),
+                'can_confirm_duetto' => $status === 'pending_duetto',
+                'can_cancel' => $canCancel,
+                'cancel_hint' => $canCancel ? null : 'Disdetta possibile fino a 12 ore prima.',
+                'start_at' => $startAt,
+            ];
+        })->filter());
+
+        return $paginator;
     }
 
     public function openCancelModal(int $bookingId): void
@@ -152,6 +227,12 @@ class Profile extends Component
 
         if (!$booking || !$booking->occurrence) {
             $this->cancelError = 'Prenotazione non disponibile.';
+            $this->dispatch('open-modal', 'cancel-booking');
+            return;
+        }
+
+        if (!$this->canCancelBooking($booking)) {
+            $this->cancelError = 'Puoi disdire solo fino a 12 ore prima della lezione.';
             $this->dispatch('open-modal', 'cancel-booking');
             return;
         }
@@ -287,6 +368,10 @@ class Profile extends Component
 
                 if (!$booking) {
                     throw new \RuntimeException('Prenotazione non disponibile.');
+                }
+
+                if (!$this->canCancelBooking($booking)) {
+                    throw new \RuntimeException('Puoi disdire solo fino a 12 ore prima della lezione.');
                 }
 
                 $occurrenceId = $booking->occurrence_id;
@@ -457,6 +542,8 @@ class Profile extends Component
 
     public function render()
     {
-        return view('livewire.pages.profile');
+        return view('livewire.pages.profile', [
+            'upcomingBookings' => $this->upcomingBookings,
+        ]);
     }
 }

@@ -132,6 +132,15 @@
             margin-top: 10px;
             flex-wrap: wrap;
         }
+        .cancel-disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+        .cancel-hint {
+            margin-top: 8px;
+            font-size: 11px;
+            color: var(--muted);
+        }
         .btn-cancel {
             background: transparent;
             color: var(--accent-2);
@@ -169,6 +178,24 @@
         .link-hint {
             font-size: 12px;
             color: var(--muted);
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 14px;
+        }
+        .pagination button {
+            border: 1px solid var(--line);
+            background: #0f0f12;
+            color: var(--text);
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+        }
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
         .rv-modal {
             position: fixed;
@@ -306,7 +333,7 @@
         <section class="section-block">
             <div class="section-title">Le tue prenotazioni</div>
             <div class="booking-list">
-                @forelse ($upcomingLessons as $lesson)
+                @forelse ($upcomingBookings as $lesson)
                     <article class="booking-item">
                         <div class="booking-top">
                             <span>{{ strtoupper($lesson['date']) }} - {{ $lesson['time'] }}</span>
@@ -321,15 +348,38 @@
                                     Conferma duetto
                                 </button>
                             @endif
-                            <button class="btn-cancel" type="button" wire:click="openCancelModal({{ $lesson['booking_id'] }})">
-                                Disdici
-                            </button>
+                            @if ($lesson['can_cancel'])
+                                <button class="btn-cancel" type="button" wire:click="openCancelModal({{ $lesson['booking_id'] }})">
+                                    Disdici
+                                </button>
+                            @else
+                                <button class="btn-cancel cancel-disabled" type="button" disabled>
+                                    Disdici
+                                </button>
+                            @endif
                         </div>
+                        @if (!empty($lesson['cancel_hint']))
+                            <div class="cancel-hint">{{ $lesson['cancel_hint'] }}</div>
+                        @endif
                     </article>
                 @empty
                     <div class="empty-state">Nessuna lezione futura al momento.</div>
                 @endforelse
             </div>
+            @if ($upcomingBookings instanceof \Illuminate\Pagination\LengthAwarePaginator && $upcomingBookings->hasPages())
+                <div class="pagination">
+                    <button type="button"
+                        wire:click="previousPage('bookingsPage')"
+                        @disabled($upcomingBookings->onFirstPage())>
+                        Indietro
+                    </button>
+                    <button type="button"
+                        wire:click="nextPage('bookingsPage')"
+                        @disabled(!$upcomingBookings->hasMorePages())>
+                        Avanti
+                    </button>
+                </div>
+            @endif
         </section>
 
         <section class="section-block">
