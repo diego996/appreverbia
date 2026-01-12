@@ -227,13 +227,13 @@ class Profile extends Component
 
         if (!$booking || !$booking->occurrence) {
             $this->cancelError = 'Prenotazione non disponibile.';
-            $this->dispatch('open-modal', 'cancel-booking');
+            $this->dispatch('open-modal', name: 'cancel-booking');
             return;
         }
 
         if (!$this->canCancelBooking($booking)) {
             $this->cancelError = 'Puoi disdire solo fino a 12 ore prima della lezione.';
-            $this->dispatch('open-modal', 'cancel-booking');
+            $this->dispatch('open-modal', name: 'cancel-booking');
             return;
         }
 
@@ -248,7 +248,7 @@ class Profile extends Component
             'branch' => $course?->branch?->name ?? 'Sede',
         ];
 
-        $this->dispatch('open-modal', 'cancel-booking');
+        $this->dispatch('open-modal', name: 'cancel-booking');
     }
 
     public function openDuettoConfirmModal(int $bookingId): void
@@ -271,7 +271,7 @@ class Profile extends Component
 
         if (!$booking || !$booking->occurrence) {
             $this->duettoError = 'Richiesta duetto non disponibile.';
-            $this->dispatch('open-modal', 'confirm-duetto');
+            $this->dispatch('open-modal', name: 'confirm-duetto');
             return;
         }
 
@@ -286,7 +286,7 @@ class Profile extends Component
             'branch' => $course?->branch?->name ?? 'Sede',
         ];
 
-        $this->dispatch('open-modal', 'confirm-duetto');
+        $this->dispatch('open-modal', name: 'confirm-duetto');
     }
 
     public function confirmDuettoBooking(): void
@@ -345,7 +345,7 @@ class Profile extends Component
             return;
         }
 
-        $this->dispatch('close-modal', 'confirm-duetto');
+        $this->dispatch('close-modal', name: 'confirm-duetto');
         $this->mount();
     }
 
@@ -525,7 +525,7 @@ class Profile extends Component
             return;
         }
 
-        $this->dispatch('close-modal', 'cancel-booking');
+        $this->dispatch('close-modal', name: 'cancel-booking');
         $this->mount();
     }
 

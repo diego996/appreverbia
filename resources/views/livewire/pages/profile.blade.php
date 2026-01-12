@@ -506,12 +506,16 @@
                 window.__reverbiaProfileModalHandlers = true;
 
                 window.addEventListener('open-modal', (event) => {
-                    const name = typeof event.detail === 'string' ? event.detail : event.detail?.name;
+                    const name = typeof event.detail === 'string'
+                        ? event.detail
+                        : event.detail?.name ?? event.detail?.[0];
                     openModal(name);
                 });
 
                 window.addEventListener('close-modal', (event) => {
-                    const name = typeof event.detail === 'string' ? event.detail : event.detail?.name;
+                    const name = typeof event.detail === 'string'
+                        ? event.detail
+                        : event.detail?.name ?? event.detail?.[0];
                     closeModal(name);
                 });
 
