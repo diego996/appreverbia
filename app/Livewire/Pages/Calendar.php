@@ -116,6 +116,9 @@ class Calendar extends Component
 
     public function updatedSelectedCourse(): void
     {
+        if ($this->selectedCourse) {
+            $this->selectedCourse = strtolower($this->selectedCourse);
+        }
         $this->loadCalendar();
     }
 
@@ -479,7 +482,21 @@ class Calendar extends Component
             });
         }
 
-        return $query->get();
+        $occurrences = $query->get();
+
+        if ($this->selectedCourse === 'pilates') {
+            return $occurrences
+                ->filter(fn (CourseOccurrence $occurrence) => str_contains(strtolower($occurrence->course?->title ?? ''), 'pilates'))
+                ->values();
+        }
+
+        if ($this->selectedCourse === 'functional') {
+            return $occurrences
+                ->filter(fn (CourseOccurrence $occurrence) => !str_contains(strtolower($occurrence->course?->title ?? ''), 'pilates'))
+                ->values();
+        }
+
+        return $occurrences;
     }
 
     protected function filterByWeekday(Collection $occurrences): Collection

@@ -364,6 +364,23 @@
                 padding: 18px 24px;
             }
         }
+        @media (max-width: 640px) {
+            .membership-status-card {
+                flex-direction: column;
+                align-items: stretch;
+                text-align: left;
+            }
+            .membership-status-left {
+                align-items: flex-start;
+            }
+            .membership-meta {
+                text-align: left;
+            }
+            .btn-renew {
+                width: 100%;
+                justify-content: center;
+            }
+        }
     </style>
 @endpush
 
