@@ -4,6 +4,7 @@ namespace App\Livewire\Pages;
 
 use App\Models\CourseBooking;
 use App\Models\CourseOccurrence;
+use App\Models\Membership;
 use App\Models\Wallet;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -16,6 +17,7 @@ class Dashboard extends Component
     public array $bookedLessons = [];
     public array $availableLessons = [];
     public array $walletSummary = [];
+    public array $membershipStatus = [];
 
     public function mount(): void
     {
@@ -42,6 +44,8 @@ class Dashboard extends Component
             'available' => max(0, (int) $walletBalance),
             'label' => 'Lezioni disponibili',
         ];
+
+        $this->membershipStatus = $this->buildMembershipStatus($user->id);
 
         $today = now()->startOfDay();
         $bookings = CourseBooking::query()
@@ -93,6 +97,42 @@ class Dashboard extends Component
 
         // Load available lessons
         $this->loadAvailableLessons($user);
+    }
+
+    protected function buildMembershipStatus(int $userId): array
+    {
+        $membership = Membership::query()
+            ->where('user_id', $userId)
+            ->where('status', 'active')
+            ->where('end_date', '>=', now()->toDateString())
+            ->orderByDesc('end_date')
+            ->first();
+
+        if (!$membership) {
+            return [
+                'active' => false,
+                'label' => 'Nessuna membership attiva',
+                'message' => 'Attiva o rinnova la membership per continuare ad allenarti.',
+                'days_left' => null,
+                'expires_at' => null,
+                'renew_recommended' => true,
+            ];
+        }
+
+        $daysLeft = now()->startOfDay()->diffInDays($membership->end_date, false);
+        $daysLeft = max(0, (int) $daysLeft);
+        $renewRecommended = $daysLeft <= 7;
+
+        return [
+            'active' => true,
+            'label' => 'Membership attiva',
+            'message' => $renewRecommended
+                ? 'La tua membership sta per scadere. Rinnova per non perdere l\'accesso.'
+                : 'La tua membership è attiva e ti dà accesso completo ai corsi.',
+            'days_left' => $daysLeft,
+            'expires_at' => $membership->end_date,
+            'renew_recommended' => $renewRecommended,
+        ];
     }
 
     protected function loadAvailableLessons($user): void

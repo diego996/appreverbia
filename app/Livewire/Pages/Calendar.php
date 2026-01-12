@@ -34,7 +34,7 @@ class Calendar extends Component
     public ?string $selectedDate = null;
     public ?int $selectedBranch = null;
     public ?int $selectedTrainer = null;
-    public ?int $selectedCourse = null;
+    public ?string $selectedCourse = null;
     public ?string $selectedWeekday = null;
     
     public ?int $confirmingOccurrenceId = null;
@@ -404,18 +404,10 @@ class Calendar extends Component
             ])
             ->all();
 
-        $coursesQuery = Course::query()->orderBy('title');
-        if ($this->selectedBranch) {
-            $coursesQuery->where('branch_id', $this->selectedBranch);
-        }
-
-        $this->courses = $coursesQuery
-            ->get()
-            ->map(fn (Course $course): array => [
-                'id' => $course->id,
-                'title' => $course->title,
-            ])
-            ->all();
+        $this->courses = [
+            ['id' => 'pilates', 'title' => 'Pilates'],
+            ['id' => 'functional', 'title' => 'Functional'],
+        ];
 
         if ($this->selectedCourse && !collect($this->courses)->contains(fn ($course) => $course['id'] === $this->selectedCourse)) {
             $this->selectedCourse = null;
@@ -475,8 +467,16 @@ class Calendar extends Component
             $query->whereHas('course', fn ($q) => $q->where('trainer_id', $this->selectedTrainer));
         }
 
-        if ($this->selectedCourse) {
-            $query->where('course_id', $this->selectedCourse);
+        if ($this->selectedCourse === 'pilates') {
+            $query->whereHas('course', function ($q) {
+                $q->whereRaw('LOWER(title) LIKE ?', ['%pilates%']);
+            });
+        }
+
+        if ($this->selectedCourse === 'functional') {
+            $query->whereHas('course', function ($q) {
+                $q->whereRaw('LOWER(title) NOT LIKE ?', ['%pilates%']);
+            });
         }
 
         return $query->get();

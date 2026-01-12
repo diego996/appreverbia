@@ -250,6 +250,79 @@
         .btn-book-lesson i {
             font-size: 16px;
         }
+
+        /* Membership Status */
+        .membership-status-card {
+            background: linear-gradient(150deg, #14141a, #0f0f12);
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            padding: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            box-shadow: var(--shadow);
+        }
+        .membership-status-card.expiring {
+            border-color: rgba(252, 91, 91, 0.45);
+            background: linear-gradient(150deg, rgba(252, 91, 91, 0.08), rgba(15, 15, 18, 0.9));
+        }
+        .membership-status-left {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+        }
+        .membership-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 14px;
+            display: grid;
+            place-items: center;
+            border: 1px solid rgba(126, 252, 91, 0.35);
+            background: rgba(126, 252, 91, 0.12);
+            color: var(--accent);
+            font-size: 22px;
+        }
+        .membership-status-card.expiring .membership-icon {
+            border-color: rgba(252, 91, 91, 0.45);
+            background: rgba(252, 91, 91, 0.12);
+            color: #fc5b5b;
+        }
+        .membership-info h4 {
+            margin: 0 0 6px;
+            font-size: 16px;
+            font-weight: 700;
+        }
+        .membership-info p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 12px;
+        }
+        .membership-meta {
+            text-align: right;
+            font-size: 12px;
+            color: var(--muted);
+        }
+        .membership-meta strong {
+            display: block;
+            color: var(--text);
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+        .btn-renew {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 10px 14px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, var(--accent) 0%, #8fff6b 100%);
+            color: #000;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 700;
+            margin-top: 10px;
+        }
         
         /* Carousel Navigation */
         .carousel-dots {
@@ -407,6 +480,37 @@
                     </div>
                 </article>
             @endif
+        </section>
+
+        {{-- Membership Status --}}
+        <section class="section-block">
+            <div class="section-title">Stato membership</div>
+            <div class="membership-status-card {{ $membershipStatus['renew_recommended'] ? 'expiring' : '' }}">
+                <div class="membership-status-left">
+                    <div class="membership-icon">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+                    <div class="membership-info">
+                        <h4>{{ $membershipStatus['label'] }}</h4>
+                        <p>{{ $membershipStatus['message'] }}</p>
+                    </div>
+                </div>
+                <div class="membership-meta">
+                    @if (!empty($membershipStatus['expires_at']))
+                        <strong>{{ $membershipStatus['days_left'] }} giorni</strong>
+                        Scadenza {{ $membershipStatus['expires_at']->format('d/m/Y') }}
+                    @else
+                        <strong>—</strong>
+                        Nessuna scadenza
+                    @endif
+                    @if ($membershipStatus['renew_recommended'])
+                        <a class="btn-renew" href="{{ route('membership') }}" wire:navigate>
+                            Rinnova ora
+                            <i class="bi bi-arrow-right"></i>
+                        </a>
+                    @endif
+                </div>
+            </div>
         </section>
     </main>
 </div>
