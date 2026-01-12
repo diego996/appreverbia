@@ -335,6 +335,73 @@
         .token-pill strong {
             color: var(--accent);
         }
+        .filter-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 12px;
+        }
+        .btn-apply-filters {
+            background: linear-gradient(135deg, var(--accent) 0%, #8fff6b 100%);
+            border: none;
+            color: #000;
+            padding: 10px 16px;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .trainer-filter-row {
+            margin-top: 14px;
+        }
+        .trainer-filter-label {
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .trainer-scroll {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 6px;
+        }
+        .trainer-chip {
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: #0f0f12;
+            border: 1px solid var(--line);
+            color: var(--text);
+            font-size: 12px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .trainer-chip.active {
+            border-color: rgba(126,252,91,0.5);
+            color: var(--accent);
+        }
+        .trainer-chip.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .filter-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: rgba(126,252,91,0.15);
+            border: 1px solid rgba(126,252,91,0.4);
+            color: var(--accent);
+            font-size: 12px;
+            font-weight: 600;
+            margin: 14px 0 8px;
+        }
         .list-actions {
             display: flex;
             align-items: center;
@@ -849,7 +916,7 @@
             <div class="filters-panel">
                 <label class="filter-group">
                     Sede
-                    <select class="filter-select" wire:model="selectedBranch">
+                    <select class="filter-select" wire:model.defer="selectedBranch">
                         <option value="">Qualsiasi</option>
                         @foreach ($branches as $branch)
                             <option value="{{ $branch['id'] }}">{{ $branch['name'] }}</option>
@@ -858,13 +925,37 @@
                 </label>
                 <label class="filter-group">
                     Corso
-                    <select class="filter-select" wire:model="selectedCourse">
+                    <select class="filter-select" wire:model.defer="selectedCourse">
                         <option value="">Qualsiasi</option>
                         @foreach ($courses as $course)
                             <option value="{{ $course['id'] }}">{{ $course['title'] }}</option>
                         @endforeach
                     </select>
                 </label>
+                <div class="filter-actions">
+                    <button type="button" class="btn-apply-filters" wire:click="applyFilters">
+                        Applica filtri
+                    </button>
+                </div>
+            </div>
+
+            <div class="trainer-filter-row">
+                <div class="trainer-filter-label">Trainer</div>
+                <div class="trainer-scroll">
+                    @if ($selectedBranch)
+                        @forelse ($trainers as $trainer)
+                            <button type="button"
+                                class="trainer-chip {{ $selectedTrainer === $trainer['id'] ? 'active' : '' }}"
+                                wire:click="setTrainerFilter({{ $trainer['id'] }})">
+                                <span>{{ $trainer['name'] }}</span>
+                            </button>
+                        @empty
+                            <span class="trainer-chip disabled">Nessun trainer</span>
+                        @endforelse
+                    @else
+                        <span class="trainer-chip disabled">Seleziona una sede</span>
+                    @endif
+                </div>
             </div>
 
             <div class="title-block">
@@ -943,7 +1034,22 @@
             </section>
 
 
+            @php
+                $courseFilterLabel = null;
+                if ($selectedCourse === 'pilates') {
+                    $courseFilterLabel = 'Pilates';
+                } elseif ($selectedCourse === 'functional') {
+                    $courseFilterLabel = 'Functional';
+                }
+            @endphp
+
             @if (!empty($lessonCardsByTrainer))
+                @if ($courseFilterLabel)
+                    <div class="filter-badge">
+                        <i class="bi bi-filter"></i>
+                        Filtrato: {{ $courseFilterLabel }}
+                    </div>
+                @endif
                 @foreach ($lessonCardsByTrainer as $trainerGroup)
                     <div class="trainer-section">
                         <div class="trainer-header">

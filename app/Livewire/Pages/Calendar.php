@@ -100,26 +100,46 @@ class Calendar extends Component
 
     public function updatedSelectedBranch(): void
     {
-        $this->loadFilters();
-        $this->loadCalendar();
+        // No-op: apply via applyFilters()
     }
 
     public function updatedSelectedTrainer(): void
     {
-        $this->loadCalendar();
+        // No-op: apply via applyFilters()
     }
 
     public function updatedSelectedWeekday(): void
     {
-        $this->loadCalendar();
+        // No-op: apply via applyFilters()
     }
 
     public function updatedSelectedCourse(): void
     {
+        // No-op: apply via applyFilters()
+    }
+
+    public function applyFilters(): void
+    {
         if ($this->selectedCourse) {
             $this->selectedCourse = strtolower($this->selectedCourse);
         }
+
+        if (!$this->selectedBranch) {
+            $this->selectedTrainer = null;
+        }
+
+        $this->loadFilters();
         $this->loadCalendar();
+    }
+
+    public function setTrainerFilter(?int $trainerId): void
+    {
+        if (!$this->selectedBranch) {
+            return;
+        }
+
+        $this->selectedTrainer = $this->selectedTrainer === $trainerId ? null : $trainerId;
+        $this->applyFilters();
     }
 
     public function updatedConfirmDuetto(): void
