@@ -183,6 +183,31 @@
             background: linear-gradient(135deg, #8fff6b 0%, var(--accent) 100%);
             color: #000;
         }
+        .btn-buy-option.is-disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            box-shadow: none;
+            pointer-events: none;
+        }
+        .membership-lock {
+            background: rgba(252, 91, 91, 0.08);
+            border: 1px solid rgba(252, 91, 91, 0.35);
+            border-radius: 16px;
+            padding: 14px 16px;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .membership-lock i {
+            color: #fc5b5b;
+            font-size: 18px;
+        }
+        .membership-lock span {
+            font-size: 13px;
+            color: var(--muted);
+        }
         
         /* Empty State */
         .empty-state {
@@ -249,6 +274,15 @@
         {{-- Token Items Section --}}
         <section class="section-block">
             <div class="section-title">Acquista Token</div>
+            @if(!$hasActiveMembership)
+                <div class="membership-lock">
+                    <i class="bi bi-lock-fill"></i>
+                    <div>
+                        <strong>Membership richiesta</strong>
+                        <span>Attiva una membership per acquistare lezioni.</span>
+                    </div>
+                </div>
+            @endif
             @if($groupedItems->count() > 0)
                 <div class="token-groups-grid">
                     @foreach($groupedItems as $tokenAmount => $items)
@@ -278,9 +312,15 @@
                                         <div class="option-description">
                                             {{ $item->descrizione }}
                                         </div>
-                                        <a href="{{ route('payment.checkout', $item) }}" class="btn-buy-option">
-                                            Acquista
-                                        </a>
+                                        @if($hasActiveMembership)
+                                            <a href="{{ route('payment.checkout', $item) }}" class="btn-buy-option">
+                                                Acquista
+                                            </a>
+                                        @else
+                                            <span class="btn-buy-option is-disabled" aria-disabled="true">
+                                                Acquista
+                                            </span>
+                                        @endif
                                     </div>
                                 @endforeach
                             </div>

@@ -65,6 +65,19 @@ class PaymentController extends Controller
         // In a real app, we might retrieve the session from Stripe here to confirm status immediately
         // allowing for instant UI update even if webhook is slightly delayed.
         // For now, we display the success page.
+        if ($sessionId) {
+            try {
+                $session = $this->stripeService->retrieveCheckoutSession($sessionId);
+                if ($session && in_array($session->payment_status, ['paid', 'no_payment_required'], true)) {
+                    $this->handleCheckoutSessionCompleted($session);
+                }
+            } catch (\Exception $e) {
+                Log::warning('Stripe session retrieval failed on success callback.', [
+                    'session_id' => $sessionId,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
 
         return view('payment.success', ['session_id' => $sessionId]);
     }
@@ -106,19 +119,27 @@ class PaymentController extends Controller
     {
         $payment = Payment::where('provider_ref', $session->id)->first();
 
-        if ($payment && $payment->status !== 'paid') {
+        if (!$payment) {
+            return;
+        }
+
+        if ($payment->status !== 'paid') {
             $payment->update([
                 'status' => 'paid',
                 'paid_at' => now(),
                 'meta' => array_merge($payment->meta ?? [], ['stripe_payment_intent' => $session->payment_intent])
             ]);
+        }
 
-            // Found item via payment
-            $item = $payment->item; // Assuming relation exists and is loaded or accessible
+        // Found item via payment
+        $item = $payment->item; // Assuming relation exists and is loaded or accessible
 
-            if ($item) {
-                // Handle Membership (Property ID = 2)
-                if ($item->item_property_id == 2) {
+        if ($item) {
+            // Handle Membership (Property ID = 2)
+            if ($item->item_property_id == 2) {
+                $membershipExists = \App\Models\Membership::where('payment_id', $payment->id)->exists();
+
+                if (!$membershipExists) {
                     $user = User::find($payment->user_id);
 
                     // Determine start and end dates
@@ -142,7 +163,7 @@ class PaymentController extends Controller
                     // Create new membership record
                     \App\Models\Membership::create([
                         'user_id' => $payment->user_id,
-                        'branch_id' => $user->branch_id,
+                        'branch_id' => $user ? $user->branch_id : null,
                         'start_date' => $startDate,
                         'end_date' => $endDate,
                         'payment_id' => $payment->id,
@@ -151,29 +172,29 @@ class PaymentController extends Controller
 
                     Log::info("Membership created for User {$payment->user_id}. Start: {$startDate->toDateString()}, End: {$endDate->toDateString()}");
                 }
+            }
 
-                // Credit the wallet (Standard Logic)
-                // Check if wallet entry already exists to avoid duplicates (idempotency)
-                // We use the payment as the unique model reference
-                $exists = Wallet::where('model_type', Payment::class)
-                    ->where('model_id', $payment->id)
-                    ->exists();
+            // Credit the wallet (Standard Logic)
+            // Check if wallet entry already exists to avoid duplicates (idempotency)
+            // We use the payment as the unique model reference
+            $exists = Wallet::where('model_type', Payment::class)
+                ->where('model_id', $payment->id)
+                ->exists();
 
-                if (!$exists) {
-                    Wallet::create([
-                        'user_id' => $payment->user_id,
-                        'model_type' => Payment::class,
-                        'model_id' => $payment->id,
-                        'token_delta' => $item->token,
-                        'token' => $item->token, // Initial balance for this packet
-                        'reason' => 'purchase',
-                        'provider' => 'stripe',
-                        'expires_at' => $item->validity_months ? now()->addMonths($item->validity_months) : null,
-                        'meta' => ['description' => $item->descrizione]
-                    ]);
+            if (!$exists) {
+                Wallet::create([
+                    'user_id' => $payment->user_id,
+                    'model_type' => Payment::class,
+                    'model_id' => $payment->id,
+                    'token_delta' => $item->token,
+                    'token' => $item->token, // Initial balance for this packet
+                    'reason' => 'purchase',
+                    'provider' => 'stripe',
+                    'expires_at' => $item->validity_months ? now()->addMonths($item->validity_months) : null,
+                    'meta' => ['description' => $item->descrizione]
+                ]);
 
-                    Log::info("Wallet credited for User {$payment->user_id} with {$item->token} tokens.");
-                }
+                Log::info("Wallet credited for User {$payment->user_id} with {$item->token} tokens.");
             }
         }
     }

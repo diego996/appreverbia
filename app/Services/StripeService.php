@@ -48,4 +48,9 @@ class StripeService
 
         return Session::create($payload);
     }
+
+    public function retrieveCheckoutSession(string $sessionId): Session
+    {
+        return Session::retrieve($sessionId);
+    }
 }

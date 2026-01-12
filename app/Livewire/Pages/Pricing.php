@@ -3,6 +3,7 @@
 namespace App\Livewire\Pages;
 
 use App\Models\Item;
+use App\Models\Membership;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 
@@ -29,7 +30,11 @@ class Pricing extends Component
         $groupedItems = $tokenItems->groupBy('token');
 
         return view('livewire.pages.pricing', [
-            'groupedItems' => $groupedItems
+            'groupedItems' => $groupedItems,
+            'hasActiveMembership' => Membership::where('user_id', $user->id)
+                ->where('status', 'active')
+                ->where('end_date', '>=', now()->toDateString())
+                ->exists(),
         ]);
     }
 }
