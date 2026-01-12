@@ -11,9 +11,16 @@ class Pricing extends Component
 {
     public function render()
     {
+        $user = auth()->user();
+
         // Get active token items (item_property_id = 1), sorted by cost
+        // Hide Duetto items if user doesn't have duetto_id
         $tokenItems = Item::where('active', true)
             ->where('item_property_id', 1)
+            ->when(!$user->duetto_id, function ($query) {
+                // Hide Duetto items if user doesn't have duetto_id
+                $query->where('descrizione', 'NOT LIKE', '%duetto%');
+            })
             ->orderBy('token')
             ->orderBy('costo')
             ->get();
