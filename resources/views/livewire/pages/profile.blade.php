@@ -141,6 +141,14 @@
             font-size: 11px;
             color: var(--muted);
         }
+        .status-banner {
+            background: rgba(126, 252, 91, 0.12);
+            border: 1px solid rgba(126, 252, 91, 0.4);
+            color: var(--text);
+            border-radius: 14px;
+            padding: 10px 12px;
+            font-size: 12px;
+        }
         .btn-cancel {
             background: transparent;
             color: var(--accent-2);
@@ -332,6 +340,9 @@
 
         <section class="section-block">
             <div class="section-title">Le tue prenotazioni</div>
+            @if (!empty($cancelSuccess))
+                <div class="status-banner">{{ $cancelSuccess }}</div>
+            @endif
             <div class="booking-list">
                 @forelse ($upcomingBookings as $lesson)
                     <article class="booking-item">

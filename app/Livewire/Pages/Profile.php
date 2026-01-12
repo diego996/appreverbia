@@ -28,6 +28,7 @@ class Profile extends Component
     public ?int $confirmingCancelId = null;
     public array $confirmingLesson = [];
     public string $cancelError = '';
+    public string $cancelSuccess = '';
     public ?int $confirmingDuettoId = null;
     public array $confirmingDuettoLesson = [];
     public string $duettoError = '';
@@ -216,6 +217,7 @@ class Profile extends Component
         }
 
         $this->cancelError = '';
+        $this->cancelSuccess = '';
         $this->confirmingLesson = [];
         $this->confirmingCancelId = $bookingId;
 
@@ -526,6 +528,10 @@ class Profile extends Component
         }
 
         $this->dispatch('close-modal', name: 'cancel-booking');
+        $lessonTitle = $this->confirmingLesson['title'] ?? 'Lezione';
+        $lessonDate = $this->confirmingLesson['date'] ?? '';
+        $lessonTime = $this->confirmingLesson['time'] ?? '';
+        $this->cancelSuccess = trim("{$lessonTitle} del {$lessonDate} {$lessonTime} è stata disdetta con successo e la lezione ricaricata.");
         $this->mount();
     }
 
