@@ -8,6 +8,7 @@ use App\Models\SupportAttachment;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\WithFileUploads;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 #[Layout('layouts.reverbia-shell', ['title' => 'Supporto'])]
@@ -19,6 +20,12 @@ class Support extends Component
     public $attachments = [];
     public $conversation;
     public $messages = [];
+
+    public function getCanSendProperty(): bool
+    {
+        $hasText = trim((string) $this->messageText) !== '';
+        return $hasText || count($this->getValidAttachments()) > 0;
+    }
 
     public function mount()
     {
@@ -67,51 +74,63 @@ class Support extends Component
             ->toArray();
     }
 
+    protected function getValidAttachments(): array
+    {
+        return array_values(array_filter($this->attachments, fn ($file) => $file));
+    }
+
     public function sendMessage()
     {
+        $this->attachments = $this->getValidAttachments();
+
         $this->validate([
             'messageText' => 'required_without:attachments|string|max:5000',
             'attachments.*' => 'nullable|file|max:10240', // 10MB max per file
         ]);
 
         $user = auth()->user();
-        $hasAttachments = !empty($this->attachments);
+        $messageText = trim((string) $this->messageText);
+        $messageText = $messageText === '' ? null : $messageText;
+        $hasAttachments = count($this->attachments) > 0;
 
-        // Create the message
-        $message = SupportMessage::create([
-            'conversation_id' => $this->conversation->id,
-            'user_id' => $user->id,
-            'branch_id' => $user->branch_id,
-            'sender_type' => 'customer',
-            'text' => $this->messageText ?: null,
-            'has_attachments' => $hasAttachments,
-            'sent_at' => now(),
-        ]);
+        DB::transaction(function () use ($user, $hasAttachments, $messageText) {
+            // Create the message
+            $message = SupportMessage::create([
+                'conversation_id' => $this->conversation->id,
+                'user_id' => $user->id,
+                'branch_id' => $user->branch_id,
+                'sender_type' => 'customer',
+                'text' => $messageText,
+                'has_attachments' => $hasAttachments,
+                'sent_at' => now(),
+            ]);
 
-        // Handle file attachments
-        if ($hasAttachments) {
-            foreach ($this->attachments as $file) {
-                $path = $file->store('support-attachments', 'public');
+            // Handle file attachments
+            if ($hasAttachments) {
+                foreach ($this->attachments as $file) {
+                    $path = $file->store('support-attachments', 'public');
 
-                SupportAttachment::create([
-                    'message_id' => $message->id,
-                    'disk' => 'public',
-                    'path' => $path,
-                    'filename' => $file->getClientOriginalName(),
-                    'mime' => $file->getMimeType(),
-                    'size' => $file->getSize(),
-                    'uploaded_by_type' => 'customer',
-                    'uploaded_by_name' => $user->name,
-                    'uploaded_at' => now(),
-                ]);
+                    SupportAttachment::create([
+                        'message_id' => $message->id,
+                        'disk' => 'public',
+                        'path' => $path,
+                        'filename' => $file->getClientOriginalName(),
+                        'mime' => $file->getMimeType(),
+                        'size' => $file->getSize(),
+                        'uploaded_by_type' => 'customer',
+                        'uploaded_by_name' => $user->name,
+                        'uploaded_at' => now(),
+                    ]);
+                }
             }
-        }
 
-        // Update conversation
-        $this->conversation->update([
-            'last_message_at' => now(),
-            'last_read_at_customer' => now(),
-        ]);
+            // Update conversation
+            $this->conversation->update([
+                'last_message_at' => now(),
+                'last_read_at_customer' => now(),
+                'unread_count' => ($this->conversation->unread_count ?? 0) + 1,
+            ]);
+        });
 
         // Reset form
         $this->messageText = '';

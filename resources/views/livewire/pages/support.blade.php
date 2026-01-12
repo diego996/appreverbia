@@ -2,11 +2,14 @@
     <style>
         main.page-support {
             padding: 0;
-            height: calc(100vh - 60px - 70px);
+            height: calc(100dvh - 60px - 70px);
+            min-height: calc(100dvh - 60px - 70px);
             /* viewport - topbar - bottom nav */
             display: flex;
             flex-direction: column;
             background: var(--bg);
+            width: 100%;
+            overflow: hidden;
         }
 
         /* Chat Header */
@@ -48,10 +51,12 @@
         .messages-container {
             flex: 1;
             overflow-y: auto;
+            overflow-x: hidden;
             padding: 16px;
             display: flex;
             flex-direction: column;
             gap: 12px;
+            min-height: 0;
         }
 
         .messages-container::-webkit-scrollbar {
@@ -73,7 +78,7 @@
 
         /* Message Bubble */
         .message-bubble {
-            max-width: 85%;
+            max-width: min(85%, 420px);
             display: flex;
             flex-direction: column;
             gap: 6px;
@@ -93,6 +98,7 @@
             padding: 12px 16px;
             border-radius: 18px;
             word-wrap: break-word;
+            overflow-wrap: anywhere;
             font-size: 15px;
             line-height: 1.4;
         }
@@ -121,6 +127,7 @@
             flex-direction: column;
             gap: 8px;
             margin-top: 4px;
+            width: 100%;
         }
 
         .attachment-item {
@@ -134,7 +141,8 @@
             text-decoration: none;
             color: var(--text);
             transition: all 0.2s ease;
-            max-width: 280px;
+            max-width: 100%;
+            width: 100%;
         }
 
         .attachment-item:hover {
@@ -206,6 +214,7 @@
         /* Input Area */
         .input-area {
             padding: 12px 16px;
+            padding-bottom: calc(12px + env(safe-area-inset-bottom));
             background: var(--panel);
             border-top: 1px solid var(--line);
             display: flex;
@@ -230,6 +239,7 @@
             font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
             resize: none;
             max-height: 120px;
+            overflow-y: auto;
             transition: all 0.2s ease;
         }
 
@@ -241,6 +251,14 @@
 
         .input-field::placeholder {
             color: var(--muted);
+        }
+
+        .input-field::-webkit-scrollbar {
+            display: none;
+        }
+
+        .input-field {
+            scrollbar-width: none;
         }
 
         /* Attachment Preview */
@@ -417,12 +435,12 @@
                     </div>
                 @endif
 
-                <textarea wire:model="messageText" wire:keydown.enter.prevent="sendMessage" class="input-field"
+                <textarea wire:model.live.debounce.300ms="messageText" wire:keydown.enter.prevent="sendMessage" class="input-field"
                     placeholder="Scrivi messaggio..." rows="1"></textarea>
             </div>
 
             <button type="button" class="btn-send" wire:click="sendMessage" wire:loading.attr="disabled"
-                @disabled(empty($messageText) && empty($attachments))>
+                @disabled(!$this->canSend)>
                 <i class="bi bi-send-fill"></i>
             </button>
         </div>
@@ -458,8 +476,9 @@
             const textarea = document.querySelector('.input-field');
             if (textarea) {
                 textarea.addEventListener('input', function () {
+                    const maxHeight = 160;
                     this.style.height = 'auto';
-                    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+                    this.style.height = Math.min(this.scrollHeight, maxHeight) + 'px';
                 });
             }
         })();
