@@ -263,7 +263,7 @@
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Giorni Rimanenti</span>
-                            <span class="detail-value">{{ $currentMembership->end_date->diffInDays(now()) }}</span>
+                            <span class="detail-value">{{ now()->startOfDay()->diffInDays($currentMembership->end_date->startOfDay(), false) }}</span>
                         </div>
                     </div>
                 </div>
@@ -309,7 +309,7 @@
                                 </li>
                                 <li>
                                     <i class="bi bi-calendar-check"></i>
-                                    Validità <strong>{{ $item->validity_months }} {{ $item->validity_months == 1 ? 'mese' : 'mesi' }}</strong>
+                                    Validita <strong>6 mesi</strong>
                                 </li>
                                 <li>
                                     <i class="bi bi-check2-circle"></i>
