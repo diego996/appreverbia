@@ -18,6 +18,30 @@
             padding: 16px;
             box-shadow: var(--shadow);
         }
+        .logout-strip {
+            margin-bottom: 18px;
+        }
+        .logout-button {
+            width: 100%;
+            border: 1px solid var(--line);
+            background: #0f0f12;
+            color: var(--muted);
+            border-radius: 14px;
+            padding: 10px 14px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+        }
+        .logout-button:hover {
+            color: var(--text);
+            border-color: rgba(126, 252, 91, 0.35);
+            background: rgba(126, 252, 91, 0.08);
+        }
+        .logout-button i {
+            margin-right: 8px;
+        }
         .profile-hero {
             display: grid;
             gap: 16px;
@@ -296,6 +320,15 @@
 
 <div>
     <main class="page-profile">
+        <section class="logout-strip">
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button class="logout-button" type="submit">
+                    <i class="bi bi-box-arrow-right"></i>
+                    Logout
+                </button>
+            </form>
+        </section>
         <section class="section-block">
             <div class="section-title">Info base utente</div>
             <div class="card-panel profile-hero">
