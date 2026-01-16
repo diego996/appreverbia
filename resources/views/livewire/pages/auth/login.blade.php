@@ -21,7 +21,7 @@ new #[Layout('layouts.reverbia-guest')] #[Title('Reverbia - Login')] class exten
 
         Session::regenerate();
 
-        $this->redirectIntended(default: route('home', absolute: false), navigate: true);
+        $this->redirectIntended(default: route('home', absolute: false));
     }
 }; ?>
 
