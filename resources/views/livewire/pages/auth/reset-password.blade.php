@@ -77,6 +77,10 @@ new #[Layout('layouts.reverbia-guest')] #[Title('Reverbia - Reset Password')] cl
         </div>
         <h1>Reimposta la tua password</h1>
 
+        @if (session('status'))
+            <div class="status-text">{{ session('status') }}</div>
+        @endif
+
         <form wire:submit="resetPassword">
             <div class="field">
                 <label for="email">Inserisci la tua email</label>
