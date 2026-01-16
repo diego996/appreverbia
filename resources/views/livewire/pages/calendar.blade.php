@@ -963,7 +963,7 @@
             </div>
 
             <div class="token-pill">
-                Token disponibili <strong>{{ $availableTokens }}</strong>
+                Lezioni disponibili <strong>{{ $availableTokens }}</strong>
             </div>
 
             <section class="calendar-card">
@@ -1102,7 +1102,7 @@
                                         $firstSlot = $course['time_slots'][0] ?? null;
                                         $insufficientTokens = $firstSlot && $firstSlot['action'] === 'book' && $availableTokens < 1;
                                         $ctaDisabled = $firstSlot ? ($firstSlot['cta_disabled'] || $insufficientTokens) : true;
-                                        $ctaLabel = $insufficientTokens ? 'Token insufficienti' : ($firstSlot['cta'] ?? 'Non disponibile');
+                                        $ctaLabel = $insufficientTokens ? 'Lezioni insufficienti' : ($firstSlot['cta'] ?? 'Non disponibile');
                                         $ctaVariant = $firstSlot['cta_variant'] ?? '';
                                         $action = $firstSlot['action'] ?? '';
                                         $occurrenceId = $firstSlot['occurrence_id'] ?? 0;
@@ -1187,7 +1187,7 @@
                         $requiredTokens = $confirmingAction === 'book' ? 1 : 0;
                         $duettoInsufficient = $confirmDuetto && $duettoTokens !== null && $duettoTokens < 1;
                         $insufficientTokens = $confirmingAction === 'book' && ($availableTokens < 1 || $duettoInsufficient);
-                        $requiredLabel = $confirmDuetto ? '2 TOKEN (1 + 1)' : '1 TOKEN';
+                        $requiredLabel = $confirmDuetto ? '2 LEZIONI (1 + 1)' : '1 LEZIONE';
                         $hasBlockingError = $insufficientTokens || $bookingError || !$hasAction;
                     @endphp
 
@@ -1224,7 +1224,7 @@
                     @if ($insufficientTokens && !$bookingError)
                         <div class="status-message status-error">
                             <i class="bi bi-coin"></i>
-                            Token insufficienti per questa prenotazione.
+                            Lezioni insufficienti per questa prenotazione.
                         </div>
                     @endif
 

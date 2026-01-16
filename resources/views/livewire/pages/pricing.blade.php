@@ -273,7 +273,7 @@
 
         {{-- Token Items Section --}}
         <section class="section-block">
-            <div class="section-title">Acquista Token</div>
+            <div class="section-title">Acquista Lezioni</div>
             @if(!$hasActiveMembership)
                 <div class="membership-lock">
                     <i class="bi bi-lock-fill"></i>
@@ -331,7 +331,7 @@
                 <div class="empty-state">
                     <i class="bi bi-inbox"></i>
                     <h3>Nessun pacchetto disponibile</h3>
-                    <p>Al momento non ci sono pacchetti token disponibili</p>
+                    <p>Al momento non ci sono pacchetti lezioni disponibili</p>
                 </div>
             @endif
         </section>

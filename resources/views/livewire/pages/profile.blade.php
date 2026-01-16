@@ -430,7 +430,7 @@
             <div class="section-title">Il tuo wallet</div>
             <div class="card-panel wallet-card">
                 <div>
-                    <div class="wallet-balance">{{ $walletSummary['balance'] ?? 0 }} token</div>
+                    <div class="wallet-balance">{{ $walletSummary['balance'] ?? 0 }} lezioni</div>
                     <div class="wallet-meta">Saldo attuale disponibile</div>
                 </div>
                 <div class="wallet-meta">
