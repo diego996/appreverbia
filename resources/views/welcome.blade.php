@@ -5,6 +5,13 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
         <title>Laravel</title>
+        <link rel="manifest" href="/manifest.webmanifest">
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+        <meta name="theme-color" content="#050505">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <meta name="apple-mobile-web-app-title" content="Reverbia">
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
