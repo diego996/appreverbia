@@ -2,9 +2,9 @@ const CACHE_NAME = 'reverbia-pwa-v1';
 const PRECACHE_URLS = [
   '/',
   '/manifest.webmanifest',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png',
-  '/icons/apple-touch-icon.png',
+  '/icons/icon-192.jpg',
+  '/icons/icon-512.jpg',
+  '/icons/apple-touch-icon.jpg',
 ];
 
 self.addEventListener('install', (event) => {
