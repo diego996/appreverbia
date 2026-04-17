@@ -2,7 +2,7 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>{{ $title ?? config('app.name', 'Reverbia') }}</title>
@@ -54,7 +54,7 @@
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                background: linear-gradient(180deg, rgba(126,252,91,0.08), rgba(5,5,5,0.94));
+                background: #050505;
                 border-bottom: 1px solid var(--line);
             }
             .brand {
@@ -123,8 +123,7 @@
             .menu-overlay {
                 position: fixed;
                 inset: 0;
-                background: rgba(0,0,0,0.8);
-                backdrop-filter: blur(3px);
+                background: #050505;
                 opacity: 0;
                 pointer-events: none;
                 transition: opacity 0.25s ease;
