@@ -141,6 +141,7 @@ class PaymentController extends Controller
 
                 if (!$membershipExists) {
                     $user = User::find($payment->user_id);
+                    $membershipMonths = max(1, (int) ($item->validity_months ?? 0));
 
                     // Determine start and end dates
                     // Check if user has an existing active membership
@@ -152,12 +153,12 @@ class PaymentController extends Controller
 
                     if ($existingMembership) {
                         // Extend from existing end_date
-                        $startDate = $existingMembership->end_date;
-                        $endDate = $startDate->copy()->addMonths($item->validity_months);
+                        $startDate = $existingMembership->end_date->copy();
+                        $endDate = $startDate->copy()->addMonths($membershipMonths);
                     } else {
                         // New membership starts today
-                        $startDate = now();
-                        $endDate = now()->addMonths($item->validity_months);
+                        $startDate = now()->startOfDay();
+                        $endDate = $startDate->copy()->addMonths($membershipMonths);
                     }
 
                     // Create new membership record
@@ -170,7 +171,7 @@ class PaymentController extends Controller
                         'status' => 'active',
                     ]);
 
-                    Log::info("Membership created for User {$payment->user_id}. Start: {$startDate->toDateString()}, End: {$endDate->toDateString()}");
+                    Log::info("Membership created for User {$payment->user_id}. Start: {$startDate->toDateString()}, End: {$endDate->toDateString()}, Months: {$membershipMonths}");
                 }
             }
 

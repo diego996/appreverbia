@@ -119,7 +119,7 @@ class Dashboard extends Component
             ];
         }
 
-        $daysLeft = now()->startOfDay()->diffInDays($membership->end_date, false);
+        $daysLeft = now()->startOfDay()->diffInDays($membership->end_date->startOfDay(), false) + 1;
         $daysLeft = max(0, (int) $daysLeft);
         $renewRecommended = $daysLeft <= 7;
 

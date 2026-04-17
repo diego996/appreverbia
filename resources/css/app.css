@@ -5,6 +5,20 @@ html, body {
   touch-action: manipulation;
 }
 
+header.topbar,
+.topbar {
+  background: #050505 !important;
+  background-image: none !important;
+  opacity: 1 !important;
+}
+
+.menu-overlay,
+.menu-panel {
+  background: #050505 !important;
+  background-image: none !important;
+  backdrop-filter: none !important;
+}
+
 html.orientation-locked-landscape,
 html.orientation-locked-landscape body {
   overflow: hidden !important;

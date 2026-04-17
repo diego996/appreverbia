@@ -263,7 +263,7 @@
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Giorni Rimanenti</span>
-                            <span class="detail-value">{{ now()->startOfDay()->diffInDays($currentMembership->end_date->startOfDay(), false) }}</span>
+                            <span class="detail-value">{{ max(0, now()->startOfDay()->diffInDays($currentMembership->end_date->startOfDay(), false) + 1) }}</span>
                         </div>
                     </div>
                 </div>
