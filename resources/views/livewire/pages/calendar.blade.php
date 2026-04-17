@@ -1194,10 +1194,10 @@
     </main>
 
 
-    <div class="rv-modal" data-modal="booking-confirm" aria-hidden="true">
-        <div class="rv-modal-backdrop" data-modal-close></div>
+    <div class="rv-modal {{ $showBookingModal ? 'is-open' : '' }}" data-modal="booking-confirm" aria-hidden="{{ $showBookingModal ? 'false' : 'true' }}">
+        <div class="rv-modal-backdrop" wire:click="closeBookingModal"></div>
         <div class="rv-modal-panel">
-            <button class="rv-modal-close" type="button" data-modal-close aria-label="Chiudi modal">
+            <button class="rv-modal-close" type="button" wire:click="closeBookingModal" aria-label="Chiudi modal">
                 <i class="bi bi-x-lg"></i>
             </button>
             <div class="premium-modal">
@@ -1323,7 +1323,7 @@
 
                     {{-- Footer --}}
                     <div class="modal-footer">
-                        <button class="btn-cancel" type="button" data-modal-close>Annulla</button>
+                        <button class="btn-cancel" type="button" wire:click="closeBookingModal">Annulla</button>
                         <button class="btn-confirm" 
                                 type="button" 
                                 wire:click="confirmBooking" 
@@ -1403,6 +1403,14 @@
                     if (event.key !== 'Escape') return;
                     const modal = document.querySelector('[data-modal].is-open');
                     if (modal) {
+                        if (modal.dataset.modal === 'booking-confirm') {
+                            const wireId = document.querySelector('[wire\\:id]')?.getAttribute('wire:id');
+                            const component = wireId && window.Livewire ? window.Livewire.find(wireId) : null;
+                            if (component) {
+                                component.call('closeBookingModal');
+                                return;
+                            }
+                        }
                         closeModal(null, modal);
                     }
                 });

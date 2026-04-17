@@ -41,6 +41,7 @@ class Calendar extends Component
     
     public ?int $confirmingOccurrenceId = null;
     public ?string $confirmingAction = null;
+    public bool $showBookingModal = false;
     public string $selectedBookingType = 'functional';
     public bool $confirmDuetto = false;
     public array $confirmingDetails = [];
@@ -254,6 +255,7 @@ class Calendar extends Component
         }
 
         $this->resetBookingState();
+        $this->showBookingModal = true;
         $this->confirmingOccurrenceId = $occurrenceId;
 
         $occurrence = CourseOccurrence::query()
@@ -391,6 +393,15 @@ class Calendar extends Component
         $this->dispatch('open-modal', 'booking-confirm');
     }
 
+    public function closeBookingModal(): void
+    {
+        $this->showBookingModal = false;
+        $this->confirmingOccurrenceId = null;
+        $this->confirmingAction = null;
+        $this->resetBookingState();
+        $this->dispatch('close-modal', 'booking-confirm');
+    }
+
     public function confirmBooking(): void
     {
         $user = auth()->user();
@@ -524,7 +535,7 @@ class Calendar extends Component
             return;
         }
 
-        $this->dispatch('close-modal', 'booking-confirm');
+        $this->closeBookingModal();
         $this->loadCalendar();
     }
 
