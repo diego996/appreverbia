@@ -560,7 +560,6 @@ class Calendar extends Component
         }
 
         $trainersQuery = User::query()
-            ->where('role', 'trainer')
             ->whereHas('courses', function ($query) {
                 if ($this->selectedBranch) {
                     $query->where('branch_id', $this->selectedBranch);
@@ -613,6 +612,7 @@ class Calendar extends Component
         $this->lessonCards = $this->buildLessonCards($occurrences, $selectedDate, $userBookings, $userWaitlist);
         $this->lessonCardsByTrainer = $this->groupLessonsByTrainer($this->lessonCards);
         $this->trainerIndicators = $this->buildTrainerIndicators($occurrences);
+        $this->trainers = $this->buildTrainers($occurrences);
     }
 
     protected function getOccurrencesForMonth(Carbon $month): Collection
@@ -942,7 +942,11 @@ class Calendar extends Component
         }
 
         return User::query()
-            ->where('role', 'trainer')
+            ->whereHas('courses', function ($query) {
+                if ($this->selectedBranch) {
+                    $query->where('branch_id', $this->selectedBranch);
+                }
+            })
             ->with('courses')
             ->orderBy('name')
             ->get()
