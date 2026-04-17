@@ -36,6 +36,8 @@ class Calendar extends Component
     public ?int $selectedTrainer = null;
     public ?string $selectedCourse = null;
     public ?string $selectedWeekday = null;
+    public ?string $selectedStartTime = null;
+    public ?string $selectedEndTime = null;
     
     public ?int $confirmingOccurrenceId = null;
     public ?string $confirmingAction = null;
@@ -118,10 +120,27 @@ class Calendar extends Component
         // No-op: apply via applyFilters()
     }
 
+    public function updatedSelectedStartTime(): void
+    {
+        // No-op: apply via applyFilters()
+    }
+
+    public function updatedSelectedEndTime(): void
+    {
+        // No-op: apply via applyFilters()
+    }
+
     public function applyFilters(): void
     {
         if ($this->selectedCourse) {
             $this->selectedCourse = strtolower($this->selectedCourse);
+        }
+
+        $this->selectedStartTime = $this->selectedStartTime ?: null;
+        $this->selectedEndTime = $this->selectedEndTime ?: null;
+
+        if ($this->selectedStartTime && $this->selectedEndTime && $this->selectedStartTime > $this->selectedEndTime) {
+            [$this->selectedStartTime, $this->selectedEndTime] = [$this->selectedEndTime, $this->selectedStartTime];
         }
 
         if (!$this->selectedBranch) {
@@ -435,6 +454,37 @@ class Calendar extends Component
         if ($this->selectedCourse && !collect($this->courses)->contains(fn ($course) => $course['id'] === $this->selectedCourse)) {
             $this->selectedCourse = null;
         }
+
+        $trainersQuery = User::query()
+            ->where('role', 'trainer')
+            ->whereHas('courses', function ($query) {
+                if ($this->selectedBranch) {
+                    $query->where('branch_id', $this->selectedBranch);
+                }
+
+                if ($this->selectedCourse === 'pilates') {
+                    $query->whereRaw('LOWER(title) LIKE ?', ['%pilates%']);
+                }
+
+                if ($this->selectedCourse === 'functional') {
+                    $query->whereRaw('LOWER(title) NOT LIKE ?', ['%pilates%']);
+                }
+            })
+            ->orderBy('name');
+
+        $this->trainers = $trainersQuery
+            ->get()
+            ->map(function (User $trainer): array {
+                return [
+                    'id' => $trainer->id,
+                    'name' => $trainer->name,
+                ];
+            })
+            ->all();
+
+        if ($this->selectedTrainer && !collect($this->trainers)->contains(fn ($trainer) => $trainer['id'] === $this->selectedTrainer)) {
+            $this->selectedTrainer = null;
+        }
     }
 
     protected function loadCalendar(): void
@@ -467,7 +517,6 @@ class Calendar extends Component
         $this->lessonCards = $this->buildLessonCards($occurrences, $selectedDate, $userBookings, $userWaitlist);
         $this->lessonCardsByTrainer = $this->groupLessonsByTrainer($this->lessonCards);
         $this->trainerIndicators = $this->buildTrainerIndicators($occurrences);
-        $this->trainers = $this->buildTrainers($occurrences);
     }
 
     protected function getOccurrencesForMonth(Carbon $month): Collection
@@ -488,6 +537,14 @@ class Calendar extends Component
 
         if ($this->selectedTrainer) {
             $query->whereHas('course', fn ($q) => $q->where('trainer_id', $this->selectedTrainer));
+        }
+
+        if ($this->selectedStartTime) {
+            $query->whereTime('start_time', '>=', $this->selectedStartTime);
+        }
+
+        if ($this->selectedEndTime) {
+            $query->whereTime('start_time', '<=', $this->selectedEndTime);
         }
 
         if ($this->selectedCourse === 'pilates') {

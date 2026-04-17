@@ -338,7 +338,8 @@
         .filter-actions {
             display: flex;
             justify-content: flex-end;
-            margin-top: 12px;
+            align-items: flex-end;
+            flex: 0 0 auto;
         }
         .btn-apply-filters {
             background: linear-gradient(135deg, var(--accent) 0%, #8fff6b 100%);
@@ -932,29 +933,37 @@
                         @endforeach
                     </select>
                 </label>
+                <label class="filter-group">
+                    Trainer
+                    <select class="filter-select" wire:model.defer="selectedTrainer">
+                        <option value="">Tutti</option>
+                        @foreach ($trainers as $trainer)
+                            <option value="{{ $trainer['id'] }}">{{ $trainer['name'] }}</option>
+                        @endforeach
+                    </select>
+                </label>
+                <label class="filter-group">
+                    Dalle ore
+                    <select class="filter-select" wire:model.defer="selectedStartTime">
+                        <option value="">Qualsiasi</option>
+                        @for ($hour = 6; $hour <= 22; $hour++)
+                            <option value="{{ sprintf('%02d:00', $hour) }}">{{ sprintf('%02d:00', $hour) }}</option>
+                        @endfor
+                    </select>
+                </label>
+                <label class="filter-group">
+                    Alle ore
+                    <select class="filter-select" wire:model.defer="selectedEndTime">
+                        <option value="">Qualsiasi</option>
+                        @for ($hour = 6; $hour <= 22; $hour++)
+                            <option value="{{ sprintf('%02d:00', $hour) }}">{{ sprintf('%02d:00', $hour) }}</option>
+                        @endfor
+                    </select>
+                </label>
                 <div class="filter-actions">
                     <button type="button" class="btn-apply-filters" wire:click="applyFilters">
                         Applica filtri
                     </button>
-                </div>
-            </div>
-
-            <div class="trainer-filter-row">
-                <div class="trainer-filter-label">Trainer</div>
-                <div class="trainer-scroll">
-                    @if ($selectedBranch)
-                        @forelse ($trainers as $trainer)
-                            <button type="button"
-                                class="trainer-chip {{ $selectedTrainer === $trainer['id'] ? 'active' : '' }}"
-                                wire:click="setTrainerFilter({{ $trainer['id'] }})">
-                                <span>{{ $trainer['name'] }}</span>
-                            </button>
-                        @empty
-                            <span class="trainer-chip disabled">Nessun trainer</span>
-                        @endforelse
-                    @else
-                        <span class="trainer-chip disabled">Seleziona una sede</span>
-                    @endif
                 </div>
             </div>
 
