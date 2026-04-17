@@ -181,14 +181,6 @@
             padding: 6px 12px;
             font-size: 12px;
         }
-        .btn-duetto {
-            background: rgba(126,252,91,0.18);
-            color: var(--accent);
-            border: 1px solid rgba(126,252,91,0.5);
-            border-radius: 999px;
-            padding: 6px 12px;
-            font-size: 12px;
-        }
         .wallet-card {
             display: grid;
             gap: 10px;
@@ -387,11 +379,6 @@
                         <div class="booking-meta">Trainer: {{ $lesson['trainer'] }}</div>
                         <div class="booking-meta">Sede: {{ $lesson['location'] }}</div>
                         <div class="booking-actions">
-                            @if ($lesson['can_confirm_duetto'])
-                                <button class="btn-duetto" type="button" wire:click="openDuettoConfirmModal({{ $lesson['booking_id'] }})">
-                                    Conferma duetto
-                                </button>
-                            @endif
                             @if ($lesson['can_cancel'])
                                 <button class="btn-cancel" type="button" wire:click="openCancelModal({{ $lesson['booking_id'] }})">
                                     Disdici
@@ -492,37 +479,6 @@
         </div>
     </div>
 
-    <div class="rv-modal" data-modal="confirm-duetto" aria-hidden="true">
-        <div class="rv-modal-backdrop" data-modal-close></div>
-        <div class="rv-modal-panel">
-            <button class="rv-modal-close" type="button" data-modal-close aria-label="Chiudi modal">
-                <i class="bi bi-x-lg"></i>
-            </button>
-            <div class="modal-card">
-                <div>
-                    <div class="modal-title">Conferma duetto</div>
-                    <div class="modal-meta">
-                        {{ $confirmingDuettoLesson['title'] ?? 'Lezione' }} - {{ $confirmingDuettoLesson['date'] ?? '' }}
-                        @if (!empty($confirmingDuettoLesson['time']))
-                            - {{ $confirmingDuettoLesson['time'] }}
-                        @endif
-                    </div>
-                    <div class="modal-meta">
-                        Trainer: {{ $confirmingDuettoLesson['trainer'] ?? 'Trainer' }} - {{ $confirmingDuettoLesson['branch'] ?? 'Sede' }}
-                    </div>
-                </div>
-
-                @if ($duettoError)
-                    <div class="modal-error">{{ $duettoError }}</div>
-                @endif
-
-                <div class="modal-actions">
-                    <button class="btn-secondary" type="button" data-modal-close>Annulla</button>
-                    <button class="btn-primary" type="button" wire:click="confirmDuettoBooking">Conferma</button>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 
 @push('scripts')

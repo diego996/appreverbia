@@ -41,6 +41,7 @@ class Calendar extends Component
     
     public ?int $confirmingOccurrenceId = null;
     public ?string $confirmingAction = null;
+    public string $selectedBookingType = 'functional';
     public bool $confirmDuetto = false;
     public array $confirmingDetails = [];
     
@@ -166,6 +167,58 @@ class Calendar extends Component
         if (!$this->hasDuetto || $this->confirmingAction !== 'book') {
             $this->confirmDuetto = false;
         }
+
+        if ($this->confirmingOccurrenceId && $this->selectedBookingType === 'pilates') {
+            $occurrence = CourseOccurrence::query()
+                ->withCount([
+                    'bookings as active_bookings_count' => fn ($query) => $query
+                        ->whereNotIn('status', ['cancelled', 'canceled']),
+                    'bookings as pilates_bookings_count' => fn ($query) => $query
+                        ->where('booking_type', 'pilates')
+                        ->whereNotIn('status', ['cancelled', 'canceled']),
+                ])
+                ->find($this->confirmingOccurrenceId);
+
+            if ($occurrence) {
+                $availability = $this->getOccurrenceAvailability($occurrence);
+                $requiredPilatesSeats = $this->confirmDuetto ? 2 : 1;
+                if ($availability['pilates_available'] < $requiredPilatesSeats) {
+                    $this->selectedBookingType = 'functional';
+                }
+            }
+        }
+    }
+
+    public function updatedSelectedBookingType(): void
+    {
+        if ($this->confirmingAction !== 'book' || !$this->confirmingOccurrenceId) {
+            $this->selectedBookingType = 'functional';
+            return;
+        }
+
+        if (!in_array($this->selectedBookingType, ['functional', 'pilates'], true)) {
+            $this->selectedBookingType = 'functional';
+        }
+
+        if ($this->selectedBookingType === 'pilates') {
+            $occurrence = CourseOccurrence::query()
+                ->withCount([
+                    'bookings as active_bookings_count' => fn ($query) => $query
+                        ->whereNotIn('status', ['cancelled', 'canceled']),
+                    'bookings as pilates_bookings_count' => fn ($query) => $query
+                        ->where('booking_type', 'pilates')
+                        ->whereNotIn('status', ['cancelled', 'canceled']),
+                ])
+                ->find($this->confirmingOccurrenceId);
+
+            if ($occurrence) {
+                $availability = $this->getOccurrenceAvailability($occurrence);
+                $requiredPilatesSeats = $this->confirmDuetto ? 2 : 1;
+                if ($availability['pilates_available'] < $requiredPilatesSeats) {
+                    $this->selectedBookingType = 'functional';
+                }
+            }
+        }
     }
 
     public function previousMonth(): void
@@ -205,7 +258,13 @@ class Calendar extends Component
 
         $occurrence = CourseOccurrence::query()
             ->with(['course.trainer', 'course.branch'])
-            ->withCount('bookings')
+            ->withCount([
+                'bookings as active_bookings_count' => fn ($query) => $query
+                    ->whereNotIn('status', ['cancelled', 'canceled']),
+                'bookings as pilates_bookings_count' => fn ($query) => $query
+                    ->where('booking_type', 'pilates')
+                    ->whereNotIn('status', ['cancelled', 'canceled']),
+            ])
             ->find($occurrenceId);
 
         if (!$occurrence || !$occurrence->date) {
@@ -247,9 +306,11 @@ class Calendar extends Component
             }
         }
 
+        $availability = $this->getOccurrenceAvailability($occurrence);
+
         // Check if full
-        $isFull = $occurrence->max_participants > 0 
-            && $occurrence->bookings_count >= $occurrence->max_participants;
+        $isFull = $occurrence->max_participants > 0
+            && $availability['general_remaining'] <= 0;
 
         if ($isFull && $action === 'book') {
             $action = 'waitlist';
@@ -274,10 +335,23 @@ class Calendar extends Component
             'trainer' => $occurrence->course?->trainer?->name ?? 'Trainer',
             'branch' => $occurrence->course?->branch?->name ?? 'Sede',
             'max' => $occurrence->max_participants,
-            'booked' => $occurrence->bookings_count,
+            'booked' => $availability['active_bookings'],
+            'pilates_booked' => $availability['pilates_booked'],
+            'pilates_limit' => $availability['pilates_limit'],
+            'pilates_available' => $availability['pilates_available'],
             'trainer_initials' => $this->getTrainerInitials($occurrence->course?->trainer?->name ?? 'Trainer'),
             'trainer_color' => $this->getTrainerColor($occurrence->course?->trainer?->id),
         ];
+
+        if ($action === 'book') {
+            $this->selectedBookingType = in_array($this->selectedCourse, ['pilates', 'functional'], true)
+                ? $this->selectedCourse
+                : 'functional';
+
+            if ($this->selectedBookingType === 'pilates' && $availability['pilates_available'] < 1) {
+                $this->selectedBookingType = 'functional';
+            }
+        }
 
         // Update token counts
         $this->availableTokens = $this->getWalletBalance($user->id);
@@ -327,11 +401,14 @@ class Calendar extends Component
         $this->bookingError = '';
 
         $action = $this->confirmingAction;
+        $bookingType = $action === 'book' && $this->selectedBookingType === 'pilates'
+            ? 'pilates'
+            : 'functional';
         $isDuetto = $action === 'book' && $this->confirmDuetto && $user->duetto_id;
         $requiredSeats = $isDuetto ? 2 : 1;
 
         try {
-            DB::transaction(function () use ($user, $action, $isDuetto, $requiredSeats) {
+            DB::transaction(function () use ($user, $action, $bookingType, $isDuetto, $requiredSeats) {
                 $occurrence = CourseOccurrence::query()
                     ->lockForUpdate()
                     ->find($this->confirmingOccurrenceId);
@@ -383,12 +460,26 @@ class Calendar extends Component
                 // Handle booking
                 $bookingsCount = CourseBooking::query()
                     ->where('occurrence_id', $occurrence->id)
+                    ->whereNotIn('status', ['cancelled', 'canceled'])
                     ->lockForUpdate()
                     ->count();
 
                 if ($occurrence->max_participants > 0 
                     && $bookingsCount + $requiredSeats > $occurrence->max_participants) {
                     throw new \RuntimeException('Posti esauriti per questa lezione.');
+                }
+
+                if ($bookingType === 'pilates') {
+                    $pilatesBooked = CourseBooking::query()
+                        ->where('occurrence_id', $occurrence->id)
+                        ->where('booking_type', 'pilates')
+                        ->whereNotIn('status', ['cancelled', 'canceled'])
+                        ->lockForUpdate()
+                        ->count();
+
+                    if ($pilatesBooked + $requiredSeats > $this->getPilatesLimit()) {
+                        throw new \RuntimeException('Postazioni Pilates esaurite per questo orario.');
+                    }
                 }
 
                 $availableTokens = $this->getWalletBalance($user->id);
@@ -407,6 +498,7 @@ class Calendar extends Component
                     'user_id' => $user->id,
                     'booked_at' => now(),
                     'status' => $isDuetto ? 'confirmed_duetto' : 'booked',
+                    'booking_type' => $bookingType,
                 ]);
 
                 if ($duettoId) {
@@ -414,7 +506,8 @@ class Calendar extends Component
                         'occurrence_id' => $occurrence->id,
                         'user_id' => $duettoId,
                         'booked_at' => now(),
-                        'status' => 'pending_duetto',
+                        'status' => 'confirmed_duetto',
+                        'booking_type' => $bookingType,
                     ]);
                 }
 
@@ -460,14 +553,6 @@ class Calendar extends Component
             ->whereHas('courses', function ($query) {
                 if ($this->selectedBranch) {
                     $query->where('branch_id', $this->selectedBranch);
-                }
-
-                if ($this->selectedCourse === 'pilates') {
-                    $query->whereRaw('LOWER(title) LIKE ?', ['%pilates%']);
-                }
-
-                if ($this->selectedCourse === 'functional') {
-                    $query->whereRaw('LOWER(title) NOT LIKE ?', ['%pilates%']);
                 }
             })
             ->orderBy('name');
@@ -523,7 +608,13 @@ class Calendar extends Component
     {
         $query = CourseOccurrence::query()
             ->with(['course.trainer', 'course.branch'])
-            ->withCount('bookings')
+            ->withCount([
+                'bookings as active_bookings_count' => fn ($q) => $q
+                    ->whereNotIn('status', ['cancelled', 'canceled']),
+                'bookings as pilates_bookings_count' => fn ($q) => $q
+                    ->where('booking_type', 'pilates')
+                    ->whereNotIn('status', ['cancelled', 'canceled']),
+            ])
             ->whereBetween('date', [
                 $month->copy()->startOfMonth(),
                 $month->copy()->endOfMonth()
@@ -547,29 +638,17 @@ class Calendar extends Component
             $query->whereTime('start_time', '<=', $this->selectedEndTime);
         }
 
-        if ($this->selectedCourse === 'pilates') {
-            $query->whereHas('course', function ($q) {
-                $q->whereRaw('LOWER(title) LIKE ?', ['%pilates%']);
-            });
-        }
-
-        if ($this->selectedCourse === 'functional') {
-            $query->whereHas('course', function ($q) {
-                $q->whereRaw('LOWER(title) NOT LIKE ?', ['%pilates%']);
-            });
-        }
-
         $occurrences = $query->get();
 
         if ($this->selectedCourse === 'pilates') {
             return $occurrences
-                ->filter(fn (CourseOccurrence $occurrence) => str_contains(strtolower($occurrence->course?->title ?? ''), 'pilates'))
+                ->filter(fn (CourseOccurrence $occurrence) => $this->isActivityAvailable($occurrence, 'pilates'))
                 ->values();
         }
 
         if ($this->selectedCourse === 'functional') {
             return $occurrences
-                ->filter(fn (CourseOccurrence $occurrence) => !str_contains(strtolower($occurrence->course?->title ?? ''), 'pilates'))
+                ->filter(fn (CourseOccurrence $occurrence) => $this->isActivityAvailable($occurrence, 'functional'))
                 ->values();
         }
 
@@ -679,16 +758,23 @@ class Calendar extends Component
     ): array {
         return $occurrences
             ->filter(fn (CourseOccurrence $occurrence) => $occurrence->date->isSameDay($selectedDate))
+            ->filter(function (CourseOccurrence $occurrence): bool {
+                if (!in_array($this->selectedCourse, ['pilates', 'functional'], true)) {
+                    return true;
+                }
+
+                return $this->isActivityAvailable($occurrence, $this->selectedCourse);
+            })
             ->map(function (CourseOccurrence $occurrence) use ($userBookings, $userWaitlist): array {
                 $course = $occurrence->course;
                 $trainer = $course?->trainer;
                 $branch = $course?->branch;
-                
-                $bookingsCount = (int) ($occurrence->bookings_count ?? 0);
+                $availability = $this->getOccurrenceAvailability($occurrence);
+                $bookingsCount = $availability['active_bookings'];
                 $maxParticipants = (int) ($occurrence->max_participants ?? 0);
-                $remaining = $maxParticipants > 0 ? max(0, $maxParticipants - $bookingsCount) : null;
+                $remaining = $maxParticipants > 0 ? $availability['general_remaining'] : null;
 
-                $tags = $this->buildLessonTags($occurrence, $remaining, $branch);
+                $tags = $this->buildLessonTags($occurrence, $remaining, $branch, $availability);
                 [$cta, $ctaVariant, $ctaDisabled, $action] = $this->buildLessonCta(
                     $occurrence, 
                     $userBookings, 
@@ -717,7 +803,12 @@ class Calendar extends Component
             ->all();
     }
 
-    protected function buildLessonTags(CourseOccurrence $occurrence, ?int $remaining, ?Branch $branch): array
+    protected function buildLessonTags(
+        CourseOccurrence $occurrence,
+        ?int $remaining,
+        ?Branch $branch,
+        array $availability
+    ): array
     {
         $tags = [];
 
@@ -735,6 +826,8 @@ class Calendar extends Component
         if ($remaining !== null) {
             $tags[] = 'Posti disponibili ' . $remaining;
         }
+
+        $tags[] = 'Pilates disponibili ' . $availability['pilates_available'] . '/' . $availability['pilates_limit'];
 
         if ($branch?->name) {
             $tags[] = $branch->name;
@@ -755,10 +848,6 @@ class Calendar extends Component
         $isWaitlisted = $userWaitlist->has($occurrence->id);
         $isFull = $maxParticipants > 0 && $bookingsCount >= $maxParticipants;
 
-        if ($isBooked && in_array($booking->status, ['pending_duetto', 'confirmed_duetto'], true)) {
-            return ['In attesa duetto', 'is-secondary', true, null];
-        }
-        
         if ($isBooked) {
             return ['Prenotato', 'is-secondary', true, null];
         }
@@ -785,6 +874,41 @@ class Calendar extends Component
         }
         
         return ['Prenota ora', '', false, 'book'];
+    }
+
+    protected function getOccurrenceAvailability(CourseOccurrence $occurrence): array
+    {
+        $activeBookings = (int) ($occurrence->active_bookings_count ?? $occurrence->bookings_count ?? 0);
+        $pilatesBooked = (int) ($occurrence->pilates_bookings_count ?? 0);
+        $pilatesLimit = $this->getPilatesLimit();
+        $generalRemaining = $occurrence->max_participants > 0
+            ? max(0, $occurrence->max_participants - $activeBookings)
+            : PHP_INT_MAX;
+
+        return [
+            'active_bookings' => $activeBookings,
+            'pilates_booked' => $pilatesBooked,
+            'pilates_limit' => $pilatesLimit,
+            'general_remaining' => $generalRemaining,
+            'pilates_available' => max(0, min($pilatesLimit - $pilatesBooked, $generalRemaining)),
+            'functional_available' => max(0, $generalRemaining),
+        ];
+    }
+
+    protected function isActivityAvailable(CourseOccurrence $occurrence, string $activity): bool
+    {
+        $availability = $this->getOccurrenceAvailability($occurrence);
+
+        if ($activity === 'pilates') {
+            return $availability['pilates_available'] > 0;
+        }
+
+        return $availability['functional_available'] > 0;
+    }
+
+    protected function getPilatesLimit(): int
+    {
+        return 2;
     }
 
     protected function buildTrainers(Collection $occurrences): array
@@ -897,6 +1021,7 @@ class Calendar extends Component
         $this->bookingError = '';
         $this->confirmingDetails = [];
         $this->duettoTokens = null;
+        $this->selectedBookingType = 'functional';
     }
 
     protected function groupLessonsByTrainer(array $lessonCards): array

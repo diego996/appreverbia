@@ -752,6 +752,54 @@
             margin-bottom: 24px;
             border: 1px solid rgba(255,255,255,0.1);
         }
+        .premium-modal .activity-section {
+            background: #1a1a1e;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .premium-modal .activity-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #9ea0a8;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        .premium-modal .activity-options {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+        .premium-modal .activity-option {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 12px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            background: rgba(255,255,255,0.03);
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 700;
+            color: #f0f0f0;
+        }
+        .premium-modal .activity-option input {
+            accent-color: var(--accent);
+            width: 16px;
+            height: 16px;
+        }
+        .premium-modal .activity-option.disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+        .premium-modal .activity-note {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #a4a6ad;
+        }
         .premium-modal .duetto-toggle {
             display: flex;
             align-items: center;
@@ -925,7 +973,7 @@
                     </select>
                 </label>
                 <label class="filter-group">
-                    Corso
+                    Lezione
                     <select class="filter-select" wire:model.defer="selectedCourse">
                         <option value="">Qualsiasi</option>
                         @foreach ($courses as $course)
@@ -1056,7 +1104,7 @@
                 @if ($courseFilterLabel)
                     <div class="filter-badge">
                         <i class="bi bi-filter"></i>
-                        Filtrato: {{ $courseFilterLabel }}
+                        Attivita: {{ $courseFilterLabel }}
                     </div>
                 @endif
                 @foreach ($lessonCardsByTrainer as $trainerGroup)
@@ -1196,8 +1244,12 @@
                         $requiredTokens = $confirmingAction === 'book' ? 1 : 0;
                         $duettoInsufficient = $confirmDuetto && $duettoTokens !== null && $duettoTokens < 1;
                         $insufficientTokens = $confirmingAction === 'book' && ($availableTokens < 1 || $duettoInsufficient);
+                        $pilatesAvailable = (int) ($confirmingDetails['pilates_available'] ?? 0);
+                        $pilatesLimit = (int) ($confirmingDetails['pilates_limit'] ?? 2);
+                        $pilatesRequired = $confirmDuetto ? 2 : 1;
+                        $pilatesUnavailable = $confirmingAction === 'book' && $selectedBookingType === 'pilates' && $pilatesAvailable < $pilatesRequired;
                         $requiredLabel = $confirmDuetto ? '2 LEZIONI (1 + 1)' : '1 LEZIONE';
-                        $hasBlockingError = $insufficientTokens || $bookingError || !$hasAction;
+                        $hasBlockingError = $insufficientTokens || $pilatesUnavailable || $bookingError || !$hasAction;
                     @endphp
 
                     @if ($hasAction)
@@ -1210,6 +1262,31 @@
                             </div>
                             <div class="token-cost">
                                 -{{ $requiredLabel }}
+                            </div>
+                        </div>
+                    @endif
+
+                    @if ($confirmingAction === 'book')
+                        <div class="activity-section">
+                            <div class="activity-label">Attivita nello slot</div>
+                            <div class="activity-options">
+                                <label class="activity-option">
+                                    <input type="radio" wire:model.live="selectedBookingType" value="functional">
+                                    <span>Functional</span>
+                                </label>
+                                <label class="activity-option {{ $pilatesAvailable < $pilatesRequired ? 'disabled' : '' }}">
+                                    <input type="radio"
+                                           wire:model.live="selectedBookingType"
+                                           value="pilates"
+                                           @if ($pilatesAvailable < $pilatesRequired) disabled @endif>
+                                    <span>Pilates</span>
+                                </label>
+                            </div>
+                            <div class="activity-note">
+                                Pilates disponibili: {{ $pilatesAvailable }}/{{ $pilatesLimit }}
+                                @if ($confirmDuetto)
+                                    (richiesti {{ $pilatesRequired }})
+                                @endif
                             </div>
                         </div>
                     @endif
@@ -1234,6 +1311,13 @@
                         <div class="status-message status-error">
                             <i class="bi bi-coin"></i>
                             Lezioni insufficienti per questa prenotazione.
+                        </div>
+                    @endif
+
+                    @if ($pilatesUnavailable && !$bookingError)
+                        <div class="status-message status-error">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            Postazioni Pilates insufficienti per questo slot.
                         </div>
                     @endif
 

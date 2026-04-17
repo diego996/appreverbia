@@ -29,9 +29,6 @@ class Profile extends Component
     public array $confirmingLesson = [];
     public string $cancelError = '';
     public string $cancelSuccess = '';
-    public ?int $confirmingDuettoId = null;
-    public array $confirmingDuettoLesson = [];
-    public string $duettoError = '';
     public int $upcomingPerPage = 3;
 
     public function mount(): void
@@ -95,8 +92,8 @@ class Profile extends Component
 
         $statusLabels = [
             'booked' => 'Confermato',
-            'confirmed_duetto' => 'In attesa duetto',
-            'pending_duetto' => 'Richiesta duetto',
+            'confirmed_duetto' => 'Confermato',
+            'pending_duetto' => 'Confermato',
             'waiting' => 'In attesa',
             'cancelled' => 'Annullato',
         ];
@@ -121,7 +118,6 @@ class Profile extends Component
                 'trainer' => $trainer?->name ?? 'Trainer',
                 'location' => $branch?->name ?? 'Sede',
                 'status' => $statusLabels[$status] ?? ucfirst($status),
-                'can_confirm_duetto' => $status === 'pending_duetto',
             ];
 
             if ($occurrence->date->greaterThanOrEqualTo($today)) {
@@ -180,8 +176,8 @@ class Profile extends Component
 
             $statusLabels = [
                 'booked' => 'Confermato',
-                'confirmed_duetto' => 'In attesa duetto',
-                'pending_duetto' => 'Richiesta duetto',
+                'confirmed_duetto' => 'Confermato',
+                'pending_duetto' => 'Confermato',
                 'waiting' => 'In attesa',
                 'cancelled' => 'Annullato',
             ];
@@ -199,7 +195,6 @@ class Profile extends Component
                 'trainer' => $trainer?->name ?? 'Trainer',
                 'location' => $branch?->name ?? 'Sede',
                 'status' => $statusLabels[$status] ?? ucfirst($status),
-                'can_confirm_duetto' => $status === 'pending_duetto',
                 'can_cancel' => $canCancel,
                 'cancel_hint' => $canCancel ? null : 'Disdetta possibile fino a 12 ore prima.',
                 'start_at' => $startAt,
@@ -251,104 +246,6 @@ class Profile extends Component
         ];
 
         $this->dispatch('open-modal', name: 'cancel-booking');
-    }
-
-    public function openDuettoConfirmModal(int $bookingId): void
-    {
-        $user = auth()->user();
-        if (!$user) {
-            return;
-        }
-
-        $this->duettoError = '';
-        $this->confirmingDuettoLesson = [];
-        $this->confirmingDuettoId = $bookingId;
-
-        $booking = CourseBooking::query()
-            ->where('id', $bookingId)
-            ->where('user_id', $user->id)
-            ->where('status', 'pending_duetto')
-            ->with(['occurrence.course.trainer', 'occurrence.course.branch'])
-            ->first();
-
-        if (!$booking || !$booking->occurrence) {
-            $this->duettoError = 'Richiesta duetto non disponibile.';
-            $this->dispatch('open-modal', name: 'confirm-duetto');
-            return;
-        }
-
-        $occurrence = $booking->occurrence;
-        $course = $occurrence->course;
-
-        $this->confirmingDuettoLesson = [
-            'title' => $course?->title ?? 'Lezione',
-            'date' => $occurrence->date->translatedFormat('D d M'),
-            'time' => substr($occurrence->start_time ?? '--:--', 0, 5),
-            'trainer' => $course?->trainer?->name ?? 'Trainer',
-            'branch' => $course?->branch?->name ?? 'Sede',
-        ];
-
-        $this->dispatch('open-modal', name: 'confirm-duetto');
-    }
-
-    public function confirmDuettoBooking(): void
-    {
-        $user = auth()->user();
-        if (!$user || !$this->confirmingDuettoId) {
-            return;
-        }
-
-        $this->duettoError = '';
-
-        try {
-            DB::transaction(function () use ($user) {
-                $booking = CourseBooking::query()
-                    ->where('id', $this->confirmingDuettoId)
-                    ->where('user_id', $user->id)
-                    ->where('status', 'pending_duetto')
-                    ->lockForUpdate()
-                    ->first();
-
-                if (!$booking) {
-                    throw new \RuntimeException('Richiesta duetto non disponibile.');
-                }
-
-                $occurrenceId = $booking->occurrence_id;
-                $duettoId = $user->duetto_id;
-
-                $partnerBooking = null;
-                if ($duettoId) {
-                    $partnerBooking = CourseBooking::query()
-                        ->where('occurrence_id', $occurrenceId)
-                        ->where('user_id', $duettoId)
-                        ->whereIn('status', ['pending_duetto', 'confirmed_duetto'])
-                        ->lockForUpdate()
-                        ->first();
-                }
-
-                if (!$partnerBooking) {
-                    throw new \RuntimeException('Duetto non disponibile.');
-                }
-
-                $booking->update([
-                    'status' => 'confirmed_duetto',
-                ]);
-
-                if ($partnerBooking && $partnerBooking->status === 'confirmed_duetto') {
-                    CourseBooking::query()
-                        ->whereIn('id', [$booking->id, $partnerBooking->id])
-                        ->update([
-                            'status' => 'booked',
-                        ]);
-                }
-            });
-        } catch (\Throwable $exception) {
-            $this->duettoError = $exception->getMessage();
-            return;
-        }
-
-        $this->dispatch('close-modal', name: 'confirm-duetto');
-        $this->mount();
     }
 
     public function confirmCancelBooking(): void
