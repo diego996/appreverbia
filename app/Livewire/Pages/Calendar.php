@@ -174,7 +174,7 @@ class Calendar extends Component
                     'bookings as active_bookings_count' => fn ($query) => $query
                         ->whereNotIn('status', ['cancelled', 'canceled']),
                     'bookings as pilates_bookings_count' => fn ($query) => $query
-                        ->where('booking_type', 'pilates')
+                        ->whereRaw("LOWER(IFNULL(notes, '')) LIKE ?", ['%pilates%'])
                         ->whereNotIn('status', ['cancelled', 'canceled']),
                 ])
                 ->find($this->confirmingOccurrenceId);
@@ -206,7 +206,7 @@ class Calendar extends Component
                     'bookings as active_bookings_count' => fn ($query) => $query
                         ->whereNotIn('status', ['cancelled', 'canceled']),
                     'bookings as pilates_bookings_count' => fn ($query) => $query
-                        ->where('booking_type', 'pilates')
+                        ->whereRaw("LOWER(IFNULL(notes, '')) LIKE ?", ['%pilates%'])
                         ->whereNotIn('status', ['cancelled', 'canceled']),
                 ])
                 ->find($this->confirmingOccurrenceId);
@@ -262,7 +262,7 @@ class Calendar extends Component
                 'bookings as active_bookings_count' => fn ($query) => $query
                     ->whereNotIn('status', ['cancelled', 'canceled']),
                 'bookings as pilates_bookings_count' => fn ($query) => $query
-                    ->where('booking_type', 'pilates')
+                    ->whereRaw("LOWER(IFNULL(notes, '')) LIKE ?", ['%pilates%'])
                     ->whereNotIn('status', ['cancelled', 'canceled']),
             ])
             ->find($occurrenceId);
@@ -472,7 +472,7 @@ class Calendar extends Component
                 if ($bookingType === 'pilates') {
                     $pilatesBooked = CourseBooking::query()
                         ->where('occurrence_id', $occurrence->id)
-                        ->where('booking_type', 'pilates')
+                        ->whereRaw("LOWER(IFNULL(notes, '')) LIKE ?", ['%pilates%'])
                         ->whereNotIn('status', ['cancelled', 'canceled'])
                         ->lockForUpdate()
                         ->count();
@@ -498,7 +498,7 @@ class Calendar extends Component
                     'user_id' => $user->id,
                     'booked_at' => now(),
                     'status' => $isDuetto ? 'confirmed_duetto' : 'booked',
-                    'booking_type' => $bookingType,
+                    'notes' => $bookingType === 'pilates' ? 'pilates' : null,
                 ]);
 
                 if ($duettoId) {
@@ -507,7 +507,7 @@ class Calendar extends Component
                         'user_id' => $duettoId,
                         'booked_at' => now(),
                         'status' => 'confirmed_duetto',
-                        'booking_type' => $bookingType,
+                        'notes' => $bookingType === 'pilates' ? 'pilates' : null,
                     ]);
                 }
 
@@ -612,7 +612,7 @@ class Calendar extends Component
                 'bookings as active_bookings_count' => fn ($q) => $q
                     ->whereNotIn('status', ['cancelled', 'canceled']),
                 'bookings as pilates_bookings_count' => fn ($q) => $q
-                    ->where('booking_type', 'pilates')
+                    ->whereRaw("LOWER(IFNULL(notes, '')) LIKE ?", ['%pilates%'])
                     ->whereNotIn('status', ['cancelled', 'canceled']),
             ])
             ->whereBetween('date', [
