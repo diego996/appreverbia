@@ -37,7 +37,7 @@
                 z-index: 9999;
                 text-align: left;
             }
-            .pwa-required .pwa-gate { display: flex; }
+            .pwa-required .pwa-gate { display: none !important; }
             .pwa-card {
                 width: min(560px, 100%);
                 background: #0d0d0f;
