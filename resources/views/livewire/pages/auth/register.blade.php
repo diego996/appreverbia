@@ -27,7 +27,7 @@ new #[Layout('layouts.guest')] class extends Component
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
-        $validated['password_changed_at'] = now();
+        $validated['force_password_reset'] = false;
 
         event(new Registered($user = User::create($validated)));
 

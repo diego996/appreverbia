@@ -21,7 +21,7 @@ new #[Layout('layouts.reverbia-guest')] #[Title('Reverbia - Login')] class exten
 
         Session::regenerate();
 
-        if (auth()->user()?->password_changed_at === null) {
+        if ((bool) auth()->user()?->force_password_reset) {
             $this->redirectRoute('password.first-change', navigate: true);
             return;
         }

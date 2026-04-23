@@ -22,7 +22,7 @@ new #[Layout('layouts.reverbia-guest')] #[Title('Reverbia - Cambia Password')] c
             return;
         }
 
-        if ($user->password_changed_at) {
+        if (!(bool) $user->force_password_reset) {
             $this->redirectRoute('home', navigate: true);
         }
     }
@@ -42,7 +42,7 @@ new #[Layout('layouts.reverbia-guest')] #[Title('Reverbia - Cambia Password')] c
 
         $user->forceFill([
             'password' => Hash::make($validated['password']),
-            'password_changed_at' => now(),
+            'force_password_reset' => false,
             'remember_token' => Str::random(60),
         ])->save();
 
@@ -82,4 +82,3 @@ new #[Layout('layouts.reverbia-guest')] #[Title('Reverbia - Cambia Password')] c
         </form>
     </div>
 </div>
-

@@ -30,7 +30,7 @@ new class extends Component
 
         Auth::user()->update([
             'password' => Hash::make($validated['password']),
-            'password_changed_at' => now(),
+            'force_password_reset' => false,
         ]);
 
         $this->reset('current_password', 'password', 'password_confirmation');

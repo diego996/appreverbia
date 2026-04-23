@@ -33,7 +33,7 @@ class User extends Authenticatable
         'privacy_accepted',
         'newsletter_opt_in',
         'duetto_id',
-        'password_changed_at',
+        'force_password_reset',
     ];
 
     /**
@@ -58,7 +58,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'privacy_accepted' => 'boolean',
             'newsletter_opt_in' => 'boolean',
-            'password_changed_at' => 'datetime',
+            'force_password_reset' => 'boolean',
         ];
     }
 

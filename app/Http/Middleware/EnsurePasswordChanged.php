@@ -16,7 +16,7 @@ class EnsurePasswordChanged
             return $next($request);
         }
 
-        if ($user->password_changed_at) {
+        if (!$user->force_password_reset) {
             return $next($request);
         }
 
@@ -27,4 +27,3 @@ class EnsurePasswordChanged
         return redirect()->route('password.first-change');
     }
 }
-
