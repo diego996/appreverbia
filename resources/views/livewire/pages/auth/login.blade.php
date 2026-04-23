@@ -21,6 +21,11 @@ new #[Layout('layouts.reverbia-guest')] #[Title('Reverbia - Login')] class exten
 
         Session::regenerate();
 
+        if (auth()->user()?->password_changed_at === null) {
+            $this->redirectRoute('password.first-change', navigate: true);
+            return;
+        }
+
         $this->redirectIntended(default: route('home', absolute: false));
     }
 }; ?>

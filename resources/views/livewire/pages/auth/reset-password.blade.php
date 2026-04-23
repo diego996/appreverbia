@@ -48,6 +48,7 @@ new #[Layout('layouts.reverbia-guest')] #[Title('Reverbia - Reset Password')] cl
             function ($user) {
                 $user->forceFill([
                     'password' => Hash::make($this->password),
+                    'password_changed_at' => now(),
                     'remember_token' => Str::random(60),
                 ])->save();
 
