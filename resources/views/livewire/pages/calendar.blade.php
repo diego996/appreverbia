@@ -41,6 +41,44 @@
             gap: 10px;
             align-items: stretch;
         }
+        .filters-accordion {
+            border: 1px solid rgba(126, 252, 91, 0.15);
+            border-radius: 16px;
+            background: #0b0b0e;
+            overflow: hidden;
+        }
+        .filters-accordion summary {
+            list-style: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 14px;
+            font-size: 12px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--muted);
+            font-weight: 700;
+            user-select: none;
+        }
+        .filters-accordion summary::-webkit-details-marker {
+            display: none;
+        }
+        .filters-accordion summary .expand-label {
+            font-size: 10px;
+            color: var(--accent);
+        }
+        .filters-accordion[open] summary .expand-label::after {
+            content: "chiudi";
+        }
+        .filters-accordion:not([open]) summary .expand-label::after {
+            content: "espandi";
+        }
+        .filters-accordion .filters-panel {
+            border: 0;
+            border-top: 1px solid rgba(126, 252, 91, 0.1);
+            border-radius: 0;
+        }
         .filter-group {
             display: flex;
             flex-direction: column;
@@ -998,7 +1036,12 @@
     </div>
     <main class="page-calendar">
         <div class="calendar-shell">
-            <div class="filters-panel">
+            <details class="filters-accordion">
+                <summary>
+                    <span>Filtri</span>
+                    <span class="expand-label"></span>
+                </summary>
+                <div class="filters-panel">
                 <label class="filter-group">
                     Sede
                     <select class="filter-select" wire:model.defer="selectedBranch">
@@ -1049,7 +1092,8 @@
                         Applica filtri
                     </button>
                 </div>
-            </div>
+                </div>
+            </details>
 
             <div class="title-block">
                 CALENDARIO <span>LEZIONI</span>
@@ -1147,11 +1191,7 @@
                     <div class="trainer-section">
                         <div class="trainer-header">
                             <div class="trainer-badge" style="background: {{ $trainerGroup['trainer_color'] }};">
-                                @if (!empty($trainerGroup['trainer_avatar']))
-                                    <img src="{{ $trainerGroup['trainer_avatar'] }}" alt="{{ $trainerGroup['trainer_name'] }}">
-                                @else
-                                    {{ $this->getTrainerInitials($trainerGroup['trainer_name']) }}
-                                @endif
+                                {{ $this->getTrainerInitials($trainerGroup['trainer_name']) }}
                             </div>
                             <div class="trainer-name">{{ $trainerGroup['trainer_name'] }}</div>
                             <div style="margin-left: auto; color: var(--muted); font-size: 13px;">
@@ -1258,11 +1298,7 @@
                         </div>
                         <div class="info-pill trainer-pill">
                             <div class="trainer-avatar-small" style="background-color: {{ $confirmingDetails['trainer_color'] ?? '#7efc5b' }}">
-                                @if (!empty($confirmingDetails['trainer_avatar']))
-                                    <img src="{{ $confirmingDetails['trainer_avatar'] }}" alt="{{ $confirmingDetails['trainer'] ?? 'Trainer' }}">
-                                @else
-                                    {{ $confirmingDetails['trainer_initials'] ?? 'T' }}
-                                @endif
+                                {{ $confirmingDetails['trainer_initials'] ?? 'T' }}
                             </div>
                             {{ $confirmingDetails['trainer'] ?? 'Trainer' }}
                         </div>
