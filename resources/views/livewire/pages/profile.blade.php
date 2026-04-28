@@ -13,7 +13,7 @@
         }
         .card-panel {
             background: #0b0b0e;
-            border: 1px solid var(--line);
+            border: 1px solid rgba(126, 252, 91, 0.35);
             border-radius: 18px;
             padding: 16px;
             box-shadow: var(--shadow);
@@ -23,7 +23,7 @@
         }
         .logout-button {
             width: 100%;
-            border: 1px solid var(--line);
+            border: 1px solid rgba(126, 252, 91, 0.35);
             background: #0f0f12;
             color: var(--muted);
             border-radius: 14px;
@@ -88,7 +88,7 @@
             gap: 12px;
             padding: 14px 16px;
             border-radius: 16px;
-            border: 1px solid var(--line);
+            border: 1px solid rgba(126, 252, 91, 0.35);
             background: #0f0f12;
             text-decoration: none;
             color: var(--text);
@@ -121,7 +121,7 @@
             gap: 12px;
         }
         .booking-item {
-            border: 1px solid var(--line);
+            border: 1px solid rgba(126, 252, 91, 0.35);
             border-radius: 14px;
             padding: 12px;
             background: #0f0f12;
@@ -312,17 +312,7 @@
 
 <div>
     <main class="page-profile">
-        <section class="logout-strip">
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button class="logout-button" type="submit">
-                    <i class="bi bi-box-arrow-right"></i>
-                    Logout
-                </button>
-            </form>
-        </section>
         <section class="section-block">
-            <div class="section-title">Info base utente</div>
             <div class="card-panel profile-hero">
                 <div class="user-card">
                     <div class="user-title">
@@ -414,7 +404,7 @@
         </section>
 
         <section class="section-block">
-            <div class="section-title">Il tuo wallet</div>
+            <div class="section-title">Lezioni disponibili</div>
             <div class="card-panel wallet-card">
                 <div>
                     <div class="wallet-balance">{{ $walletSummary['balance'] ?? 0 }} lezioni</div>
@@ -444,6 +434,15 @@
                 </div>
                 <i class="bi bi-chevron-right"></i>
             </a>
+        </section>
+        <section class="logout-strip">
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button class="logout-button" type="submit">
+                    <i class="bi bi-box-arrow-right"></i>
+                    Logout
+                </button>
+            </form>
         </section>
     </main>
 

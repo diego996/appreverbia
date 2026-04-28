@@ -214,6 +214,7 @@
                 line-height: 1.5;
             }
         </style>
+        @stack('styles')
     </head>
     <body>
         {{ $slot }}
@@ -262,6 +263,7 @@
                 }
             }());
         </script>
+        @stack('scripts')
     </body>
 </html>
 

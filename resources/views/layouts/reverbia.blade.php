@@ -58,14 +58,15 @@
                 border-bottom: 1px solid var(--line);
             }
             .brand {
-                letter-spacing: 5px;
-                font-weight: 700;
-                font-size: 15px;
                 display: flex;
                 align-items: center;
                 gap: 6px;
             }
-            .brand span { color: var(--accent); }
+            .app-logo {
+                height: 22px;
+                width: auto;
+                display: block;
+            }
             .top-icons { display: flex; gap: 14px; font-size: 18px; color: var(--text); }
             .hamburger {
                 width: 34px;
@@ -231,8 +232,8 @@
     <body>
         <!-- Topbar -->
         <div class="topbar">
-            <a href="{{ route('home') }}" class="brand text-decoration-none" wire:navigate>
-                <span>RE</span>VERBIA
+            <a href="{{ route('home') }}" class="brand text-decoration-none" wire:navigate aria-label="Reverbia">
+                <x-application-logo class="app-logo" />
             </a>
             <div class="top-icons">
                 <a href="{{ route('pricing') }}" class="text-decoration-none text-white" wire:navigate>

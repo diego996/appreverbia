@@ -13,8 +13,8 @@
         
         /* Wallet Card */
         .wallet-card {
-            background: linear-gradient(135deg, rgba(126,252,91,0.08) 0%, rgba(126,252,91,0.02) 100%);
-            border: 1.5px solid rgba(126,252,91,0.3);
+            background: #0a0a0c;
+            border: 1.5px solid rgba(126,252,91,0.45);
             border-radius: 24px;
             padding: 24px;
             display: flex;
@@ -112,8 +112,8 @@
             gap: 14px;
         }
         .lesson-card {
-            background: linear-gradient(150deg, #1b1b20, #0f0f12);
-            border: 1px solid var(--line);
+            background: #000;
+            border: 1px solid rgba(126,252,91,0.35);
             border-radius: 20px;
             padding: 18px;
             min-height: 160px;
@@ -193,8 +193,8 @@
             gap: 14px;
         }
         .available-lesson-card {
-            background: linear-gradient(150deg, #1b1b20, #0f0f12);
-            border: 1px solid var(--line);
+            background: #000;
+            border: 1px solid rgba(126,252,91,0.35);
             border-radius: 20px;
             padding: 18px;
             box-shadow: var(--shadow);
@@ -253,8 +253,8 @@
 
         /* Membership Status */
         .membership-status-card {
-            background: linear-gradient(150deg, #14141a, #0f0f12);
-            border: 1px solid var(--line);
+            background: #0a0a0c;
+            border: 1px solid rgba(126,252,91,0.45);
             border-radius: 20px;
             padding: 18px;
             display: flex;
@@ -266,6 +266,10 @@
         .membership-status-card.expiring {
             border-color: rgba(252, 91, 91, 0.45);
             background: linear-gradient(150deg, rgba(252, 91, 91, 0.08), rgba(15, 15, 18, 0.9));
+        }
+        .wallet-grid {
+            display: grid;
+            gap: 12px;
         }
         .membership-status-left {
             display: flex;
@@ -389,20 +393,48 @@
         {{-- Wallet Section --}}
         <section class="section-block">
             <div class="section-title">La tua situazione</div>
-            <a href="{{ route('pricing') }}" class="wallet-card" wire:navigate>
-                <div class="wallet-left">
-                    <div class="wallet-icon">
-                        <i class="bi bi-wallet2"></i>
+            <div class="wallet-grid">
+                <a href="{{ route('pricing') }}" class="wallet-card" wire:navigate>
+                    <div class="wallet-left">
+                        <div class="wallet-icon">
+                            <i class="bi bi-wallet2"></i>
+                        </div>
+                        <div class="wallet-info">
+                            <div class="amount">{{ (int) $walletSummary['available'] }}</div>
+                            <div class="label">Lezioni disponibili</div>
+                        </div>
                     </div>
-                    <div class="wallet-info">
-                        <div class="amount">{{ (int) $walletSummary['available'] }}</div>
-                        <div class="label">{{ $walletSummary['label'] }}</div>
+                    <div class="wallet-action">
+                        Acquista <i class="bi bi-arrow-right"></i>
+                    </div>
+                </a>
+                <div class="membership-status-card {{ $membershipStatus['renew_recommended'] ? 'expiring' : '' }}">
+                    <div class="membership-status-left">
+                        <div class="membership-icon">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+                        <div class="membership-info">
+                            <h4>{{ $membershipStatus['label'] }}</h4>
+                            <p>{{ $membershipStatus['message'] }}</p>
+                        </div>
+                    </div>
+                    <div class="membership-meta">
+                        @if (!empty($membershipStatus['expires_at']))
+                            <strong>{{ $membershipStatus['days_left'] }} giorni</strong>
+                            Scadenza {{ $membershipStatus['expires_at']->format('d/m/Y') }}
+                        @else
+                            <strong>—</strong>
+                            Nessuna scadenza
+                        @endif
+                        @if ($membershipStatus['renew_recommended'])
+                            <a class="btn-renew" href="{{ route('membership') }}" wire:navigate>
+                                Rinnova ora
+                                <i class="bi bi-arrow-right"></i>
+                            </a>
+                        @endif
                     </div>
                 </div>
-                <div class="wallet-action">
-                    Acquista <i class="bi bi-arrow-right"></i>
-                </div>
-            </a>
+            </div>
         </section>
 
         {{-- Book Button --}}
@@ -499,36 +531,6 @@
             @endif
         </section>
 
-        {{-- Membership Status --}}
-        <section class="section-block">
-            <div class="section-title">Stato membership</div>
-            <div class="membership-status-card {{ $membershipStatus['renew_recommended'] ? 'expiring' : '' }}">
-                <div class="membership-status-left">
-                    <div class="membership-icon">
-                        <i class="bi bi-shield-check"></i>
-                    </div>
-                    <div class="membership-info">
-                        <h4>{{ $membershipStatus['label'] }}</h4>
-                        <p>{{ $membershipStatus['message'] }}</p>
-                    </div>
-                </div>
-                <div class="membership-meta">
-                    @if (!empty($membershipStatus['expires_at']))
-                        <strong>{{ $membershipStatus['days_left'] }} giorni</strong>
-                        Scadenza {{ $membershipStatus['expires_at']->format('d/m/Y') }}
-                    @else
-                        <strong>—</strong>
-                        Nessuna scadenza
-                    @endif
-                    @if ($membershipStatus['renew_recommended'])
-                        <a class="btn-renew" href="{{ route('membership') }}" wire:navigate>
-                            Rinnova ora
-                            <i class="bi bi-arrow-right"></i>
-                        </a>
-                    @endif
-                </div>
-            </div>
-        </section>
     </main>
 </div>
 

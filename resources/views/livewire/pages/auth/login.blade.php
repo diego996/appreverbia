@@ -52,7 +52,12 @@ new #[Layout('layouts.reverbia-guest')] #[Title('Reverbia - Login')] class exten
 
             <div class="field">
                 <label for="password">Password</label>
-                <input wire:model="form.password" type="password" id="password" name="password" placeholder="********" required autocomplete="current-password">
+                <div class="password-wrap">
+                    <input wire:model="form.password" type="password" id="password" name="password" placeholder="********" required autocomplete="current-password">
+                    <button type="button" class="password-toggle" data-toggle-password aria-label="Mostra password">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
                 @error('form.password')
                     <div class="error-text">{{ $message }}</div>
                 @enderror
@@ -76,3 +81,52 @@ new #[Layout('layouts.reverbia-guest')] #[Title('Reverbia - Login')] class exten
         </div>
     </div>
 </div>
+
+@push('styles')
+    <style>
+        .password-wrap {
+            position: relative;
+        }
+        .password-wrap input {
+            padding-right: 44px;
+        }
+        .password-toggle {
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+            width: 30px;
+            height: 30px;
+            border: 0;
+            border-radius: 50%;
+            background: transparent;
+            color: #cfd2d5;
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+        }
+    </style>
+@endpush
+
+@push('scripts')
+    <script>
+        (function () {
+            const bindPasswordToggle = () => {
+                const input = document.getElementById('password');
+                const toggle = document.querySelector('[data-toggle-password]');
+                if (!input || !toggle || toggle.dataset.bound === '1') return;
+
+                toggle.dataset.bound = '1';
+                toggle.addEventListener('click', () => {
+                    const isHidden = input.type === 'password';
+                    input.type = isHidden ? 'text' : 'password';
+                    toggle.innerHTML = isHidden ? '<i class="bi bi-eye-slash"></i>' : '<i class="bi bi-eye"></i>';
+                    toggle.setAttribute('aria-label', isHidden ? 'Nascondi password' : 'Mostra password');
+                });
+            };
+
+            document.addEventListener('DOMContentLoaded', bindPasswordToggle);
+            document.addEventListener('livewire:navigated', bindPasswordToggle);
+        }());
+    </script>
+@endpush
