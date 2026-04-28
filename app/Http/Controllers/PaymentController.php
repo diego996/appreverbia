@@ -135,13 +135,15 @@ class PaymentController extends Controller
         $item = $payment->item; // Assuming relation exists and is loaded or accessible
 
         if ($item) {
+            $isMembership = (int) $item->item_property_id === 2;
+
             // Handle Membership (Property ID = 2)
-            if ($item->item_property_id == 2) {
+            if ($isMembership) {
                 $membershipExists = \App\Models\Membership::where('payment_id', $payment->id)->exists();
 
                 if (!$membershipExists) {
                     $user = User::find($payment->user_id);
-                    $membershipMonths = max(1, (int) ($item->validity_months ?? 0));
+                    $membershipMonths = 12;
 
                     // Determine start and end dates
                     // Check if user has an existing active membership
@@ -153,7 +155,7 @@ class PaymentController extends Controller
 
                     if ($existingMembership) {
                         // Extend from existing end_date
-                        $startDate = $existingMembership->end_date->copy();
+                        $startDate = $existingMembership->end_date->copy()->addDay();
                         $endDate = $startDate->copy()->addMonths($membershipMonths);
                     } else {
                         // New membership starts today
@@ -176,6 +178,10 @@ class PaymentController extends Controller
             }
 
             // Credit the wallet (Standard Logic)
+            if ($isMembership) {
+                return;
+            }
+
             // Check if wallet entry already exists to avoid duplicates (idempotency)
             // We use the payment as the unique model reference
             $exists = Wallet::where('model_type', Payment::class)

@@ -11,25 +11,6 @@
             margin-bottom: 14px;
         }
         
-        /* Back Button */
-        .back-button {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            color: var(--muted);
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 20px;
-            transition: color 0.2s ease;
-        }
-        .back-button:hover {
-            color: var(--text);
-        }
-        .back-button i {
-            font-size: 16px;
-        }
-        
         /* Membership Status Card */
         .membership-status-card {
             background: linear-gradient(135deg, rgba(126,252,91,0.08) 0%, rgba(126,252,91,0.02) 100%);
@@ -232,12 +213,6 @@
 
 <div>
     <main class="page-membership">
-        {{-- Back Button --}}
-        <a href="{{ route('pricing') }}" class="back-button" wire:navigate>
-            <i class="bi bi-arrow-left"></i>
-            Torna agli acquisti
-        </a>
-
         {{-- Current Membership Status --}}
         <section class="section-block">
             <div class="section-title">Il tuo abbonamento</div>
@@ -304,12 +279,8 @@
                             </div>
                             <ul class="item-features">
                                 <li>
-                                    <i class="bi bi-coin"></i>
-                                    <strong>{{ $item->token }} Lezioni</strong> incluse
-                                </li>
-                                <li>
                                     <i class="bi bi-calendar-check"></i>
-                                    Validita <strong>6 mesi</strong>
+                                    Validita <strong>12 mesi</strong>
                                 </li>
                                 <li>
                                     <i class="bi bi-check2-circle"></i>
