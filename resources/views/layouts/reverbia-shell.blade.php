@@ -100,6 +100,23 @@
             color: inherit;
             text-decoration: none;
         }
+        .top-left {
+            justify-self: start;
+            grid-column: 1;
+        }
+        .top-back {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: 1px solid var(--line);
+            background: #0a0a0c;
+            color: var(--text);
+            display: grid;
+            place-items: center;
+            padding: 0;
+            font-size: 16px;
+            line-height: 1;
+        }
 
         .hamburger {
             width: 34px;

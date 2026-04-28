@@ -323,7 +323,6 @@
     <main class="page-dashboard">
         {{-- Wallet Section --}}
         <section class="section-block">
-            <div class="section-title">La tua situazione</div>
             <div class="wallet-grid">
                 <a href="{{ route('pricing') }}" class="wallet-card" wire:navigate>
                     <div class="wallet-left">

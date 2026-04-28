@@ -326,34 +326,14 @@
         }
         .list-card {
             display: grid;
-            grid-template-columns: 94px 1fr;
-            gap: 14px;
+            grid-template-columns: 1fr;
+            gap: 0;
             padding: 12px;
             border-radius: 14px;
             background: var(--panel-2);
             border: 1px solid var(--line);
             margin-bottom: 12px;
             box-shadow: var(--shadow);
-        }
-        .thumb {
-            width: 100%;
-            aspect-ratio: 1/1;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #1c1c21, #0f0f12);
-            position: relative;
-            overflow: hidden;
-        }
-        .thumb::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: repeating-linear-gradient(
-                135deg,
-                rgba(255,255,255,0.04),
-                rgba(255,255,255,0.04) 10px,
-                transparent 10px,
-                transparent 20px
-            );
         }
         .list-body .category {
             color: var(--muted);
@@ -1200,7 +1180,6 @@
                         </div>
                         @foreach ($trainerGroup['courses'] as $course)
                             <article class="list-card course-card">
-                                <div class="thumb" aria-hidden="true"></div>
                                 <div class="list-body d-flex flex-column">
                                     <div class="category">{{ $course['category'] }}</div>
                                     <div class="title">{{ $course['title'] }}</div>
@@ -1262,7 +1241,6 @@
                 @endforeach
             @else
                 <article class="list-card">
-                    <div class="thumb" aria-hidden="true"></div>
                     <div class="list-body d-flex flex-column">
                         <div class="category">Nessuna lezione</div>
                         <div class="title">Non ci sono lezioni disponibili</div>
