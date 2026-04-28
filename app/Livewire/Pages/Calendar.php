@@ -10,6 +10,7 @@ use App\Models\CourseWaitlist;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -335,6 +336,9 @@ class Calendar extends Component
             'time' => substr($occurrence->start_time ?? '--:--', 0, 5),
             'duration' => $duration,
             'trainer' => $occurrence->course?->trainer?->name ?? 'Trainer',
+            'trainer_avatar' => $occurrence->course?->trainer?->avatar
+                ? Storage::url($occurrence->course->trainer->avatar)
+                : null,
             'branch' => $occurrence->course?->branch?->name ?? 'Sede',
             'max' => $occurrence->max_participants,
             'booked' => $availability['active_bookings'],
@@ -799,6 +803,7 @@ class Calendar extends Component
                     'occurrence_id' => $occurrence->id,
                     'category' => $branch?->name ?? 'Corso',
                     'trainer' => $trainer?->name ?? 'Trainer',
+                    'trainer_avatar' => $trainer?->avatar ? Storage::url($trainer->avatar) : null,
                     'title' => $course?->title ?? 'Lezione',
                     'time' => substr($occurrence->start_time ?? '--:--', 0, 5),
                     'tags' => $tags,
@@ -1053,6 +1058,7 @@ class Calendar extends Component
                 $grouped[$trainerId] = [
                     'trainer_id' => $trainerId,
                     'trainer_name' => $trainerName,
+                    'trainer_avatar' => $lesson['trainer_avatar'] ?? null,
                     'trainer_color' => $lesson['trainer_color'] ?? '#7efc5b',
                     'courses' => [],
                 ];

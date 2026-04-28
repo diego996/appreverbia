@@ -109,7 +109,7 @@
         .lessons-carousel {
             display: flex;
             transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            gap: 14px;
+            gap: 0;
         }
         .lesson-card {
             background: #000;
@@ -122,7 +122,7 @@
             flex-direction: column;
             gap: 10px;
             flex-shrink: 0;
-            width: calc(100% - 4px);
+            width: 100%;
             transition: all 0.3s ease;
         }
         .lesson-card:hover {
@@ -182,75 +182,6 @@
             margin-bottom: 8px;
         }
         
-        /* Available Lessons Carousel */
-        .available-carousel-container {
-            position: relative;
-            overflow: hidden;
-        }
-        .available-carousel {
-            display: flex;
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            gap: 14px;
-        }
-        .available-lesson-card {
-            background: #000;
-            border: 1px solid rgba(126,252,91,0.35);
-            border-radius: 20px;
-            padding: 18px;
-            box-shadow: var(--shadow);
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            transition: all 0.3s ease;
-            flex-shrink: 0;
-            width: calc(100% - 4px);
-        }
-        .available-lesson-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-            border-color: rgba(126,252,91,0.3);
-        }
-        .badge-spots {
-            background: rgba(91,150,252,0.12);
-            border: 1px solid rgba(91,150,252,0.4);
-            color: #5b96fc;
-            padding: 5px 10px;
-            border-radius: 999px;
-            font-size: 11px;
-            font-weight: 700;
-            white-space: nowrap;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-        .btn-book-lesson {
-            margin-top: auto;
-            background: linear-gradient(135deg, var(--accent) 0%, #8fff6b 100%);
-            color: #000;
-            border: none;
-            border-radius: 12px;
-            padding: 12px 16px;
-            font-size: 14px;
-            font-weight: 700;
-            text-align: center;
-            text-decoration: none;
-            box-shadow: 0 4px 12px rgba(126,252,91,0.2);
-            transition: all 0.3s ease;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
-        .btn-book-lesson:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(126,252,91,0.3);
-            background: linear-gradient(135deg, #8fff6b 0%, var(--accent) 100%);
-            color: #000;
-        }
-        .btn-book-lesson i {
-            font-size: 16px;
-        }
-
         /* Membership Status */
         .membership-status-card {
             background: #0a0a0c;
@@ -447,7 +378,7 @@
 
         {{-- Upcoming Lessons --}}
         <section class="section-block">
-            <div class="section-title">Prossime lezioni</div>
+            <div class="section-title">Le mie prossime lezioni</div>
             @if (!empty($bookedLessons))
                 <div class="lessons-carousel-container">
                     <div class="lessons-carousel" id="lessonsCarousel">
@@ -479,53 +410,6 @@
                     <div class="lesson-meta" style="justify-content: center;">
                         <i class="bi bi-calendar-x"></i>
                         Prenota la tua prima lezione dal calendario
-                    </div>
-                </article>
-            @endif
-        </section>
-
-        {{-- Available Lessons --}}
-        <section class="section-block">
-            <div class="section-title">Lezioni Disponibili</div>
-            @if (!empty($availableLessons))
-                <div class="available-carousel-container">
-                    <div class="available-carousel" id="availableCarousel">
-                        @foreach ($availableLessons as $lesson)
-                            <article class="available-lesson-card">
-                                <div class="lesson-top">
-                                    <span class="lesson-date">{{ strtoupper($lesson['date']) }} ƒ?½ {{ $lesson['time'] }}</span>
-                                    @if ($lesson['spots_left'] !== null)
-                                        <span class="badge-spots">{{ $lesson['spots_left'] }} posti</span>
-                                    @endif
-                                </div>
-                                <div class="lesson-title">{{ $lesson['title'] }}</div>
-                                <div class="lesson-meta">
-                                    <i class="bi bi-person"></i>
-                                    {{ $lesson['coach'] }}
-                                </div>
-                                <div class="lesson-meta">
-                                    <i class="bi bi-geo-alt"></i>
-                                    {{ $lesson['room'] }}
-                                </div>
-                                <a href="{{ route('calendar') }}?date={{ $lesson['full_date'] }}&book={{ $lesson['occurrence_id'] }}"
-                                   class="btn-book-lesson"
-                                   wire:navigate>
-                                    <i class="bi bi-calendar-check"></i>
-                                    Prenota
-                                </a>
-                            </article>
-                        @endforeach
-                    </div>
-                    @if (count($availableLessons) > 1)
-                        <div class="carousel-dots" id="availableCarouselDots"></div>
-                    @endif
-                </div>
-            @else
-                <article class="lesson-card empty-state">
-                    <div class="lesson-title">Nessuna lezione disponibile</div>
-                    <div class="lesson-meta" style="justify-content: center;">
-                        <i class="bi bi-calendar-x"></i>
-                        Al momento non ci sono lezioni disponibili
                     </div>
                 </article>
             @endif
@@ -674,141 +558,6 @@
 
         document.addEventListener('DOMContentLoaded', initCarousel);
         document.addEventListener('livewire:navigated', initCarousel);
-    })();
-</script>
-<script>
-    (function() {
-        function initAvailableCarousel() {
-            const carousel = document.getElementById('availableCarousel');
-            const dotsContainer = document.getElementById('availableCarouselDots');
-
-            if (!carousel) return;
-            if (carousel.dataset.initialized) return;
-            carousel.dataset.initialized = "true";
-
-            const cards = carousel.querySelectorAll('.available-lesson-card');
-            const totalCards = cards.length;
-
-            if (totalCards <= 1) return;
-
-            let currentIndex = 0;
-            let startX = 0;
-            let isDragging = false;
-
-            if (dotsContainer && dotsContainer.innerHTML === '') {
-                for (let i = 0; i < totalCards; i++) {
-                    const dot = document.createElement('div');
-                    dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
-                    dot.addEventListener('click', () => goToSlide(i));
-                    dotsContainer.appendChild(dot);
-                }
-            }
-
-            const dots = dotsContainer ? dotsContainer.querySelectorAll('.carousel-dot') : [];
-
-            function updateCarousel() {
-                const offset = -currentIndex * 100;
-                carousel.style.transform = `translateX(${offset}%)`;
-
-                dots.forEach((dot, index) => {
-                    dot.classList.toggle('active', index === currentIndex);
-                });
-            }
-
-            function goToSlide(index) {
-                currentIndex = Math.max(0, Math.min(index, totalCards - 1));
-                updateCarousel();
-            }
-
-            function nextSlide() {
-                if (currentIndex < totalCards - 1) {
-                    currentIndex++;
-                    updateCarousel();
-                }
-            }
-
-            function prevSlide() {
-                if (currentIndex > 0) {
-                    currentIndex--;
-                    updateCarousel();
-                }
-            }
-
-            carousel.addEventListener('touchstart', (e) => {
-                startX = e.touches[0].clientX;
-                isDragging = true;
-            });
-
-            carousel.addEventListener('touchmove', () => {
-                if (!isDragging) return;
-            });
-
-            carousel.addEventListener('touchend', (e) => {
-                if (!isDragging) return;
-                isDragging = false;
-
-                const endX = e.changedTouches[0].clientX;
-                const diff = startX - endX;
-
-                if (Math.abs(diff) > 50) {
-                    if (diff > 0) {
-                        nextSlide();
-                    } else {
-                        prevSlide();
-                    }
-                }
-            });
-
-            carousel.addEventListener('mousedown', (e) => {
-                startX = e.clientX;
-                isDragging = true;
-                carousel.style.cursor = 'grabbing';
-            });
-
-            carousel.addEventListener('mousemove', (e) => {
-                if (!isDragging) return;
-                e.preventDefault();
-            });
-
-            carousel.addEventListener('mouseup', (e) => {
-                if (!isDragging) return;
-                isDragging = false;
-                carousel.style.cursor = 'grab';
-
-                const endX = e.clientX;
-                const diff = startX - endX;
-
-                if (Math.abs(diff) > 50) {
-                    if (diff > 0) {
-                        nextSlide();
-                    } else {
-                        prevSlide();
-                    }
-                }
-            });
-
-            carousel.addEventListener('mouseleave', () => {
-                if (isDragging) {
-                    isDragging = false;
-                    carousel.style.cursor = 'grab';
-                }
-            });
-
-            const intervalId = setInterval(() => {
-                if (!document.getElementById('availableCarousel')) {
-                    clearInterval(intervalId);
-                    return;
-                }
-                if (currentIndex < totalCards - 1) {
-                    nextSlide();
-                } else {
-                    goToSlide(0);
-                }
-            }, 6000);
-        }
-
-        document.addEventListener('DOMContentLoaded', initAvailableCarousel);
-        document.addEventListener('livewire:navigated', initAvailableCarousel);
     })();
 </script>
 @endpush

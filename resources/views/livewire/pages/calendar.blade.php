@@ -9,6 +9,27 @@
             gap: 18px;
             position: relative;
         }
+        .calendar-loading {
+            position: fixed;
+            inset: 0;
+            background: rgba(5, 5, 5, 0.55);
+            backdrop-filter: blur(2px);
+            z-index: 60;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .calendar-loading-spinner {
+            width: 44px;
+            height: 44px;
+            border: 4px solid rgba(126, 252, 91, 0.25);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: rvSpin 0.8s linear infinite;
+        }
+        @keyframes rvSpin {
+            to { transform: rotate(360deg); }
+        }
         .filters-panel {
             background: linear-gradient(135deg, #0f0f12 0%, #0b0b0e 100%);
             border: 1px solid rgba(126, 252, 91, 0.15);
@@ -209,6 +230,12 @@
             font-weight: 700;
             color: #0a0a0a;
             flex-shrink: 0;
+            overflow: hidden;
+        }
+        .trainer-badge img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
         .trainer-name {
             font-size: 16px;
@@ -743,6 +770,12 @@
             align-items: center;
             justify-content: center;
             font-size: 9px;
+            overflow: hidden;
+        }
+        .premium-modal .trainer-avatar-small img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .premium-modal .duetto-section {
@@ -960,6 +993,9 @@
 @endpush
 
 <div id="calendar-root">
+    <div class="calendar-loading" wire:loading.flex wire:target="applyFilters,previousMonth,nextMonth,selectDay,openBookingModal,confirmBooking">
+        <div class="calendar-loading-spinner" aria-label="Caricamento"></div>
+    </div>
     <main class="page-calendar">
         <div class="calendar-shell">
             <div class="filters-panel">
@@ -1111,7 +1147,11 @@
                     <div class="trainer-section">
                         <div class="trainer-header">
                             <div class="trainer-badge" style="background: {{ $trainerGroup['trainer_color'] }};">
-                                {{ $this->getTrainerInitials($trainerGroup['trainer_name']) }}
+                                @if (!empty($trainerGroup['trainer_avatar']))
+                                    <img src="{{ $trainerGroup['trainer_avatar'] }}" alt="{{ $trainerGroup['trainer_name'] }}">
+                                @else
+                                    {{ $this->getTrainerInitials($trainerGroup['trainer_name']) }}
+                                @endif
                             </div>
                             <div class="trainer-name">{{ $trainerGroup['trainer_name'] }}</div>
                             <div style="margin-left: auto; color: var(--muted); font-size: 13px;">
@@ -1218,7 +1258,11 @@
                         </div>
                         <div class="info-pill trainer-pill">
                             <div class="trainer-avatar-small" style="background-color: {{ $confirmingDetails['trainer_color'] ?? '#7efc5b' }}">
-                                {{ $confirmingDetails['trainer_initials'] ?? 'T' }}
+                                @if (!empty($confirmingDetails['trainer_avatar']))
+                                    <img src="{{ $confirmingDetails['trainer_avatar'] }}" alt="{{ $confirmingDetails['trainer'] ?? 'Trainer' }}">
+                                @else
+                                    {{ $confirmingDetails['trainer_initials'] ?? 'T' }}
+                                @endif
                             </div>
                             {{ $confirmingDetails['trainer'] ?? 'Trainer' }}
                         </div>
