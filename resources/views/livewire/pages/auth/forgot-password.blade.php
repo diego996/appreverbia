@@ -53,8 +53,9 @@ new #[Layout('layouts.guest')] class extends Component
         </div>
 
         <div class="d-flex justify-content-end">
-            <x-primary-button>
-                {{ __('Email Password Reset Link') }}
+            <x-primary-button wire:loading.attr="disabled" wire:target="sendPasswordResetLink">
+                <span wire:loading.remove wire:target="sendPasswordResetLink">{{ __('Email Password Reset Link') }}</span>
+                <span wire:loading wire:target="sendPasswordResetLink">Caricamento...</span>
             </x-primary-button>
         </div>
     </form>

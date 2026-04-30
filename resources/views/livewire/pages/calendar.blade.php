@@ -213,9 +213,16 @@
             box-shadow: 0 6px 14px rgba(126,252,91,0.45);
         }
         .day.busy {
-            background: #f7f7fb;
-            border-color: rgba(126,252,91,0.9);
-            color: #1b1b1e;
+            background: #2d67ff;
+            border-color: #2d67ff;
+            color: #ffffff;
+            box-shadow: 0 6px 14px rgba(45, 103, 255, 0.35);
+        }
+        .day.busy .day-number {
+            color: #ffffff;
+        }
+        .day.busy .trainer-dots {
+            display: none;
         }
         .day.past {
             background: #f4f3f7;

@@ -105,7 +105,10 @@ new class extends Component
         </div>
 
         <div class="d-flex align-items-center gap-3">
-            <x-primary-button>{{ __('Save') }}</x-primary-button>
+            <x-primary-button wire:loading.attr="disabled" wire:target="updateProfileInformation">
+                <span wire:loading.remove wire:target="updateProfileInformation">{{ __('Save') }}</span>
+                <span wire:loading wire:target="updateProfileInformation">Caricamento...</span>
+            </x-primary-button>
 
             <x-action-message class="mb-0" on="profile-updated">
                 {{ __('Saved.') }}

@@ -70,7 +70,10 @@ new class extends Component
         </div>
 
         <div class="d-flex align-items-center gap-3">
-            <x-primary-button>{{ __('Save') }}</x-primary-button>
+            <x-primary-button wire:loading.attr="disabled" wire:target="updatePassword">
+                <span wire:loading.remove wire:target="updatePassword">{{ __('Save') }}</span>
+                <span wire:loading wire:target="updatePassword">Caricamento...</span>
+            </x-primary-button>
 
             <x-action-message class="mb-0" on="password-updated">
                 {{ __('Saved.') }}

@@ -78,7 +78,10 @@ new #[Layout('layouts.reverbia-guest')] #[Title('Reverbia - Cambia Password')] c
                 @enderror
             </div>
 
-            <button class="btn" type="submit">Salva e continua</button>
+            <button class="btn" type="submit" wire:loading.attr="disabled" wire:target="save">
+                <span wire:loading.remove wire:target="save">Salva e continua</span>
+                <span wire:loading wire:target="save">Caricamento...</span>
+            </button>
         </form>
     </div>
 </div>

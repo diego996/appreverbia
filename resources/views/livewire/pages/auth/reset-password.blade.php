@@ -107,7 +107,10 @@ new #[Layout('layouts.reverbia-guest')] #[Title('Reverbia - Reset Password')] cl
                 @enderror
             </div>
 
-            <button class="btn" type="submit">Aggiorna password</button>
+            <button class="btn" type="submit" wire:loading.attr="disabled" wire:target="resetPassword">
+                <span wire:loading.remove wire:target="resetPassword">Aggiorna password</span>
+                <span wire:loading wire:target="resetPassword">Caricamento...</span>
+            </button>
         </form>
 
         <div class="links">
