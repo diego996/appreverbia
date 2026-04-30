@@ -206,14 +206,14 @@
             padding: 4px 2px;
         }
         .day.selected {
-            background: #2d67ff;
+            background: #7efc5b;
             border-color: #7efc5b;
-            color: #ffffff;
+            color: #0a0a0a;
             font-weight: 700;
             box-shadow: 0 6px 14px rgba(126,252,91,0.45);
         }
         .day.selected .day-number {
-            color: #ffffff;
+            color: #0a0a0a;
         }
         .day.busy {
             background: #2d67ff;
