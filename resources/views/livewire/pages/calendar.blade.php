@@ -1123,6 +1123,10 @@
                             @php
                                 $classes = ['day'];
                                 $isPast = false;
+                                $dayTrainers = $day !== null && isset($calendar['trainersByDay'][$day]) 
+                                    ? $calendar['trainersByDay'][$day] 
+                                    : [];
+                                $hasLessons = !empty($dayTrainers);
                                 
                                 if ($day !== null) {
                                     $dateObj = \Carbon\Carbon::create($currentYear, $currentMonth, $day)->startOfDay();
@@ -1132,29 +1136,17 @@
                                     }
                                 }
 
-                                $hasLessons = !empty($dayTrainers);
-
                                 if ($day === $calendar['selectedDay']) {
                                     $classes[] = 'selected';
                                 } elseif ($day !== null && $hasLessons && !$isPast) {
                                     $classes[] = 'busy';
                                 }
-                                $dayTrainers = $day !== null && isset($calendar['trainersByDay'][$day]) 
-                                    ? $calendar['trainersByDay'][$day] 
-                                    : [];
                             @endphp
                             @if ($day === null)
                                 <div></div>
                             @else
                                 <div class="{{ implode(' ', $classes) }}" wire:click="selectDay({{ $day }})">
                                     <span class="day-number">{{ $day }}</span>
-                                    @if (!empty($dayTrainers))
-                                        <div class="trainer-dots">
-                                            @foreach (array_slice($dayTrainers, 0, 3) as $trainer)
-                                                <div class="trainer-dot" style="background: {{ $trainer['color'] }};" title="{{ $trainer['name'] }}"></div>
-                                            @endforeach
-                                        </div>
-                                    @endif
                                 </div>
                             @endif
                         @endforeach
