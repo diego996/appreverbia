@@ -206,11 +206,14 @@
             padding: 4px 2px;
         }
         .day.selected {
-            background: #7efc5b;
+            background: #2d67ff;
             border-color: #7efc5b;
-            color: #0a0a0a;
+            color: #ffffff;
             font-weight: 700;
             box-shadow: 0 6px 14px rgba(126,252,91,0.45);
+        }
+        .day.selected .day-number {
+            color: #ffffff;
         }
         .day.busy {
             background: #2d67ff;
@@ -221,7 +224,7 @@
         .day.busy .day-number {
             color: #ffffff;
         }
-        .day.busy .trainer-dots {
+        .trainer-dots {
             display: none;
         }
         .day.past {
@@ -1129,9 +1132,11 @@
                                     }
                                 }
 
+                                $hasLessons = !empty($dayTrainers);
+
                                 if ($day === $calendar['selectedDay']) {
                                     $classes[] = 'selected';
-                                } elseif ($day !== null && isset($calendar['specialDays'][$day]) && !$isPast) {
+                                } elseif ($day !== null && $hasLessons && !$isPast) {
                                     $classes[] = 'busy';
                                 }
                                 $dayTrainers = $day !== null && isset($calendar['trainersByDay'][$day]) 
