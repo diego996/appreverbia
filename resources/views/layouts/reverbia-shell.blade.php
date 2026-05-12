@@ -407,6 +407,22 @@
                     }
                 }, true);
 
+                document.addEventListener('click', (event) => {
+                    const link = event.target.closest('a[href]');
+                    if (!link) return;
+                    if (link.hasAttribute('wire:navigate')) return;
+                    if (link.target === '_blank') return;
+
+                    const href = link.getAttribute('href') ?? '';
+                    if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+
+                    show();
+                }, true);
+
+                window.addEventListener('beforeunload', () => {
+                    loader.classList.add('is-active');
+                });
+
                 const bindLivewireHooks = () => {
                     if (!window.Livewire || window.__reverbiaGlobalLoaderHooks) return;
                     window.__reverbiaGlobalLoaderHooks = true;

@@ -2,6 +2,26 @@
     <style>
         main.page-appointments { padding: 14px 16px 96px; }
         .appointments-shell { display: grid; gap: 14px; }
+        .appointments-loading {
+            position: fixed;
+            inset: 0;
+            background: rgba(5, 5, 5, 0.28);
+            z-index: 1100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .appointments-loading-spinner {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: 3px solid rgba(126,252,91,0.25);
+            border-top-color: var(--accent);
+            animation: appointmentsSpin .8s linear infinite;
+        }
+        @keyframes appointmentsSpin {
+            to { transform: rotate(360deg); }
+        }
         .toolbar {
             background: #0f0f12;
             border: 1px solid var(--line);
@@ -73,6 +93,9 @@
 @endpush
 
 <div>
+    <div class="appointments-loading" wire:loading.flex wire:target="search,scope,previousPage,nextPage">
+        <div class="appointments-loading-spinner" aria-label="Caricamento"></div>
+    </div>
     <main class="page-appointments">
         <div class="appointments-shell">
             <div class="toolbar">
@@ -80,8 +103,10 @@
                     class="search-input"
                     type="text"
                     placeholder="Cerca per lezione, trainer, sede, data..."
-                    wire:model.live.debounce.300ms="search">
-                <select class="scope-select" wire:model.live="scope">
+                    wire:model.live.debounce.300ms="search"
+                    wire:loading.attr="disabled"
+                    wire:target="search">
+                <select class="scope-select" wire:model.live="scope" wire:loading.attr="disabled" wire:target="scope">
                     <option value="all">Tutti</option>
                     <option value="future">Futuri</option>
                     <option value="past">Passati</option>
@@ -113,4 +138,3 @@
         </div>
     </main>
 </div>
-
