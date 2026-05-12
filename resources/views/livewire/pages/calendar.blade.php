@@ -270,13 +270,22 @@
         .day.selected .day-number {
             color: #0a0a0a;
         }
-        .day.busy {
-            background: #2d67ff;
-            border-color: #2d67ff;
-            color: #ffffff;
-            box-shadow: 0 6px 14px rgba(45, 103, 255, 0.35);
+        .day.available {
+            background: #7efc5b;
+            border-color: #7efc5b;
+            color: #0a0a0a;
+            box-shadow: 0 6px 14px rgba(126,252,91,0.35);
         }
-        .day.busy .day-number {
+        .day.available .day-number {
+            color: #0a0a0a;
+        }
+        .day.full {
+            background: #ff4d4f;
+            border-color: #ff4d4f;
+            color: #ffffff;
+            box-shadow: 0 6px 14px rgba(255, 77, 79, 0.35);
+        }
+        .day.full .day-number {
             color: #ffffff;
         }
         .trainer-dots {
@@ -1187,10 +1196,16 @@
                                         }
                                     }
 
+                                    $status = $day !== null ? ($calendar['dayStatus'][$day] ?? null) : null;
+
                                     if ($day === $calendar['selectedDay']) {
                                         $classes[] = 'selected';
-                                    } elseif ($day !== null && $hasLessons && !$isPast) {
-                                        $classes[] = 'busy';
+                                    } elseif ($day !== null && !$isPast) {
+                                        if ($status === 'available') {
+                                            $classes[] = 'available';
+                                        } elseif ($status === 'full') {
+                                            $classes[] = 'full';
+                                        }
                                     }
                                 @endphp
                                 @if ($day === null)

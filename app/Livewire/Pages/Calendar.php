@@ -777,6 +777,7 @@ class Calendar extends Component
 
         // Build trainer indicators for each day
         $trainersByDay = $this->buildTrainerIndicators($occurrences);
+        $dayStatus = $this->buildDayStatus($occurrences);
 
         return [
             'selectedLabel' => $weekdayNames[$selectedDate->dayOfWeek] . ' ' . $selectedDate->day . ' ' . $monthNames[$selectedDate->month - 1],
@@ -786,7 +787,37 @@ class Calendar extends Component
             'selectedDay' => $selectedDate->day,
             'specialDays' => $specialDays,
             'trainersByDay' => $trainersByDay,
+            'dayStatus' => $dayStatus,
         ];
+    }
+
+    protected function buildDayStatus(Collection $occurrences): array
+    {
+        $statusByDay = [];
+
+        $byDay = $occurrences->groupBy(fn (CourseOccurrence $occurrence) => $occurrence->date?->day);
+
+        foreach ($byDay as $day => $dayOccurrences) {
+            $hasAvailable = false;
+            $hasAny = false;
+
+            foreach ($dayOccurrences as $occurrence) {
+                $hasAny = true;
+                $availability = $this->getOccurrenceAvailability($occurrence);
+                if (($availability['general_remaining'] ?? 0) > 0) {
+                    $hasAvailable = true;
+                    break;
+                }
+            }
+
+            if (!$hasAny) {
+                continue;
+            }
+
+            $statusByDay[(int) $day] = $hasAvailable ? 'available' : 'full';
+        }
+
+        return $statusByDay;
     }
 
     protected function buildWeekViewPayload(Collection $occurrences, Carbon $selectedDate): array
