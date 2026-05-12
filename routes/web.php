@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('stripe/webhook', [\App\Http\Controllers\PaymentController::class, 'webhook']);
 
-Route::middleware(['auth', 'verified', 'password.changed'])->group(function () {
+Route::middleware(['auth', 'verified', 'password.changed', 'client.role'])->group(function () {
     Route::get('/', Dashboard::class)
         ->name('home');
 

@@ -165,11 +165,36 @@
             background: #0a0a0c;
             border-top: 1px solid var(--line);
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             padding: 10px 4px;
             color: var(--muted);
             font-size: 12px;
             z-index: 10;
+        }
+
+        .global-loader {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(5, 5, 5, 0.35);
+            z-index: 1200;
+            pointer-events: none;
+        }
+        .global-loader.is-active {
+            display: flex;
+        }
+        .global-loader-spinner {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 3px solid rgba(126, 252, 91, 0.25);
+            border-top-color: var(--accent);
+            animation: globalLoaderSpin .8s linear infinite;
+        }
+        @keyframes globalLoaderSpin {
+            to { transform: rotate(360deg); }
         }
 
         .nav-bottom a {
@@ -316,6 +341,9 @@
     @yield('slot')
 
     @include('livewire.layout.menu')
+    <div class="global-loader" id="globalLoader" aria-hidden="true">
+        <div class="global-loader-spinner" aria-label="Caricamento"></div>
+    </div>
 
     <div class="pwa-gate" id="pwaGate" role="dialog" aria-modal="true" aria-label="Installazione app Reverbia">
         <div class="pwa-card">
@@ -341,6 +369,62 @@
 
     <script>
         (function () {
+            const setupGlobalLoader = () => {
+                if (window.__reverbiaGlobalLoaderInit) return;
+                window.__reverbiaGlobalLoaderInit = true;
+
+                const loader = document.getElementById('globalLoader');
+                if (!loader) return;
+
+                let pending = 0;
+                const show = () => {
+                    pending++;
+                    loader.classList.add('is-active');
+                };
+                const hide = () => {
+                    pending = Math.max(0, pending - 1);
+                    if (pending === 0) {
+                        loader.classList.remove('is-active');
+                    }
+                };
+
+                window.addEventListener('livewire:navigating', show);
+                window.addEventListener('livewire:navigated', () => {
+                    pending = 0;
+                    loader.classList.remove('is-active');
+                });
+
+                document.addEventListener('submit', (event) => {
+                    if (event.target && event.target.hasAttribute('wire:submit')) {
+                        show();
+                    }
+                }, true);
+
+                document.addEventListener('click', (event) => {
+                    const trigger = event.target.closest('[wire\\:click], [wire\\:navigate]');
+                    if (trigger) {
+                        show();
+                    }
+                }, true);
+
+                const bindLivewireHooks = () => {
+                    if (!window.Livewire || window.__reverbiaGlobalLoaderHooks) return;
+                    window.__reverbiaGlobalLoaderHooks = true;
+
+                    Livewire.hook('request', ({ succeed, fail }) => {
+                        show();
+                        succeed(() => hide());
+                        fail(() => hide());
+                    });
+                };
+
+                if (window.Livewire) {
+                    bindLivewireHooks();
+                } else {
+                    document.addEventListener('livewire:init', bindLivewireHooks);
+                }
+            };
+
             const setupMenu = () => {
                 const body = document.body;
                 const toggle = document.getElementById('menuToggle');
@@ -372,8 +456,13 @@
                 });
             };
 
-            document.addEventListener('DOMContentLoaded', setupMenu);
-            document.addEventListener('livewire:navigated', setupMenu);
+            const init = () => {
+                setupMenu();
+                setupGlobalLoader();
+            };
+
+            document.addEventListener('DOMContentLoaded', init);
+            document.addEventListener('livewire:navigated', init);
         }());
     </script>
     <script>
