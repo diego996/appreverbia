@@ -376,36 +376,26 @@
                 const loader = document.getElementById('globalLoader');
                 if (!loader) return;
 
-                let pending = 0;
+                let hideTimer = null;
                 const show = () => {
-                    pending++;
                     loader.classList.add('is-active');
+                    if (hideTimer) {
+                        clearTimeout(hideTimer);
+                        hideTimer = null;
+                    }
                 };
                 const hide = () => {
-                    pending = Math.max(0, pending - 1);
-                    if (pending === 0) {
-                        loader.classList.remove('is-active');
-                    }
+                    loader.classList.remove('is-active');
+                };
+                const hideSoon = () => {
+                    if (hideTimer) clearTimeout(hideTimer);
+                    hideTimer = setTimeout(() => hide(), 120);
                 };
 
                 window.addEventListener('livewire:navigating', show);
                 window.addEventListener('livewire:navigated', () => {
-                    pending = 0;
-                    loader.classList.remove('is-active');
+                    hideSoon();
                 });
-
-                document.addEventListener('submit', (event) => {
-                    if (event.target && event.target.hasAttribute('wire:submit')) {
-                        show();
-                    }
-                }, true);
-
-                document.addEventListener('click', (event) => {
-                    const trigger = event.target.closest('[wire\\:click], [wire\\:navigate]');
-                    if (trigger) {
-                        show();
-                    }
-                }, true);
 
                 document.addEventListener('click', (event) => {
                     const link = event.target.closest('a[href]');
@@ -429,8 +419,8 @@
 
                     Livewire.hook('request', ({ succeed, fail }) => {
                         show();
-                        succeed(() => hide());
-                        fail(() => hide());
+                        succeed(() => hideSoon());
+                        fail(() => hideSoon());
                     });
                 };
 
