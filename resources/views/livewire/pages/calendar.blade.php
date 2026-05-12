@@ -251,6 +251,11 @@
             position: relative;
             padding: 4px 2px;
         }
+        .day.today {
+            outline: 2px solid #ffd84d;
+            outline-offset: 2px;
+            box-shadow: 0 0 0 1px #1b1b1e, 0 0 0 4px rgba(255, 216, 77, 0.35);
+        }
         .day.selected {
             background: #7efc5b;
             border-color: #7efc5b;
@@ -1171,6 +1176,9 @@
                                         $dateObj = \Carbon\Carbon::create($currentYear, $currentMonth, $day)->startOfDay();
                                         if ($dateObj->lt(now()->startOfDay())) {
                                             $isPast = true;
+                                        }
+                                        if ($dateObj->isSameDay(now()->startOfDay())) {
+                                            $classes[] = 'today';
                                         }
                                     }
 
