@@ -5,6 +5,9 @@
     <a class="{{ request()->routeIs('pricing') ? 'active' : '' }}" href="{{ route('pricing') }}" wire:navigate>
         <i class="bi bi-bag-plus"></i><span>Acquista</span>
     </a>
+    <a class="{{ request()->routeIs('appointments') ? 'active' : '' }}" href="{{ route('appointments') }}" wire:navigate>
+        <i class="bi bi-journal-check"></i><span>Appuntamenti</span>
+    </a>
     <a class="{{ request()->routeIs('calendar') ? 'active' : '' }}" href="{{ route('calendar') }}" wire:navigate>
         <i class="bi bi-calendar4-week"></i><span>Calendario</span>
     </a>

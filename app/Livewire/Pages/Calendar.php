@@ -38,6 +38,9 @@ class Calendar extends Component
     public ?string $selectedWeekday = null;
     public ?string $selectedStartTime = null;
     public ?string $selectedEndTime = null;
+    public string $calendarView = 'month';
+    public array $weekView = [];
+    public array $dayView = [];
     
     public ?int $confirmingOccurrenceId = null;
     public ?string $confirmingAction = null;
@@ -138,8 +141,8 @@ class Calendar extends Component
             $this->selectedCourse = strtolower($this->selectedCourse);
         }
 
-        $this->selectedStartTime = $this->selectedStartTime ?: null;
-        $this->selectedEndTime = $this->selectedEndTime ?: null;
+        $this->selectedStartTime = $this->normalizeTimeInput($this->selectedStartTime);
+        $this->selectedEndTime = $this->normalizeTimeInput($this->selectedEndTime);
 
         if ($this->selectedStartTime && $this->selectedEndTime && $this->selectedStartTime > $this->selectedEndTime) {
             [$this->selectedStartTime, $this->selectedEndTime] = [$this->selectedEndTime, $this->selectedStartTime];
@@ -150,6 +153,16 @@ class Calendar extends Component
         }
 
         $this->loadFilters();
+        $this->loadCalendar();
+    }
+
+    public function setCalendarView(string $view): void
+    {
+        if (!in_array($view, ['month', 'week', 'day'], true)) {
+            return;
+        }
+
+        $this->calendarView = $view;
         $this->loadCalendar();
     }
 
@@ -613,6 +626,8 @@ class Calendar extends Component
         $this->lessonCardsByTrainer = $this->groupLessonsByTrainer($this->lessonCards);
         $this->trainerIndicators = $this->buildTrainerIndicators($occurrences);
         $this->trainers = $this->buildTrainers($occurrences);
+        $this->weekView = $this->buildWeekViewPayload($occurrences, $selectedDate);
+        $this->dayView = $this->buildDayViewPayload($occurrences, $selectedDate);
     }
 
     protected function getOccurrencesForMonth(Carbon $month): Collection
@@ -664,6 +679,19 @@ class Calendar extends Component
         }
 
         return $occurrences;
+    }
+
+    protected function normalizeTimeInput(?string $time): ?string
+    {
+        if (!$time) {
+            return null;
+        }
+
+        try {
+            return Carbon::parse($time)->format('H:i:s');
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     protected function filterByWeekday(Collection $occurrences): Collection
@@ -759,6 +787,59 @@ class Calendar extends Component
             'specialDays' => $specialDays,
             'trainersByDay' => $trainersByDay,
         ];
+    }
+
+    protected function buildWeekViewPayload(Collection $occurrences, Carbon $selectedDate): array
+    {
+        $startOfWeek = $selectedDate->copy()->startOfWeek(Carbon::MONDAY);
+        $days = [];
+
+        for ($i = 0; $i < 7; $i++) {
+            $current = $startOfWeek->copy()->addDays($i);
+            $entries = $occurrences
+                ->filter(fn (CourseOccurrence $occurrence) => $occurrence->date?->isSameDay($current))
+                ->sortBy('start_time')
+                ->map(function (CourseOccurrence $occurrence): array {
+                    $course = $occurrence->course;
+                    return [
+                        'time' => substr($occurrence->start_time ?? '--:--', 0, 5),
+                        'title' => $course?->title ?? 'Lezione',
+                        'trainer' => $course?->trainer?->name ?? 'Trainer',
+                        'branch' => $course?->branch?->name ?? 'Sede',
+                    ];
+                })
+                ->values()
+                ->all();
+
+            $days[] = [
+                'date' => $current->toDateString(),
+                'label' => ucfirst($current->locale('it')->translatedFormat('D d M')),
+                'is_selected' => $current->isSameDay($selectedDate),
+                'count' => count($entries),
+                'entries' => $entries,
+            ];
+        }
+
+        return $days;
+    }
+
+    protected function buildDayViewPayload(Collection $occurrences, Carbon $selectedDate): array
+    {
+        return $occurrences
+            ->filter(fn (CourseOccurrence $occurrence) => $occurrence->date?->isSameDay($selectedDate))
+            ->sortBy('start_time')
+            ->map(function (CourseOccurrence $occurrence): array {
+                $course = $occurrence->course;
+                return [
+                    'time' => substr($occurrence->start_time ?? '--:--', 0, 5),
+                    'end_time' => substr($occurrence->end_time ?? '--:--', 0, 5),
+                    'title' => $course?->title ?? 'Lezione',
+                    'trainer' => $course?->trainer?->name ?? 'Trainer',
+                    'branch' => $course?->branch?->name ?? 'Sede',
+                ];
+            })
+            ->values()
+            ->all();
     }
 
     protected function buildLessonCards(

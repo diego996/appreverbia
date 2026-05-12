@@ -165,7 +165,7 @@
             background: #0a0a0c;
             border-top: 1px solid var(--line);
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(5, 1fr);
             padding: 10px 4px;
             color: var(--muted);
             font-size: 12px;

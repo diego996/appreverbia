@@ -3,6 +3,7 @@
 use App\Livewire\Pages\Calendar;
 use App\Livewire\Pages\Dashboard;
 use App\Livewire\Pages\PaymentsHistory;
+use App\Livewire\Pages\Appointments;
 use App\Livewire\Pages\Profile;
 use Illuminate\Support\Facades\Route;
 
@@ -14,6 +15,9 @@ Route::middleware(['auth', 'verified', 'password.changed'])->group(function () {
 
     Route::get('calendar', Calendar::class)
         ->name('calendar');
+
+    Route::get('appuntamenti', Appointments::class)
+        ->name('appointments');
 
     Route::get('profilo', Profile::class)
         ->name('profile');

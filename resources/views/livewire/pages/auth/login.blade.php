@@ -69,7 +69,7 @@ new #[Layout('layouts.reverbia-guest')] #[Title('Reverbia - Login')] class exten
             </div>
 
             <button class="btn" type="submit" wire:loading.attr="disabled" wire:target="login">
-                <span wire:loading.remove wire:target="login">Entra ora</span>
+                <span wire:loading.remove wire:target="login">Accedi</span>
                 <span wire:loading wire:target="login">Caricamento...</span>
             </button>
         </form>

@@ -122,6 +122,61 @@
             font-size: 18px;
         }
         .title-block span { color: var(--accent); }
+        .view-switch {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin: 2px 0 8px;
+        }
+        .view-switch button {
+            border: 1px solid var(--line);
+            background: #0f0f12;
+            color: var(--muted);
+            border-radius: 999px;
+            padding: 7px 12px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .view-switch button.active {
+            color: #0a0a0a;
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+        .alt-view {
+            display: grid;
+            gap: 10px;
+            margin-top: 8px;
+        }
+        .alt-day {
+            background: #fff;
+            border: 1px solid #e2e2e6;
+            border-radius: 12px;
+            padding: 10px;
+            color: #17171a;
+        }
+        .alt-day.active {
+            border-color: #7efc5b;
+            box-shadow: 0 0 0 2px rgba(126, 252, 91, 0.2);
+        }
+        .alt-day-head {
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            color: #4f4f57;
+        }
+        .alt-entry {
+            border: 1px solid #ececf1;
+            border-radius: 10px;
+            padding: 8px;
+            font-size: 12px;
+            margin-bottom: 6px;
+        }
+        .alt-entry:last-child { margin-bottom: 0; }
+        .alt-entry strong { display: block; font-size: 13px; color: #17171a; }
+        .alt-empty {
+            font-size: 12px;
+            color: #7b7b84;
+        }
         .calendar-card {
             background: linear-gradient(180deg, #f4f3f7 0%, #ededf2 100%);
             border: 1px solid rgba(255,255,255,0.6);
@@ -1021,7 +1076,7 @@
 @endpush
 
 <div id="calendar-root">
-    <div class="calendar-loading" wire:loading.flex wire:target="applyFilters,previousMonth,nextMonth,selectDay,openBookingModal,confirmBooking">
+    <div class="calendar-loading" wire:loading.flex wire:target="applyFilters,setCalendarView,previousMonth,nextMonth,selectDay,openBookingModal,confirmBooking">
         <div class="calendar-loading-spinner" aria-label="Caricamento"></div>
     </div>
     <main class="page-calendar">
@@ -1053,7 +1108,7 @@
                 <label class="filter-group">
                     Trainer
                     <select class="filter-select" wire:model.defer="selectedTrainer">
-                        <option value="">Tutti</option>
+                        <option value="">Qualsiasi</option>
                         @foreach ($trainers as $trainer)
                             <option value="{{ $trainer['id'] }}">{{ $trainer['name'] }}</option>
                         @endforeach
@@ -1061,21 +1116,11 @@
                 </label>
                 <label class="filter-group">
                     Dalle ore
-                    <select class="filter-select" wire:model.defer="selectedStartTime">
-                        <option value="">Qualsiasi</option>
-                        @for ($hour = 6; $hour <= 22; $hour++)
-                            <option value="{{ sprintf('%02d:00', $hour) }}">{{ sprintf('%02d:00', $hour) }}</option>
-                        @endfor
-                    </select>
+                    <input class="filter-select" type="time" step="1" wire:model.defer="selectedStartTime" placeholder="es. 08:07">
                 </label>
                 <label class="filter-group">
                     Alle ore
-                    <select class="filter-select" wire:model.defer="selectedEndTime">
-                        <option value="">Qualsiasi</option>
-                        @for ($hour = 6; $hour <= 22; $hour++)
-                            <option value="{{ sprintf('%02d:00', $hour) }}">{{ sprintf('%02d:00', $hour) }}</option>
-                        @endfor
-                    </select>
+                    <input class="filter-select" type="time" step="1" wire:model.defer="selectedEndTime" placeholder="es. 20:30">
                 </label>
                 <div class="filter-actions">
                     <button type="button" class="btn-apply-filters" wire:click="applyFilters">
@@ -1087,6 +1132,11 @@
 
             <div class="title-block">
                 CALENDARIO <span>LEZIONI</span>
+            </div>
+            <div class="view-switch">
+                <button type="button" class="{{ $calendarView === 'month' ? 'active' : '' }}" wire:click="setCalendarView('month')">Mese</button>
+                <button type="button" class="{{ $calendarView === 'week' ? 'active' : '' }}" wire:click="setCalendarView('week')">Settimana</button>
+                <button type="button" class="{{ $calendarView === 'day' ? 'active' : '' }}" wire:click="setCalendarView('day')">Giorno</button>
             </div>
 
             <div class="token-pill">
@@ -1117,41 +1167,79 @@
                         <div>{{ $day }}</div>
                     @endforeach
                 </div>
-                @foreach ($calendar['weeks'] as $week)
-                    <div class="week-row">
-                        @foreach ($week as $day)
-                            @php
-                                $classes = ['day'];
-                                $isPast = false;
-                                $dayTrainers = $day !== null && isset($calendar['trainersByDay'][$day]) 
-                                    ? $calendar['trainersByDay'][$day] 
-                                    : [];
-                                $hasLessons = !empty($dayTrainers);
-                                
-                                if ($day !== null) {
-                                    $dateObj = \Carbon\Carbon::create($currentYear, $currentMonth, $day)->startOfDay();
-                                    if ($dateObj->lt(now()->startOfDay())) {
-                                        $isPast = true;
-                                        $classes[] = 'past';
+                @if ($calendarView === 'month')
+                    @foreach ($calendar['weeks'] as $week)
+                        <div class="week-row">
+                            @foreach ($week as $day)
+                                @php
+                                    $classes = ['day'];
+                                    $isPast = false;
+                                    $dayTrainers = $day !== null && isset($calendar['trainersByDay'][$day]) 
+                                        ? $calendar['trainersByDay'][$day] 
+                                        : [];
+                                    $hasLessons = !empty($dayTrainers);
+                                    
+                                    if ($day !== null) {
+                                        $dateObj = \Carbon\Carbon::create($currentYear, $currentMonth, $day)->startOfDay();
+                                        if ($dateObj->lt(now()->startOfDay())) {
+                                            $isPast = true;
+                                            $classes[] = 'past';
+                                        }
                                     }
-                                }
 
-                                if ($day === $calendar['selectedDay']) {
-                                    $classes[] = 'selected';
-                                } elseif ($day !== null && $hasLessons && !$isPast) {
-                                    $classes[] = 'busy';
-                                }
-                            @endphp
-                            @if ($day === null)
-                                <div></div>
-                            @else
-                                <div class="{{ implode(' ', $classes) }}" wire:click="selectDay({{ $day }})">
-                                    <span class="day-number">{{ $day }}</span>
-                                </div>
-                            @endif
+                                    if ($day === $calendar['selectedDay']) {
+                                        $classes[] = 'selected';
+                                    } elseif ($day !== null && $hasLessons && !$isPast) {
+                                        $classes[] = 'busy';
+                                    }
+                                @endphp
+                                @if ($day === null)
+                                    <div></div>
+                                @else
+                                    <div class="{{ implode(' ', $classes) }}" wire:click="selectDay({{ $day }})">
+                                        <span class="day-number">{{ $day }}</span>
+                                    </div>
+                                @endif
+                            @endforeach
+                        </div>
+                    @endforeach
+                @elseif ($calendarView === 'week')
+                    <div class="alt-view">
+                        @foreach ($weekView as $weekDay)
+                            <div class="alt-day {{ $weekDay['is_selected'] ? 'active' : '' }}">
+                                <div class="alt-day-head">{{ $weekDay['label'] }}</div>
+                                @if (!empty($weekDay['entries']))
+                                    @foreach ($weekDay['entries'] as $entry)
+                                        <div class="alt-entry">
+                                            <strong>{{ $entry['time'] }} · {{ $entry['title'] }}</strong>
+                                            {{ $entry['trainer'] }} · {{ $entry['branch'] }}
+                                        </div>
+                                    @endforeach
+                                @else
+                                    <div class="alt-empty">Nessuna lezione</div>
+                                @endif
+                            </div>
                         @endforeach
                     </div>
-                @endforeach
+                @else
+                    <div class="alt-view">
+                        @if (!empty($dayView))
+                            @foreach ($dayView as $entry)
+                                <div class="alt-day active">
+                                    <div class="alt-day-head">{{ $entry['time'] }} - {{ $entry['end_time'] }}</div>
+                                    <div class="alt-entry">
+                                        <strong>{{ $entry['title'] }}</strong>
+                                        {{ $entry['trainer'] }} · {{ $entry['branch'] }}
+                                    </div>
+                                </div>
+                            @endforeach
+                        @else
+                            <div class="alt-day">
+                                <div class="alt-empty">Nessuna lezione in questo giorno</div>
+                            </div>
+                        @endif
+                    </div>
+                @endif
             </section>
 
 
