@@ -201,15 +201,6 @@
             font-weight: 700;
             color: #141416;
         }
-        .calendar-header button {
-            width: 34px;
-            height: 34px;
-            border-radius: 12px;
-            background: #e7e6ee;
-            border: none;
-            color: #4f4f57;
-            font-size: 16px;
-        }
         .month-row {
             display: flex;
             align-items: center;
@@ -290,15 +281,6 @@
         }
         .trainer-dots {
             display: none;
-        }
-        .day.past {
-            background: #f4f3f7;
-            border-color: #e2e2e6;
-            color: #adadb5;
-        }
-        .day.past:hover {
-            transform: none;
-            cursor: default;
         }
 
         .day-number {
@@ -1158,9 +1140,6 @@
                         <div class="label">Seleziona il giorno desiderato</div>
                         <div class="date-title">{{ $calendar['selectedLabel'] }}</div>
                     </div>
-                    <button type="button" aria-label="Modifica selezione">
-                        <i class="bi bi-pencil"></i>
-                    </button>
                 </div>
                 <div class="month-row">
                     <button type="button" aria-label="Mese precedente" wire:click="previousMonth">
@@ -1192,7 +1171,6 @@
                                         $dateObj = \Carbon\Carbon::create($currentYear, $currentMonth, $day)->startOfDay();
                                         if ($dateObj->lt(now()->startOfDay())) {
                                             $isPast = true;
-                                            $classes[] = 'past';
                                         }
                                     }
 
@@ -1200,11 +1178,15 @@
 
                                     if ($day === $calendar['selectedDay']) {
                                         $classes[] = 'selected';
-                                    } elseif ($day !== null && !$isPast) {
-                                        if ($status === 'available') {
-                                            $classes[] = 'available';
-                                        } elseif ($status === 'full') {
+                                    } elseif ($day !== null) {
+                                        if ($isPast && $hasLessons) {
                                             $classes[] = 'full';
+                                        } elseif (!$isPast) {
+                                            if ($status === 'available') {
+                                                $classes[] = 'available';
+                                            } elseif ($status === 'full') {
+                                                $classes[] = 'full';
+                                            }
                                         }
                                     }
                                 @endphp
