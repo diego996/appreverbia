@@ -252,9 +252,19 @@
             padding: 4px 2px;
         }
         .day.today {
-            outline: 2px solid #ffd84d;
-            outline-offset: 2px;
-            box-shadow: 0 0 0 1px #1b1b1e, 0 0 0 4px rgba(255, 216, 77, 0.35);
+            background: #ffd84d;
+            border-color: #ffd84d;
+            color: #0a0a0a;
+            box-shadow: 0 6px 14px rgba(255, 216, 77, 0.4);
+        }
+        .day.today .day-number {
+            color: #0a0a0a;
+            font-weight: 800;
+        }
+        .day.today.selected {
+            background: #ffd84d;
+            border-color: #ffd84d;
+            color: #0a0a0a;
         }
         .day.selected {
             background: #7efc5b;
